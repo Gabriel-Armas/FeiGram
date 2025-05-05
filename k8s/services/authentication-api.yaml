@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication-api
+  template:
+    metadata:
+      labels:
+        app: authentication-api
+    spec:
+      containers:
+      - name: authentication-api
+        image: your-docker-registry/authentication-api:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-api
+spec:
+  selector:
+    app: authentication-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

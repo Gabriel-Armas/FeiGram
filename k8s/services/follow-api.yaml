@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: follow-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: follow-api
+  template:
+    metadata:
+      labels:
+        app: follow-api
+    spec:
+      containers:
+      - name: follow-api
+        image: your-docker-registry/follow-api:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: follow-api
+spec:
+  selector:
+    app: follow-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

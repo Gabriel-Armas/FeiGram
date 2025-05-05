@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ban-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ban-api
+  template:
+    metadata:
+      labels:
+        app: ban-api
+    spec:
+      containers:
+      - name: ban-api
+        image: your-docker-registry/ban-api:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ban-api
+spec:
+  selector:
+    app: ban-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
