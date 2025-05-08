@@ -30,3 +30,23 @@ def get_followers(user_id: str):
             RETURN a.id AS follower_id
         """, id=user_id)
         return {"followers": [r["follower_id"] for r in result]}
+    
+@router.get("/following/{user_id}")
+def get_following(user_id: str):
+    with driver.session() as session:
+        result = session.run("""
+            MATCH (a:User {id: $id})-[:FOLLOWS]->(b:User)
+            RETURN b.id AS followed_id
+        """, id=user_id)
+        return {"following": [r["followed_id"] for r in result]}
+    
+@router.delete("/delete/{user_id}")
+def delete_user(user_id: str):
+    with driver.session() as session:
+        session.run("""
+            MATCH (u:User {id: $id})
+            OPTIONAL MATCH (u)-[r1:FOLLOWS]->()
+            OPTIONAL MATCH ()-[r2:FOLLOWS]->(u)
+            DELETE r1, r2, u
+        """, id=user_id)
+    return {"message": f"User with ID '{user_id}' and all follow relationships deleted."}
