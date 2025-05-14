@@ -48,21 +48,19 @@
 
     app.MapPost("/login", async (LoginRequest request, AuthService authService, AuthenticationDbContext dbContext) =>
     {
-        var user = await dbContext.Users.Find(u => u.Username == request.Username).FirstOrDefaultAsync();
+        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
 
-        if (user is null)
+        if (user is null || !PasswordService.VerifyPassword(request.Password, user.Password))
         {
             return Results.Unauthorized();
         }
-
-        if (!PasswordService.VerifyPassword(request.Password, user.Password))
-        {
-            return Results.Unauthorized();
-        }
-
-        var token = await authService.AuthenticateUserAsync(request.Username, request.Password);
+            
+        var token = await authService.AuthenticateUserAsync(request.Email, request.Password);
         return Results.Ok(new { token });
-    });
+    })
+    .Produces<LoginRequest>()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status401Unauthorized);
 
     app.MapPost("/register", async (HttpContext context, IConfiguration config, AuthenticationDbContext dbContext) =>
     {
@@ -85,16 +83,27 @@
         {
             Username = request.Username,
             Password = hashedPassword,
-            Email = request.Email
+            Email = request.Email,
+            Role = "User",
+            CreationDate = DateTime.UtcNow
         };
 
-        dbContext.Users.InsertOne(user);
-
-        return Results.Ok(new { message = "User registered successfully" });
-    });
+        try
+        {
+            dbContext.Users.InsertOne(user);
+            return Results.Ok(new { message = "User registered successfully" });
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+    })
+    .Produces<RegisterRequest>()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest);
 
 
     app.Run();
 
     record RegisterRequest(string Username, string Password, string Email);
-    record LoginRequest(string Username, string Password);
+    record LoginRequest(string Email, string Password);

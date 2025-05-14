@@ -14,9 +14,11 @@ namespace AuthenticationApi.Repositories
             _users = database.GetCollection<User>(config["MongoDB:UsersCollection"]);
         }
 
-        public async Task<User?> GetUserByUsernameAsync(string username)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
-            return await _users.Find(u => u.Username == username).FirstOrDefaultAsync();
+            return await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
         }
+
+        
     }
 }
