@@ -12,8 +12,14 @@ public class IndexModel : PageModel
         _logger = logger;
     }
 
-    public void OnGet()
+    public IActionResult OnGet()
     {
+        var token = Request.Cookies["usuario_token"];
+        if (string.IsNullOrEmpty(token))
+        {
+            return RedirectToPage("/Login");
+        }
 
+        return Page();
     }
 }
