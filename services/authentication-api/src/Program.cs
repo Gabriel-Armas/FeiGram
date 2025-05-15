@@ -41,6 +41,7 @@
     });
 
     builder.Services.AddAuthorization();
+    builder.Services.AddHostedService<RabbitMqConsumer>();
 
     var app = builder.Build();
     app.UseAuthentication();

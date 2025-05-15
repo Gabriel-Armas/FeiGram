@@ -1,0 +1,53 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - feigram-net
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - feigram-net
+
+  authentication-api:
+    build:
+      context: ./services/authentication-api
+    ports:
+      - "8084:8084"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8084
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=user
+      - RabbitMQ__Password=password
+      - RabbitMQ__VirtualHost=/
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - feigram-net
+
+volumes:
+  rabbitmq_data:
+  mongo_data:
+
+networks:
+  feigram-net:
+    driver: bridge
