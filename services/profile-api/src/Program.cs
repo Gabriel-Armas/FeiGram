@@ -1,9 +1,34 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ProfileDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var jwtConfig = builder.Configuration.GetSection("Jwt");
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtConfig["Issuer"],
+            ValidAudience = jwtConfig["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["SecretKey"]))
+        };
+
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -19,7 +44,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "Error al aplicar migraciones. Verifica la cadena de conexión y el estado de la base de datos.");
+        app.Logger.LogError(ex, "Error al aplicar migraciones.");
     }
 }
 
@@ -29,7 +54,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/profiles", async (ProfileDbContext db) =>
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.MapGet("/profiles", [Authorize] async (ProfileDbContext db) =>
 {
     try
     {
@@ -41,7 +70,7 @@ app.MapGet("/profiles", async (ProfileDbContext db) =>
     }
 });
 
-app.MapGet("/profiles/{id}", async (int id, ProfileDbContext db) =>
+app.MapGet("/profiles/{id}", [Authorize] async (int id, ProfileDbContext db) =>
 {
     try
     {
@@ -54,7 +83,7 @@ app.MapGet("/profiles/{id}", async (int id, ProfileDbContext db) =>
     }
 });
 
-app.MapPost("/profiles", async (Profile profile, ProfileDbContext db) =>
+app.MapPost("/profiles", [Authorize] async (Profile profile, ProfileDbContext db) =>
 {
     try
     {
@@ -68,7 +97,7 @@ app.MapPost("/profiles", async (Profile profile, ProfileDbContext db) =>
     }
 });
 
-app.MapPut("/profiles/{id}", async (int id, Profile updatedProfile, ProfileDbContext db) =>
+app.MapPut("/profiles/{id}", [Authorize] async (int id, Profile updatedProfile, ProfileDbContext db) =>
 {
     try
     {
@@ -91,7 +120,7 @@ app.MapPut("/profiles/{id}", async (int id, Profile updatedProfile, ProfileDbCon
     }
 });
 
-app.MapDelete("/profiles/{id}", async (int id, ProfileDbContext db) =>
+app.MapDelete("/profiles/{id}", [Authorize] async (int id, ProfileDbContext db) =>
 {
     try
     {

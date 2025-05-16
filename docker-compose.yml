@@ -1,4 +1,5 @@
-version: '3'
+version: '3.8'
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -44,9 +45,37 @@ services:
     networks:
       - feigram-net
 
+  profile-api:
+    build:
+      context: ./services/profile-api
+    ports:
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=profiledb;Username=postgres;Password=admin123
+    depends_on:
+      - postgres
+    networks:
+      - feigram-net
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: profiledb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - profile_data:/var/lib/postgresql/data
+    networks:
+      - feigram-net
+
 volumes:
   rabbitmq_data:
   mongo_data:
+  profile_data:
 
 networks:
   feigram-net:
