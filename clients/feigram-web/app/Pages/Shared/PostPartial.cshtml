@@ -1,0 +1,35 @@
+@model app.ViewModel.PostPartialViewModel
+
+<div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered"> <!-- Aquí cambié modal-lg a modal-xl para hacerlo más grande -->
+    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;"> <!-- Altura máxima para que no se salga de la pantalla -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="postModalLabel">@Model.Caption</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body d-flex flex-wrap">
+        <div class="flex-grow-1 flex-shrink-1 me-3" style="min-width: 300px;">
+          <img src="@Model.ImageUrl" class="img-fluid rounded" style="max-height: 70vh; object-fit: contain;" />
+        </div>
+        <div class="flex-grow-1" style="min-width: 300px; max-width: 500px;">
+          <p><strong>Likes:</strong> @Model.Likes ❤️</p>
+          <hr />
+          <h6>Comentarios:</h6>
+          <div class="overflow-auto" style="max-height: 300px;">
+            @for (int i = 1; i <= 20; i++)
+  {
+    <div class="mb-2">
+      <strong>Usuario kawaii @i:</strong> Este es el comentario número @i, ¡tan adorable como un Totoro! 🐾
+    </div>
+  }
+          </div>
+          <form method="post" asp-page-handler="Comment" class="mt-3">
+            <input type="hidden" name="PostId" value="@Model.Id" />
+            <textarea name="CommentText" class="form-control mb-2" rows="3" placeholder="Escribe tu comentario... ✨"></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">Enviar 💌</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

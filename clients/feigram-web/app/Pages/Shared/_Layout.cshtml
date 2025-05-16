@@ -2,22 +2,17 @@
 @{
     var usuario_token ="123";
 }
-@if (string.IsNullOrEmpty(usuario_token))
-{
-    IgnoreBody();
-    Context.Response.Redirect("/Login");
-} else {
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>@ViewData["Title"] - Feigram</title>
-        <script type="importmap"></script>
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-        <link rel="stylesheet" href="~/app.styles.css" asp-append-version="true" />
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Feigram</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/app.styles.css" asp-append-version="true" />
+</head>
     <body>
         <header>
             <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(to right, #FFA500, #0059A1); color: white;">
@@ -64,5 +59,4 @@
 
         @await RenderSectionAsync("Scripts", required: false)
     </body>
-    </html>
-}
+</html>
