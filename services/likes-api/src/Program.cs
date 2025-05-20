@@ -40,5 +40,5 @@ app.MapDelete("/likes/{id}", async (int id, MongoDbContext db) =>
     var result = await db.Likes.DeleteOneAsync(l => l.Id == id);
     return result.DeletedCount > 0 ? Results.NoContent() : Results.NotFound();
 });
-
+app.Urls.Add("http://0.0.0.0:8088");
 app.Run();
