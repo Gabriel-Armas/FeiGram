@@ -11,8 +11,8 @@ services:
 
   likes-api:
     build:
-      context: ./services/likes-api/src/likes-api
-
+      context: ./services/likes-api/src
+      dockerfile: ../Dockerfile
     ports:
       - "8088:8088"
     environment:
