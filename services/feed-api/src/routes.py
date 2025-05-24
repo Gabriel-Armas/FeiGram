@@ -1,21 +1,8 @@
 from fastapi import APIRouter
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from db import db
+from recommender import get_recommendations as get_recommendations_logic
 
 router = APIRouter()
-
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
-
-client = AsyncIOMotorClient(MONGO_URI)
-db = client[MONGO_DB]
-
-@router.get("/")
-async def root():
-    return {"message": "¡Konnichiwa, Yael-kun! Feigram API está ready~ 💖"}
 
 @router.get("/posts")
 async def get_posts():
@@ -25,3 +12,7 @@ async def get_posts():
         post["_id"] = str(post["_id"])
         posts.append(post)
     return posts
+
+@router.get("/posts/recommendations")
+async def get_recommendations(user_id: str):
+    return await get_recommendations_logic(user_id, db)

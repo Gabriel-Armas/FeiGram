@@ -1,13 +1,16 @@
+# 🐍 Imagen base de Python
 FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8085
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8086"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8085 & python agent_recommendation_listener.py"]
