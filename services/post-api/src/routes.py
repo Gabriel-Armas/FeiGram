@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException
 from src.db import posts_collection, get_next_post_id
 from src.schemas import PostCreate
@@ -47,3 +48,23 @@ def delete_post(post_id: int):
         return {"message": f"Post with ID '{post_id}' deleted."}
     else:
         raise HTTPException(status_code=404, detail="Post not found")
+
+@router.get("/posts/recent")
+def get_recent_posts():
+    now = datetime.now(timezone.utc)
+    one_week_ago = now - timedelta(days=7)
+    
+    recent_posts = list(posts_collection.find({
+        "fechaPublicacion": {"$gte": one_week_ago}
+    }))
+
+    return [
+        {
+            "post_id": p["post_id"],
+            "id_usuario": p["id_usuario"],
+            "descripcion": p["descripcion"],
+            "url_media": p["url_media"],
+            "fechaPublicacion": p["fechaPublicacion"],
+        }
+        for p in recent_posts
+    ]
