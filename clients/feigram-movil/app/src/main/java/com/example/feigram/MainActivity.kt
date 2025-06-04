@@ -19,11 +19,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FeigramTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
+                    LoginScreen { email, password ->
+                        //API
+                        println("Login con: $email y $password")
+                    }
                 }
             }
         }
