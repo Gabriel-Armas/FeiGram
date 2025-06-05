@@ -16,9 +16,9 @@ public class ChartServiceImpl : ChartService.ChartServiceBase
         _mqClient = mqClient;
     }
 
-    public override Task<ChartResponse> GetWeeklyPostCounts(ChartRequest request, ServerCallContext context)
+    public override async Task<ChartResponse> GetWeeklyPostCounts(ChartRequest request, ServerCallContext context)
     {
-        var posts = _mqClient.RequestPostsForWeek(request.Week);
+        var posts = await _mqClient.RequestPostsForWeekAsync(request.Week);
 
         var dayCounts = posts
             .GroupBy(p => p.CreatedAt.Date)
@@ -31,6 +31,6 @@ public class ChartServiceImpl : ChartService.ChartServiceBase
         var response = new ChartResponse();
         response.Counts.AddRange(dayCounts);
 
-        return Task.FromResult(response);
+        return await Task.FromResult(response);
     }
 }
