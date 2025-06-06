@@ -1,82 +1,67 @@
-version: '3.8'
+version: '3.9'
 
 services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "15672:15672"
       - "5672:5672"
+      - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     networks:
-      - feigram-net
+      - backend
 
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    restart: always
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: unless-stopped
     ports:
       - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - feigram-net
-
-  authentication-api:
-    build:
-      context: ./services/authentication-api
-    ports:
-      - "8084:8084"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://0.0.0.0:8084
-      - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__Username=user
-      - RabbitMQ__Password=password
-      - RabbitMQ__VirtualHost=/
-    depends_on:
-      - mongodb
-      - rabbitmq
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: examplepassword
+    volumes:
+      - mongo-data:/data/db
     networks:
-      - feigram-net
+      - backend
 
-  profile-api:
+  chart-api:
+    platform: linux/amd64
     build:
-      context: ./services/profile-api
+      context: ./services/chart-api
+      dockerfile: Dockerfile
+    container_name: chart-api
+    depends_on:
+      - rabbitmq
+      - mongo
     ports:
       - "8081:8081"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=profiledb;Username=postgres;Password=admin123
+    networks:
+      - backend
+
+  posts-api:
+    build:
+      context: ./services/post-api
+      dockerfile: Dockerfile
+    container_name: post-api
     depends_on:
-      - postgres
-    networks:
-      - feigram-net
-
-  postgres:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_DB: profiledb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin123
+      - rabbitmq
+      - mongo
     ports:
-      - "5432:5432"
-    volumes:
-      - profile_data:/var/lib/postgresql/data
+      - "8000:8000"
     networks:
-      - feigram-net
-
-volumes:
-  rabbitmq_data:
-  mongo_data:
-  profile_data:
+      - backend
+    environment:
+      - MONGODB_URI=mongodb://root:examplepassword@mongo:27017
+      - MONGODB_DBNAME=feigram
+      - PYTHONUNBUFFERED=1
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
 
 networks:
-  feigram-net:
+  backend:
     driver: bridge
+
+volumes:
+  mongo-data:

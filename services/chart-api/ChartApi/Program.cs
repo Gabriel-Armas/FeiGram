@@ -7,11 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(IPAddress.Any, 8080);
+    /*
     options.Listen(IPAddress.Any, 8081, listenOptions =>
     {
         var certPath = Path.Combine(AppContext.BaseDirectory, "localhost.pfx");
         listenOptions.UseHttps(certPath, "miContrasenaSegura123");
     });
+    */
 });
 
 builder.Services.AddGrpc();
