@@ -1,18 +1,15 @@
-using app.ViewModel;
-using app.DTO;
-using System.Linq;
-using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using app.ViewModel;
+using app.DTO;
 
-namespace app.Pages.Profile
+namespace app.Pages.Feed
 {
-
-    public class ProfileModel : PageModel
+    public class FeedModel : PageModel
     {
-        public ProfileViewModel Profile { get; set; } = new ProfileViewModel();
+        public List<PostViewModel> Posts { get; set; } = new List<PostViewModel>();
 
-        public async Task<IActionResult> OnGetAsync()
+        public IActionResult OnGet()
         {
             var usuario_token = "123";
 
@@ -21,30 +18,21 @@ namespace app.Pages.Profile
                 return RedirectToPage("/Login");
             }
 
-            Profile = new ProfileViewModel
+            Posts = new List<PostViewModel>
             {
-                ProfilePictureUrl = "/images/DojaCat.jpg",
-                Username = "Yael Alfredo Salazar Aguilar",
-                Matricula = "S22013671",
-                Posts = new List<PostViewModel>
-            {
-                new PostViewModel { ImageUrl = "/images/logo-fei.png", Caption = "¡Mi primer post kawaii!" },
-                new PostViewModel { ImageUrl = "/images/post2.png", Caption = "Listo para el backend uwu~" },
-                new PostViewModel { ImageUrl = "/images/post3.png", Caption = "Progresando como un prota de shonen 💪" }
-            }
+                new PostViewModel
+                {
+                    ImageUrl = "/images/DojaCat.jpg",
+                    Caption = "¡Hoy cociné algo rico con Kirito! 😋🍳"
+                },
+                new PostViewModel
+                {
+                    ImageUrl = "/images/Perfil.jpg",
+                    Caption = "Miau"
+                }
             };
 
             return Page();
-        }
-
-
-        private List<PostViewModel> MapPosts(List<PostDTO> postDtos)
-        {
-            return postDtos.Select(p => new PostViewModel
-            {
-                ImageUrl = p.ImageUrl,
-                Caption = p.Caption
-            }).ToList();
         }
 
         public IActionResult OnGetPostModal(int postId)
@@ -67,7 +55,6 @@ namespace app.Pages.Profile
             return Partial("PostPartial", model);
         }
 
-        // Simulación de un método que obtiene un post por ID, en un caso real iría a la API
         private PostDTO GetPostById(int id)
         {
             return new PostDTO

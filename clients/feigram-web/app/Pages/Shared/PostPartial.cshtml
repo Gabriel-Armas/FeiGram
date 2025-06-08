@@ -17,11 +17,11 @@
           <h6>Comentarios:</h6>
           <div class="overflow-auto" style="max-height: 300px;">
             @for (int i = 1; i <= 20; i++)
-  {
-    <div class="mb-2">
-      <strong>Usuario kawaii @i:</strong> Este es el comentario número @i, ¡tan adorable como un Totoro! 🐾
-    </div>
-  }
+            {
+              <div class="mb-2">
+                <strong>Usuario kawaii @i:</strong> Este es el comentario número @i, ¡tan adorable como un Totoro! 🐾
+              </div>
+            }
           </div>
           <form method="post" asp-page-handler="Comment" class="mt-3">
             <input type="hidden" name="PostId" value="@Model.Id" />

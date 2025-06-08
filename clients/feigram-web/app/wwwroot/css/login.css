@@ -1,0 +1,54 @@
+html, body {
+  height: 100%;
+  background: linear-gradient(to right, #4cb33a, #211d84);
+}
+
+.btn-feigram {
+  background: linear-gradient(to right, #4cb33a, #211d84);
+  border: none;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-feigram:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  color: white;
+}
+
+.btn-feigram:focus,
+.btn-feigram:active {
+  background: linear-gradient(to right, #4cb33a, #211d84);
+  color: white;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
+
+.login-container {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.login-image {
+  background: url('/images/feigram_logo.png') no-repeat center;
+  background-size: 80%;
+  min-height: 300px;
+}
+
+.form-section {
+  padding: 3rem;
+}
+
+.form-floating input {
+  margin-bottom: 1rem;
+}
+
+.form-title {
+  color: #211d84;
+  font-weight: bold;
+}
