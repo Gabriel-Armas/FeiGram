@@ -1,4 +1,4 @@
-package com.example.feigram
+package com.example.feigram.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -13,10 +13,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.example.feigram.R
+import com.example.feigram.viewmodels.SessionViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginClick: (String, String) -> Unit
+    navController: NavHostController,
+    sessionViewModel: SessionViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -62,7 +66,12 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { onLoginClick(email, password) },
+            onClick = {
+                sessionViewModel.loginFake() // Establece el usuario actual (por ahora hardcoded)
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium
         ) {
