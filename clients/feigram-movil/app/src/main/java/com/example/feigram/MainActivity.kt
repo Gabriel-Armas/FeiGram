@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.navigation.compose.*
 import com.example.feigram.screens.HomeScreen
 import com.example.feigram.screens.LoginScreen
+import com.example.feigram.screens.NewPostScreen
 import com.example.feigram.screens.ProfileScreen
 import com.example.feigram.screens.SettingsScreen
 import com.example.feigram.ui.theme.FeigramTheme
@@ -41,6 +42,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("settings") {
                         SettingsScreen(navController, sessionViewModel)
+                    }
+                    composable("newpost") {
+                        NewPostScreen(navController = navController)
                     }
                 }
             }

@@ -1,5 +1,11 @@
 package com.example.feigram.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -118,6 +125,29 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                         }
                     }
                 )
+            },
+            floatingActionButton = {
+                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                val scale by infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 1.1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(800, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ), label = "scaleAnim"
+                )
+
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("newpost")
+                    },
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .scale(scale),
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Text("+", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+                }
             }
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize()) {
@@ -132,6 +162,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                             imageUrl = "https://res.cloudinary.com/demo/image/upload/sample.jpg",
                             description = "Publicación de ejemplo #$index",
                             comments = listOf("Comentario 1", "Comentario 2", "Comentario 3"),
+                            date = "07 jun 2025",
                             onCommentsClick = {
                                 currentComments = listOf(
                                     Comment("ana", "https://randomuser.me/api/portraits/women/1.jpg", "Comentario 1"),

@@ -19,12 +19,14 @@ fun PostItem(
     profileImageUrl: String,
     imageUrl: String,
     description: String,
+    date: String,
     comments: List<String>,
     onCommentsClick: () -> Unit
 ) {
     var isLiked by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -38,13 +40,19 @@ fun PostItem(
                     .size(40.dp)
                     .padding(end = 8.dp)
             )
-            Text(
-                text = username,
-                style = MaterialTheme.typography.labelLarge
-            )
+            Column {
+                Text(
+                    text = username,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = date,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
-        // Imagen de la publicación
         AsyncImage(
             model = imageUrl,
             contentDescription = "Imagen publicada",
@@ -64,9 +72,7 @@ fun PostItem(
                 Icon(
                     imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = if (isLiked) "Deshacer like" else "Dar like",
-                    tint = if (isLiked) {
-                        Color.Red
-                    } else LocalContentColor.current
+                    tint = if (isLiked) Color.Red else LocalContentColor.current
                 )
             }
 
