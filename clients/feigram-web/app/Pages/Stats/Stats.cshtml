@@ -1,0 +1,30 @@
+@page "/Stats"
+@model app.Pages.Stats.StatsModel
+@{
+    ViewData["Title"] = "Estadísticas";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold text-center mb-2 offset-md-5">Estadísticas semanales de publicaciones 📊</h2>
+    <h5 class="text-muted text-center mb-4 offset-md-5">@Model.Stats.WeekRange</h5>
+    <div class="row justify-content-center">
+        <div class="col-md-10 offset-md-6">
+            <div class="chart-container" style="position: relative; height: 500px;">
+                <canvas id="weeklyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/stats.js"></script>
+
+    <script>
+        const labels = @Html.Raw(Json.Serialize(Model.Stats.PostsPerDay.Keys));
+        const data = @Html.Raw(Json.Serialize(Model.Stats.PostsPerDay.Values));
+        renderWeeklyChart(labels, data);
+    </script>
+}

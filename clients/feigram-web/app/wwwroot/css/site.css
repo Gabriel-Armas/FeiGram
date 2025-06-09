@@ -2,11 +2,6 @@ html, body {
   background: white;
 }
 
-.dark-mode html, .dark-mode body {
-  background: #121212 !important;
-  color: #e0e0e0 !important;
-}
-
 .login-container {
   background-color: white;
   border-radius: 1rem;
@@ -14,19 +9,9 @@ html, body {
   overflow: hidden;
 }
 
-.dark-mode .login-container {
-  background-color: #1e1e1e !important;
-  color: #ffffff !important;
-}
-
 .form-section {
   padding: 3rem;
   background-color: white;
-}
-
-.dark-mode .form-section {
-  background-color: #1e1e1e !important;
-  color: #ffffff !important;
 }
 
 .form-title {
@@ -44,12 +29,6 @@ html, body {
   color: black;
 }
 
-.dark-mode .form-floating input {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-  border: 1px solid #444;
-}
-
 .login-image {
   background: url('/images/feigram_logo.png') no-repeat center;
   background-size: 80%;
@@ -57,6 +36,9 @@ html, body {
   background-color: white;
 }
 
-.dark-mode .login-image {
-  background-color: #1e1e1e !important;
+#weeklyChart {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
 }

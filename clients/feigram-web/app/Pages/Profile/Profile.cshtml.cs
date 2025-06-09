@@ -1,7 +1,5 @@
 using app.ViewModel;
 using app.DTO;
-using System.Linq;
-using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -28,9 +26,11 @@ namespace app.Pages.Profile
                 Matricula = "S22013671",
                 Posts = new List<PostViewModel>
             {
-                new PostViewModel { ImageUrl = "/images/logo-fei.png", Caption = "¡Mi primer post kawaii!" },
-                new PostViewModel { ImageUrl = "/images/post2.png", Caption = "Listo para el backend uwu~" },
-                new PostViewModel { ImageUrl = "/images/post3.png", Caption = "Progresando como un prota de shonen 💪" }
+                new PostViewModel { Id = 1, ImageUrl = "/images/logo-fei.png", Caption = "¡Mi primer post kawaii!" },
+                new PostViewModel { Id = 2, ImageUrl = "/images/post2.png", Caption = "Listo para el backend uwu~" },
+                new PostViewModel { Id = 3, ImageUrl = "/images/post3.png", Caption = "Progresando como un prota de shonen 💪" },
+                new PostViewModel { Id = 4, ImageUrl = "/images/post3.png", Caption = "Progresando como un prota de shonen 💪" },
+                new PostViewModel { Id = 5, ImageUrl = "/images/post3.png", Caption = "Progresando como un prota de shonen 💪" }
             }
             };
 
@@ -49,15 +49,20 @@ namespace app.Pages.Profile
 
         public IActionResult OnGetPostModal(int postId)
         {
-            var post = GetPostById(postId);
+            var postDto = GetPostById(postId); // Aquí simulas como si lo trajeras de la API
+
+            if (postDto == null)
+            {
+                return NotFound();
+            }
 
             var model = new PostPartialViewModel
             {
-                Id = post.Id,
-                ImageUrl = post.ImageUrl,
-                Caption = post.Caption,
-                Likes = post.Likes,
-                Comments = post.Comments.Select(c => new CommentViewModel
+                Id = postDto.Id,
+                ImageUrl = postDto.ImageUrl,
+                Caption = postDto.Caption,
+                Likes = postDto.Likes,
+                Comments = postDto.Comments.Select(c => new CommentViewModel
                 {
                     User = c.Author,
                     Text = c.Text
@@ -67,19 +72,18 @@ namespace app.Pages.Profile
             return Partial("PostPartial", model);
         }
 
-        // Simulación de un método que obtiene un post por ID, en un caso real iría a la API
         private PostDTO GetPostById(int id)
         {
             return new PostDTO
             {
                 Id = id,
-                ImageUrl = "/images/logo-fei.png",
-                Caption = "Post de prueba~ nyaa~ 💖",
-                Likes = 12,
+                ImageUrl = $"/images/post{id}.png",
+                Caption = $"Post número {id} ~✨",
+                Likes = id * 10,
                 Comments = new List<CommentDTO>
                 {
-                    new CommentDTO { Author = "Sakura", Text = "Kawaii~!" },
-                    new CommentDTO { Author = "Naruto", Text = "¡Dattebayo!" }
+                    new CommentDTO { Author = "Kokomi", Text = $"¡Comentario mágico para el post {id}!" },
+                    new CommentDTO { Author = "Zelda", Text = $"Sabio consejo para el héroe del post {id}~" }
                 }
             };
         }
