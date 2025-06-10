@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from routes import router
-# import threading
+from contextlib import asynccontextmanager
+from rabbit_consumer import start_consumer_thread
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🌸 Iniciando Feigram... levantando consumidor de likes~")
+    start_consumer_thread()
+    
+    yield
+
+    print("🌙 Apagando Feigram... ¡nos vemos en la próxima temporada~!")
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(router)
-
-# def run_listener():
-#     from agent_recommendation_listener import start_agent_listener
-#     start_agent_listener()
-
-# threading.Thread(target=run_listener, daemon=True).start()

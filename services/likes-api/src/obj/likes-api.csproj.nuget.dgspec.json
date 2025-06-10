@@ -1,39 +1,36 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\juant\\Desktop\\feigram\\services\\likes-api\\src\\likes-api\\likes-api.csproj": {}
+    "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\likes-api\\src\\likes-api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\juant\\Desktop\\feigram\\services\\likes-api\\src\\likes-api\\likes-api.csproj": {
+    "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\likes-api\\src\\likes-api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\juant\\Desktop\\feigram\\services\\likes-api\\src\\likes-api\\likes-api.csproj",
+        "projectUniqueName": "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\likes-api\\src\\likes-api.csproj",
         "projectName": "likes-api",
-        "projectPath": "C:\\Users\\juant\\Desktop\\feigram\\services\\likes-api\\src\\likes-api\\likes-api.csproj",
-        "packagesPath": "C:\\Users\\juant\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\juant\\Desktop\\feigram\\services\\likes-api\\src\\likes-api\\obj\\",
+        "projectPath": "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\likes-api\\src\\likes-api.csproj",
+        "packagesPath": "C:\\Users\\yaela\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\likes-api\\src\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files\\DevExpress 23.1\\Components\\Offline Packages",
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\juant\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.1.config",
+          "C:\\Users\\yaela\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net9.0"
+          "net8.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\DevExpress 23.1\\Components\\System\\Components\\Packages": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net9.0": {
-            "targetAlias": "net9.0",
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {}
           }
         },
@@ -47,23 +44,23 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
-              "target": "Package",
-              "version": "[9.0.1, )"
-            },
             "MongoDB.Driver": {
               "target": "Package",
-              "version": "[3.4.0, )"
+              "version": "[2.19.0, )"
+            },
+            "RabbitMQ.Client": {
+              "target": "Package",
+              "version": "[6.7.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[8.1.1, )"
+              "version": "[6.5.0, )"
             }
           },
           "imports": [
@@ -85,7 +82,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

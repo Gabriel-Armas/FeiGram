@@ -1,17 +1,20 @@
-# Etapa de compilación
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-COPY likes-api.csproj ./
+COPY src/*.csproj ./src/
+
+WORKDIR /app/src
 RUN dotnet restore
 
-COPY . ./
-RUN dotnet publish -c Release -o out
+WORKDIR /app
+COPY . .
 
-# Etapa de ejecución
+WORKDIR /app/src
+RUN dotnet publish -c Release -o /app/out
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/out .
 
-EXPOSE 8088
+EXPOSE 8082
 ENTRYPOINT ["dotnet", "likes-api.dll"]

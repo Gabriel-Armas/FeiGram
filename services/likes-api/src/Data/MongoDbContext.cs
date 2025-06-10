@@ -9,7 +9,9 @@ public class MongoDbContext
 
     public MongoDbContext(IConfiguration configuration)
     {
-        var client = new MongoClient(configuration.GetConnectionString("MongoDb"));
+        var mongoUri = configuration["MONGODB_URI"];
+        var client = new MongoClient(mongoUri);
+
         _database = client.GetDatabase("feigram-likes");
     }
 
