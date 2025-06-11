@@ -133,3 +133,17 @@
 /Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/obj/Debug/net9.0/profile-api.pdb
 /Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/obj/Debug/net9.0/profile-api.genruntimeconfig.cache
 /Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/obj/Debug/net9.0/ref/profile-api.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/publish/web.config
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/publish/appsettings.Development.json
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/publish/appsettings.json
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/publish/profile-api.deps.json
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/publish/profile-api.runtimeconfig.json
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/publish/profile-api.staticwebassets.endpoints.json
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.IdentityModel.Logging.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
+/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/profile-api/src/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll

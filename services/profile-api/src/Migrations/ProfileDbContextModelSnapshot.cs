@@ -22,22 +22,10 @@ namespace profileapi.Migrations
 
             modelBuilder.Entity("Profile", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
+                    b.Property<string>("Id")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Nickname")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
                     b.Property<string>("Photo")
