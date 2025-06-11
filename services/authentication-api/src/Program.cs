@@ -147,11 +147,24 @@ using System.Text;
         var update = Builders<User>.Update.Set(u => u.Password, hashedPassword);
         await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
 
-        // Opcional: borrar o invalidar el token
         await dbContext.PasswordResetRequests.DeleteOneAsync(r => r.Id == resetRequest.Id);
 
         return Results.Ok("Password reset successfully");
     });
+
+    app.MapPost("/ban-user", async (BanUserRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+
+        if (user is null)
+            return Results.NotFound("User not found");
+
+        var update = Builders<User>.Update.Set(u => u.Role, "Banned");
+        await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
+
+        return Results.Ok($"User {user.Username} has been banned");
+    });
+
 
 app.Run();
 
@@ -159,3 +172,4 @@ app.Run();
     record LoginRequest(string Email, string Password);
     record ForgotPasswordRequest(string Email);
     record ResetPasswordRequest(string Token, string NewPassword);
+    record BanUserRequest(string Email);
