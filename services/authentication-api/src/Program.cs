@@ -41,7 +41,7 @@
     });
 
     builder.Services.AddAuthorization();
-    builder.Services.AddHostedService<RabbitMqConsumer>();
+    //builder.Services.AddHostedService<RabbitMqConsumer>();
 
     var app = builder.Build();
     app.UseAuthentication();
@@ -104,7 +104,7 @@
     .Produces(StatusCodes.Status400BadRequest);
 
 
-    app.Run();
+app.Run();
 
     record RegisterRequest(string Username, string Password, string Email);
     record LoginRequest(string Email, string Password);
