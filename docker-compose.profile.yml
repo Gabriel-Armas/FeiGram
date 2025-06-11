@@ -10,8 +10,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=profiledb;Username=postgres;Password=admin123
+      - RabbitMQ__HostName=rabbitmq  # si usas variables para configurar conexión RabbitMQ
     depends_on:
       - postgres
+      - rabbitmq
 
   postgres:
     image: postgres:15
@@ -24,6 +26,13 @@ services:
       - "5432:5432"
     volumes:
       - profile_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
 
 volumes:
   profile_data:

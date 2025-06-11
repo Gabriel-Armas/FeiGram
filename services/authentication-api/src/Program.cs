@@ -6,8 +6,9 @@ using AuthenticationApi.Repositories;
 using AuthenticationApi.Data;
 using MongoDB.Driver;
 using System.Text;
+using src.Events.Publishers;
 
-    var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
     var configuration = builder.Configuration;
 
@@ -15,6 +16,7 @@ using System.Text;
     builder.Services.AddSingleton<UserRepository>();
     builder.Services.AddSingleton<AuthService>();
     builder.Services.AddSingleton<EmailService>();
+    builder.Services.AddSingleton<RabbitMqPublisher>();
 
     builder.Services.AddSingleton<AuthenticationDbContext>(serviceProvider =>
     {
@@ -42,7 +44,6 @@ using System.Text;
     });
 
     builder.Services.AddAuthorization();
-    //builder.Services.AddHostedService<RabbitMqConsumer>();
 
     var app = builder.Build();
     app.UseAuthentication();
@@ -64,7 +65,11 @@ using System.Text;
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status401Unauthorized);
 
-    app.MapPost("/register", async (HttpContext context, IConfiguration config, AuthenticationDbContext dbContext) =>
+    app.MapPost("/register", async (
+        HttpContext context,
+        IConfiguration config,
+        AuthenticationDbContext dbContext,
+        RabbitMqPublisher publisher) =>
     {
         var request = await context.Request.ReadFromJsonAsync<RegisterRequest>();
 
@@ -93,16 +98,24 @@ using System.Text;
         try
         {
             dbContext.Users.InsertOne(user);
+
+            var message = new CreateProfileMessage
+            {
+                UserId = user.Id,            
+                Name = user.Username,         
+                Photo = request.Photo,                   
+                Sex = request.Sex                      
+            };
+
+            publisher.Publish(message);
+
             return Results.Ok(new { message = "User registered successfully" });
         }
         catch (Exception ex)
         {
             return Results.StatusCode(500);
         }
-    })
-    .Produces<RegisterRequest>()
-    .Produces(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status400BadRequest);
+    });
 
     app.MapPost("/forgot-password", async (ForgotPasswordRequest request, AuthenticationDbContext dbContext, EmailService emailService) =>
     {
@@ -168,7 +181,7 @@ using System.Text;
 
 app.Run();
 
-    record RegisterRequest(string Username, string Password, string Email);
+    record RegisterRequest(string Username, string Password, string Email, string Photo, string Sex);
     record LoginRequest(string Email, string Password);
     record ForgotPasswordRequest(string Email);
     record ResetPasswordRequest(string Token, string NewPassword);

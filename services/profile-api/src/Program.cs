@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
+using src.Rabbit;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -11,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ProfileDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHostedService<RabbitMqConsumer>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -94,20 +97,8 @@ app.MapGet("/profiles/{id}", [Authorize] async (HttpContext httpContext, string 
     }
 });
 
-app.MapPost("/profiles", [Authorize] async (HttpContext httpContext, Profile profile, ProfileDbContext db) =>
+app.MapPost("/profiles", async (Profile profile, ProfileDbContext db) =>
 {
-    var user = httpContext.User;
-
-    foreach (var claim in user.Claims)
-    {
-        Console.WriteLine($"[PROFILE-API] Claim: {claim.Type} = {claim.Value}");
-    }
-
-    var role = user.FindFirst(roleClaimType)?.Value;
-    Console.WriteLine($"[PROFILE-API] Rol recibido en token JWT: {role}");
-
-    if (role != "Admin") return Results.Forbid();
-
     try
     {
         db.Profiles.Add(profile);
@@ -119,6 +110,7 @@ app.MapPost("/profiles", [Authorize] async (HttpContext httpContext, Profile pro
         return Results.Problem("Error al crear el perfil: " + ex.Message);
     }
 });
+
 
 app.MapPut("/profiles/{id}", [Authorize] async (HttpContext httpContext, string id, Profile updatedProfile, ProfileDbContext db) =>
 {
