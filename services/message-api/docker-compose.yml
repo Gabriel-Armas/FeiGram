@@ -7,9 +7,9 @@ services:
       - "8000:8000"
     environment:
       - MONGO_URL=mongodb://mongo:27017
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ISSUER=${JWT_ISSUER}
-      - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_SECRET_KEY=V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5
+      - JWT_ISSUER=authentication-api
+      - JWT_AUDIENCE=FeigramClient
     depends_on:
       - mongo
 
