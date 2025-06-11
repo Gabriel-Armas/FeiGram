@@ -1,16 +1,1 @@
-# 🐍 Imagen base de Python
-FROM python:3.12-slim
-
-WORKDIR /app
-
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY ./src .
-
-EXPOSE 8085
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8085"]
+FROM node:18\nWORKDIR /app\nCOPY . .\nRUN npm install\nCMD ["npm", "start"]
