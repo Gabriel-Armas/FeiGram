@@ -16,5 +16,9 @@ namespace AuthenticationApi.Data
 
         public IMongoCollection<User> Users =>
             _database.GetCollection<User>("Users");
+
+        public IMongoCollection<PasswordResetRequest> PasswordResetRequests =>
+           _database.GetCollection<PasswordResetRequest>("PasswordResetRequests");
+
     }
 }
