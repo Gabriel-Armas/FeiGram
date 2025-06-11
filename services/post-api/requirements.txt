@@ -5,4 +5,5 @@ python-dotenv
 pydantic
 cloudinary
 python-multipart
+python-jose
 pika
