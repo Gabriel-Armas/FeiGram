@@ -1,11 +1,11 @@
-    using Microsoft.AspNetCore.Authentication.JwtBearer;
-    using Microsoft.IdentityModel.Tokens;
-    using AuthenticationApi.Models;
-    using AuthenticationApi.Services;
-    using AuthenticationApi.Repositories;
-    using AuthenticationApi.Data;
-    using MongoDB.Driver;
-    using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using AuthenticationApi.Models;
+using AuthenticationApi.Services;
+using AuthenticationApi.Repositories;
+using AuthenticationApi.Data;
+using MongoDB.Driver;
+using System.Text;
 
     var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +14,7 @@
     builder.Services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
     builder.Services.AddSingleton<UserRepository>();
     builder.Services.AddSingleton<AuthService>();
+    builder.Services.AddSingleton<EmailService>();
 
     builder.Services.AddSingleton<AuthenticationDbContext>(serviceProvider =>
     {
@@ -41,7 +42,7 @@
     });
 
     builder.Services.AddAuthorization();
-    builder.Services.AddHostedService<RabbitMqConsumer>();
+    //builder.Services.AddHostedService<RabbitMqConsumer>();
 
     var app = builder.Build();
     app.UseAuthentication();
@@ -103,8 +104,72 @@
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status400BadRequest);
 
+    app.MapPost("/forgot-password", async (ForgotPasswordRequest request, AuthenticationDbContext dbContext, EmailService emailService) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+        if (user is null)
+            return Results.Ok("If the email exists, a reset link will be sent~");
 
-    app.Run();
+        var token = Guid.NewGuid().ToString();
+        var expiration = DateTime.UtcNow.AddMinutes(15);
+
+        var resetRequest = new PasswordResetRequest
+        {
+            Email = request.Email,
+            Token = token,
+            Expiration = expiration
+        };
+
+        await dbContext.PasswordResetRequests.InsertOneAsync(resetRequest);
+
+        var resetUrl = $"http://localhost:8088/ResetPassword?token={token}";
+
+        await emailService.SendResetPasswordEmail(request.Email, resetUrl);
+
+        return Results.Ok("if the email exists, a reset link will be sent~");
+    });
+
+    app.MapPost("/reset-password", async (ResetPasswordRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var resetRequest = await dbContext.PasswordResetRequests
+            .Find(r => r.Token == request.Token && r.Expiration > DateTime.UtcNow)
+            .FirstOrDefaultAsync();
+
+        if (resetRequest == null)
+            return Results.BadRequest("Invalid or expired reset token");
+
+        var user = await dbContext.Users.Find(u => u.Email == resetRequest.Email).FirstOrDefaultAsync();
+        if (user == null)
+            return Results.BadRequest("User not found");
+
+        var hashedPassword = PasswordService.HashPassword(request.NewPassword);
+
+        var update = Builders<User>.Update.Set(u => u.Password, hashedPassword);
+        await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
+
+        await dbContext.PasswordResetRequests.DeleteOneAsync(r => r.Id == resetRequest.Id);
+
+        return Results.Ok("Password reset successfully");
+    });
+
+    app.MapPost("/ban-user", async (BanUserRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+
+        if (user is null)
+            return Results.NotFound("User not found");
+
+        var update = Builders<User>.Update.Set(u => u.Role, "Banned");
+        await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
+
+        return Results.Ok($"User {user.Username} has been banned");
+    });
+
+
+app.Run();
 
     record RegisterRequest(string Username, string Password, string Email);
     record LoginRequest(string Email, string Password);
+    record ForgotPasswordRequest(string Email);
+    record ResetPasswordRequest(string Token, string NewPassword);
+    record BanUserRequest(string Email);

@@ -44,3 +44,4 @@ C:\Users\yaela\Desktop\Universidad\Semestres\Sexto\Red\Feigram\FeiGram\services\
 C:\Users\yaela\Desktop\Universidad\Semestres\Sexto\Red\Feigram\FeiGram\services\authentication-api\src\obj\Debug\net9.0\src.pdb
 C:\Users\yaela\Desktop\Universidad\Semestres\Sexto\Red\Feigram\FeiGram\services\authentication-api\src\obj\Debug\net9.0\src.genruntimeconfig.cache
 C:\Users\yaela\Desktop\Universidad\Semestres\Sexto\Red\Feigram\FeiGram\services\authentication-api\src\obj\Debug\net9.0\ref\src.dll
+C:\Users\yaela\Desktop\Universidad\Semestres\Sexto\Red\Feigram\FeiGram\services\authentication-api\src\bin\Debug\net9.0\RabbitMQ.Client.dll
