@@ -1,12 +1,7 @@
 from fastapi import FastAPI
-from routes import router
-# import threading
+from src.rabbit_consumer import start_feed_consumer_thread
+from src.routes import router
 
-app = FastAPI()
+app = FastAPI(title="Feed API")
+start_feed_consumer_thread()
 app.include_router(router)
-
-# def run_listener():
-#     from agent_recommendation_listener import start_agent_listener
-#     start_agent_listener()
-
-# threading.Thread(target=run_listener, daemon=True).start()

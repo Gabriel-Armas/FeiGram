@@ -14,5 +14,5 @@ async def get_posts():
     return posts
 
 @router.get("/posts/recommendations")
-async def get_recommendations(user_id: str):
-    return await get_recommendations_logic(user_id, db)
+async def get_recommendations(user_id: str, skip: int = 0, limit: int = 10):
+    return await get_recommendations_logic(user_id, db, skip, limit)
