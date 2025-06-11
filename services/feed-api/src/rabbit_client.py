@@ -56,5 +56,3 @@ async def request_followed_users_by_user(user_id: str):
 async def request_posts_from_post_service(skip: int = 0, limit: int = 30):
     response = await call_rpc('feed-post-requests', {'skip': skip, 'limit': limit})
     return response.get('posts', [])
-
-# ¡No olvides llamar setup_rabbitmq() cuando inicies el microservicio!
