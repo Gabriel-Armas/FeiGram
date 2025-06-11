@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-COPY comments-api.csproj ./
+COPY commentsapi.csproj ./
 RUN dotnet restore
 
 COPY . ./
@@ -14,4 +14,4 @@ WORKDIR /app
 COPY --from=build /app/out .
 
 EXPOSE 8088
-ENTRYPOINT ["dotnet", "comments-api.dll"]
+ENTRYPOINT ["dotnet", "commentsapi.dll"]
