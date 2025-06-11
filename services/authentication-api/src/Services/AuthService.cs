@@ -38,9 +38,9 @@ namespace AuthenticationApi.Services
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("sub", user.Id),
+                new Claim("name", user.Username),
+                new Claim("role", user.Role),
             };
 
             var secretKey = _configuration["Jwt:SecretKey"];

@@ -1,5 +1,6 @@
 services:
   authentication-api:
+    platform: linux/amd64
     build:
       context: ./services/authentication-api
     ports:
