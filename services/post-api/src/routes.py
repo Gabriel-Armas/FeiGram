@@ -4,6 +4,8 @@ from src.db import posts_collection, get_next_post_id
 from src.schemas import PostCreate
 from bson.objectid import ObjectId
 from src.auth import get_current_user
+from src.CommentCountRpcClient import CommentCountRpcClient 
+
 
 router = APIRouter()
 
@@ -61,7 +63,7 @@ def delete_post(post_id: int, user_id: str = Depends(get_current_user)):
 
 
 @router.get("/posts/recent")
-def get_recent_posts(user_id: str = Depends(get_current_user)):  # protegida
+def get_recent_posts(user_id: str = Depends(get_current_user)):
     now = datetime.now(timezone.utc)
     one_week_ago = now - timedelta(days=7)
 
@@ -69,13 +71,21 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):  # protegida
         "fechaPublicacion": {"$gte": one_week_ago}
     }))
 
-    return [
-        {
-            "post_id": p["post_id"],
-            "id_usuario": p["id_usuario"],
-            "descripcion": p["descripcion"],
-            "url_media": p["url_media"],
-            "fechaPublicacion": p["fechaPublicacion"],
-        }
-        for p in recent_posts
-    ]
+    rpc = CommentCountRpcClient()
+
+    result = []
+    for post in recent_posts:
+        # Llamada RPC para contar los comentarios
+        response = rpc.get_comment_count(str(post["post_id"]))
+        count = response.get("count", 0)
+
+        result.append({
+            "post_id": post["post_id"],
+            "id_usuario": post["id_usuario"],
+            "descripcion": post["descripcion"],
+            "url_media": post["url_media"],
+            "fechaPublicacion": post["fechaPublicacion"],
+            "comentarios": count  # 👍 número de comentarios
+        })
+
+    return result

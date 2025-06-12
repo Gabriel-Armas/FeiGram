@@ -2,6 +2,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace CommentsApi.Models;
 
+[BsonIgnoreExtraElements]
 public class Comment
 {
     public int CommentId { get; set; }
