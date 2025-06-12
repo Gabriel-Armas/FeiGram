@@ -59,6 +59,22 @@ services:
       - PYTHONUNBUFFERED=1
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000
 
+  comments-api:
+    build:
+      context: ./services/comments-api/src
+      dockerfile: ../Dockerfile
+    container_name: comments-api
+    depends_on:
+      - rabbitmq
+      - mongo
+    ports:
+      - "8088:8088"
+    networks:
+      - backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      MongoDb__ConnectionString: mongodb://root:examplepassword@mongo:27017
+
 networks:
   backend:
     driver: bridge

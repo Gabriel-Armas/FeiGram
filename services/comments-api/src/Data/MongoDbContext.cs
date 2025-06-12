@@ -5,16 +5,17 @@ namespace CommentsApi.Data;
 
 public class MongoDbContext
 {
-    private readonly IMongoDatabase _database;
+private readonly IMongoDatabase _database;
+    public IMongoCollection<Comment> Comments { get; }
+    public IMongoCollection<Counter> Counters { get; }
 
-    public MongoDbContext(IConfiguration configuration)
+    public MongoDbContext(string connectionString)
     {
-        var client = new MongoClient(configuration.GetConnectionString("MongoDb"));
-        _database = client.GetDatabase("feigram-comments");
+        var client = new MongoClient(connectionString);
+        _database = client.GetDatabase("feigram");
+        Comments = _database.GetCollection<Comment>("comments");
+        Counters = _database.GetCollection<Counter>("counters");
     }
-
-    public IMongoCollection<Comment> Comments => _database.GetCollection<Comment>("comments");
-    public IMongoCollection<Counter> Counters => _database.GetCollection<Counter>("counters");
 
     public async Task<int> GetNextSequenceValue(string sequenceName)
     {

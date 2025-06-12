@@ -4,7 +4,10 @@ using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<MongoDbContext>();
+var mongoConnectionString = builder.Configuration["MongoDb:ConnectionString"]
+    ?? throw new Exception("MongoDb__ConnectionString is not configured");
+
+builder.Services.AddSingleton<MongoDbContext>(sp => new MongoDbContext(mongoConnectionString));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
