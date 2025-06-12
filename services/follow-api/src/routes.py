@@ -65,3 +65,15 @@ def delete_user(user_id: str):
         return {"message": f"User with ID '{user_id}' and all follow relationships deleted."}
     except Neo4jError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.delete("/unfollow/{follower}/{followed}")
+def unfollow_user(follower: str, followed: str):
+    try:
+        with driver.session() as session:
+            session.run("""
+                MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
+                DELETE r
+            """, from_user=follower, to_user=followed)
+        return {"message": f"{follower} has unfollowed {followed}"}
+    except Neo4jError as e:
+        raise HTTPException(status_code=500, detail=str(e))
