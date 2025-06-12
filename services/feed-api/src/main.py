@@ -1,10 +1,12 @@
 from fastapi import FastAPI
-from src.rabbit_consumer import start_feed_consumer_thread
-from src.routes import router
-from src.rabbit_client import setup_rabbitmq
+from contextlib import asynccontextmanager
+from src.rabbit_client import init_rabbitmq
+from src.routes import router as likes_router
 
-app = FastAPI(title="Feed API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_rabbitmq()
+    yield
 
-setup_rabbitmq()
-start_feed_consumer_thread()
-app.include_router(router)
+app = FastAPI(lifespan=lifespan)
+app.include_router(likes_router)

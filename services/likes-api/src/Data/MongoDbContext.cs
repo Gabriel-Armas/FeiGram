@@ -9,8 +9,11 @@ public class MongoDbContext
 
     public MongoDbContext(IConfiguration configuration)
     {
-        var client = new MongoClient(configuration.GetConnectionString("MongoDb"));
-        _database = client.GetDatabase("feigram-likes");
+        var connectionString = configuration["MONGODB_URI"];
+        var dbName = configuration["MONGODB_DBNAME"];
+
+        var client = new MongoClient(connectionString);
+        _database = client.GetDatabase(dbName);
     }
 
     public IMongoCollection<Like> Likes => _database.GetCollection<Like>("likes");

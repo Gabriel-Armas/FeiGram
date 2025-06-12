@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -58,6 +56,42 @@ services:
       - MONGODB_DBNAME=feigram
       - PYTHONUNBUFFERED=1
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+
+  likes-api:
+    build:
+      context: ./services/likes-api
+      dockerfile: Dockerfile
+    container_name: likes-api
+    depends_on:
+      - rabbitmq
+      - mongo
+    ports:
+      - "8082:8082"
+    networks:
+      - backend
+    environment:
+      - MONGODB_URI=mongodb://root:examplepassword@mongo:27017
+      - MONGODB_DBNAME=feigram
+
+  feed-api:
+    build:
+      context: ./services/feed-api
+      dockerfile: Dockerfile
+    container_name: feed-api
+    depends_on:
+      - rabbitmq
+      - mongo
+      - likes-api
+      - posts-api
+    ports:
+      - "8085:8085"
+    networks:
+      - backend
+    environment:
+      - MONGODB_URI=mongodb://root:examplepassword@mongo:27017
+      - MONGODB_DBNAME=feigram
+      - PYTHONUNBUFFERED=1
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8085
 
 networks:
   backend:

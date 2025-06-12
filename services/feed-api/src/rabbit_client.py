@@ -1,58 +1,71 @@
-import pika
-import json
+import aio_pika
 import uuid
 import asyncio
-import threading
+import json
 
-_connection = None
-_channel = None
-_callback_queue = None
-_responses = {}
-_lock = threading.Lock()
+class RabbitMQClient:
+    def __init__(self, loop, amqp_url: str, request_queue: str):
+        self.loop = loop
+        self.amqp_url = amqp_url
+        self.request_queue = request_queue
+        self.connection = None
+        self.channel = None
+        self.callback_queue = None
+        self.response_futures = {}
 
-def setup_rabbitmq(host='rabbitmq'):
-    global _connection, _channel, _callback_queue
-    _connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
-    _channel = _connection.channel()
-    result = _channel.queue_declare(queue='', exclusive=True)
-    _callback_queue = result.method.queue
-    _channel.basic_consume(queue=_callback_queue, on_message_callback=_on_response, auto_ack=True)
-    threading.Thread(target=_channel.start_consuming, daemon=True).start()
+    async def connect(self):
+        print("Conectando a RabbitMQ de forma asíncrona~")
+        self.connection = await aio_pika.connect_robust(self.amqp_url, loop=self.loop)
+        self.channel = await self.connection.channel()
 
-def _on_response(ch, method, props, body):
-    with _lock:
-        _responses[props.correlation_id] = body
+        self.callback_queue = await self.channel.declare_queue(exclusive=True)
 
-async def call_rpc(queue_name: str, message: dict):
-    correlation_id = str(uuid.uuid4())
-    with _lock:
-        _responses[correlation_id] = None
+        await self.callback_queue.consume(self._on_response)
+        print("¡Conectado a RabbitMQ correctamente~!")
 
-    _channel.basic_publish(
-        exchange='',
-        routing_key=queue_name,
-        properties=pika.BasicProperties(
-            reply_to=_callback_queue,
-            correlation_id=correlation_id
-        ),
-        body=json.dumps(message)
-    )
+    async def _on_response(self, message: aio_pika.IncomingMessage):
+        async with message.process():
+            correlation_id = message.correlation_id
+            if correlation_id in self.response_futures:
+                future = self.response_futures.pop(correlation_id)
+                future.set_result(message.body)
 
-    while True:
-        await asyncio.sleep(0.01)
-        with _lock:
-            if _responses[correlation_id] is not None:
-                response_body = _responses.pop(correlation_id)
-                return json.loads(response_body)
+    async def call_rpc(self, payload: dict) -> dict:
+        correlation_id = str(uuid.uuid4())
+        future = self.loop.create_future()
+        self.response_futures[correlation_id] = future
+
+        message = aio_pika.Message(
+            body=json.dumps(payload).encode(),
+            correlation_id=correlation_id,
+            reply_to=self.callback_queue.name
+        )
+
+        await self.channel.default_exchange.publish(
+            message,
+            routing_key=self.request_queue
+        )
+
+        response = await future
+        return json.loads(response)
+
+rabbitmq_client: RabbitMQClient = None
 
 async def request_likes_by_user(user_id: str):
-    response = await call_rpc('likes-requests', {'user_id': user_id})
-    return response.get('liked_post_ids', [])
+    payload = {"action": "get_likes_by_user", "user_id": user_id}
+    return await rabbitmq_client.call_rpc(payload)
 
 async def request_followed_users_by_user(user_id: str):
-    response = await call_rpc('follow-requests', {'user_id': user_id})
-    return response.get('followed_user_ids', [])
+    payload = {"action": "get_follows_by_user", "user_id": user_id}
+    return await rabbitmq_client.call_rpc(payload)
 
-async def request_posts_from_post_service(skip: int = 0, limit: int = 30):
-    response = await call_rpc('feed-post-requests', {'skip': skip, 'limit': limit})
-    return response.get('posts', [])
+async def request_posts_from_post_service(skip: int = 0, limit: int = 10):
+    payload = {"action": "get_posts", "skip": skip, "limit": limit}
+    return await rabbitmq_client.call_rpc(payload)
+
+
+async def init_rabbitmq():
+    global rabbitmq_client
+    loop = asyncio.get_event_loop()
+    rabbitmq_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "likes_queue")
+    await rabbitmq_client.connect()

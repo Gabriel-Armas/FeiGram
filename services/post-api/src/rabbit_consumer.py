@@ -53,6 +53,6 @@ def consume():
     print("Escuchando solicitudes RabbitMQ...")
     channel.start_consuming()
 
-def start_consumer_in_thread():
+def start_feed_consumer_thread():
     thread = threading.Thread(target=consume, daemon=True)
     thread.start()
