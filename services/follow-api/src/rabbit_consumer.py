@@ -73,6 +73,31 @@ def handle_get_following_profiles(ch, method, props, body):
     )
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
+def handle_feed_following_request(ch, method, props, body):
+    request = json.loads(body.decode())
+    user_id = request.get("user_id")
+
+    with driver.session() as session:
+        result = session.run("""
+            MATCH (p:User {id: $id})-[:FOLLOWS]->(f:User)
+            RETURN f.id AS id
+        """, {"id": user_id})
+
+        following = [record["id"] for record in result]
+
+    response = json.dumps({
+        "followed_user_ids": following
+    })
+
+    ch.basic_publish(
+        exchange='',
+        routing_key=props.reply_to,
+        properties=pika.BasicProperties(correlation_id=props.correlation_id),
+        body=response
+    )
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+
+
 def consume():
     connection = None
     while not connection:
@@ -87,6 +112,7 @@ def consume():
 
     channel.queue_declare(queue='get-followers-count')
     channel.queue_declare(queue='get-following-profiles')
+    channel.queue_declare(queue='get-followers-feed-queue')
 
     channel.queue_declare(queue='create-follow-user-queue')
 
@@ -94,6 +120,7 @@ def consume():
 
     channel.basic_consume(queue='get-followers-count', on_message_callback=handle_get_followers_count)
     channel.basic_consume(queue='get-following-profiles', on_message_callback=handle_get_following_profiles)
+    channel.basic_consume(queue='get-followers-feed-queue', on_message_callback=handle_feed_following_request)
 
     channel.basic_consume(queue='create-follow-user-queue', on_message_callback=handle_create_user_event)
 
