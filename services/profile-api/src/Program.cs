@@ -17,6 +17,15 @@ builder.Services.AddDbContext<ProfileDbContext>(options =>
 builder.Services.AddHostedService<RabbitMqConsumer>();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 builder.Services.AddSingleton<FollowService>();
+builder.Services.AddSingleton(provider =>
+{
+    var config = builder.Configuration;
+    return new CloudinaryDotNet.Cloudinary(new CloudinaryDotNet.Account(
+        config["Cloudinary:CloudName"],
+        config["Cloudinary:ApiKey"],
+        config["Cloudinary:ApiSecret"]
+    ));
+});
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -153,8 +162,11 @@ app.MapPost("/profiles", async (Profile profile, ProfileDbContext db) =>
     }
 });
 
-
-app.MapPut("/profiles/{id}", [Authorize] async (HttpContext httpContext, string id, Profile updatedProfile, ProfileDbContext db) =>
+app.MapPut("/profiles/{id}", [Authorize] async (
+    HttpContext httpContext,
+    string id,
+    ProfileDbContext db,
+    CloudinaryDotNet.Cloudinary cloudinary) =>
 {
     var user = httpContext.User;
     var role = user.FindFirst(roleClaimType)?.Value;
@@ -163,6 +175,12 @@ app.MapPut("/profiles/{id}", [Authorize] async (HttpContext httpContext, string 
     if (role is null || sub is null)
         return Results.Forbid();
 
+    var form = await httpContext.Request.ReadFormAsync();
+
+    var name = form["Name"].ToString();
+    var sex = form["Sex"].ToString();
+    var photoFile = form.Files.GetFile("Photo");
+
     try
     {
         var profile = await db.Profiles.FindAsync(id);
@@ -170,9 +188,30 @@ app.MapPut("/profiles/{id}", [Authorize] async (HttpContext httpContext, string 
 
         if (role == "Admin" || (role == "User" && id == sub))
         {
-            profile.Name = updatedProfile.Name;
-            profile.Photo = updatedProfile.Photo;
-            profile.Sex = updatedProfile.Sex;
+            if (!string.IsNullOrEmpty(name))
+                profile.Name = name;
+
+            if (!string.IsNullOrEmpty(sex))
+                profile.Sex = sex;
+
+            if (photoFile != null)
+            {
+                using var stream = photoFile.OpenReadStream();
+                var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
+                {
+                    File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+                };
+                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    profile.Photo = uploadResult.SecureUrl.ToString();
+                }
+                else
+                {
+                    return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
+                }
+            }
 
             await db.SaveChangesAsync();
             return Results.NoContent();

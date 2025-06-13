@@ -17,6 +17,11 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddSingleton<AuthService>();
     builder.Services.AddSingleton<EmailService>();
     builder.Services.AddSingleton<RabbitMqPublisher>();
+    builder.Services.AddSingleton(provider => new CloudinaryDotNet.Cloudinary(new CloudinaryDotNet.Account(
+    configuration["Cloudinary:CloudName"],
+    configuration["Cloudinary:ApiKey"],
+    configuration["Cloudinary:ApiSecret"]
+    )));
 
     builder.Services.AddSingleton<AuthenticationDbContext>(serviceProvider =>
     {
@@ -66,56 +71,85 @@ var builder = WebApplication.CreateBuilder(args);
     .Produces(StatusCodes.Status401Unauthorized);
 
     app.MapPost("/register", async (
-        HttpContext context,
-        IConfiguration config,
-        AuthenticationDbContext dbContext,
-        RabbitMqPublisher publisher) =>
+    HttpContext context,
+    IConfiguration config,
+    AuthenticationDbContext dbContext,
+    RabbitMqPublisher publisher,
+    CloudinaryDotNet.Cloudinary cloudinary) =>
+{
+    var form = await context.Request.ReadFormAsync();
+
+    var username = form["Username"].ToString();
+    var password = form["Password"].ToString();
+    var email = form["Email"].ToString();
+    var sex = form["Sex"].ToString();
+    var photoFile = form.Files.GetFile("Photo");
+
+    if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
     {
-        var request = await context.Request.ReadFromJsonAsync<RegisterRequest>();
+        return Results.BadRequest("Missing required fields");
+    }
 
-        if (request is null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Email))
+    var existingUser = await dbContext.Users.Find(u => u.Email == email).FirstOrDefaultAsync();
+    if (existingUser != null)
+    {
+        return Results.BadRequest("Email already exists");
+    }
+
+    string photoUrl = null;
+
+    if (photoFile != null)
+    {
+        using var stream = photoFile.OpenReadStream();
+        var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams()
         {
-            return Results.BadRequest("Invalid registration request");
+            File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+        };
+        var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+        if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            photoUrl = uploadResult.SecureUrl.ToString();
         }
-
-        var existingUser = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
-        if (existingUser != null)
+        else
         {
-            return Results.BadRequest("Email already exists");
+            return Results.Problem(detail: "Error uploading image", statusCode: 500);
         }
+    }
 
-        var hashedPassword = PasswordService.HashPassword(request.Password);
+    var hashedPassword = PasswordService.HashPassword(password);
 
-        var user = new User
+    var user = new User
+    {
+        Username = username,
+        Password = hashedPassword,
+        Email = email,
+        Role = "User",
+        CreationDate = DateTime.UtcNow
+    };
+
+    try
+    {
+        dbContext.Users.InsertOne(user);
+
+        var message = new CreateProfileMessage
         {
-            Username = request.Username,
-            Password = hashedPassword,
-            Email = request.Email,
-            Role = "User",
-            CreationDate = DateTime.UtcNow
+            UserId = user.Id,
+            Name = user.Username,
+            Photo = photoUrl,
+            Sex = sex
         };
 
-        try
-        {
-            dbContext.Users.InsertOne(user);
+        publisher.Publish(message);
 
-            var message = new CreateProfileMessage
-            {
-                UserId = user.Id,            
-                Name = user.Username,         
-                Photo = request.Photo,                   
-                Sex = request.Sex                      
-            };
-
-            publisher.Publish(message);
-
-            return Results.Ok(new { message = "User registered successfully" });
-        }
-        catch (Exception ex)
-        {
-            return Results.StatusCode(500);
-        }
+        return Results.Ok(new { message = "User registered successfully" });
+    }
+    catch (Exception)
+    {
+        return Results.StatusCode(500);
+    }
     });
+
 
     app.MapPost("/forgot-password", async (ForgotPasswordRequest request, AuthenticationDbContext dbContext, EmailService emailService) =>
     {
