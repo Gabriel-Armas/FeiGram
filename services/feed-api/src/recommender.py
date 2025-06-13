@@ -6,7 +6,7 @@ import json
 
 async def get_recommendations(user_id: str, skip: int = 0, limit: int = 10):
     liked_post_ids = await request_likes_by_user(user_id)
-    # followed_user_ids = await request_followed_users_by_user(user_id)
+    followed_user_ids = await request_followed_users_by_user(user_id)
     all_posts = await request_posts_from_post_service(skip=skip, limit=30)
 
     parsed_posts = []
@@ -24,7 +24,7 @@ async def get_recommendations(user_id: str, skip: int = 0, limit: int = 10):
 
     filtered_posts = [
         post for post in parsed_posts
-        # if post.get("id_usuario") in followed_user_ids
+        if post.get("id_usuario") in followed_user_ids
         or post.get("post_id") in liked_post_ids
     ]
 

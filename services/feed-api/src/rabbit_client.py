@@ -70,10 +70,19 @@ async def init_rabbitmq():
     global likes_client, posts_client, follows_client
     loop = asyncio.get_event_loop()
     likes_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "likes_queue")
-    await likes_client.connect()
+    await wait_and_connect(likes_client)
 
     posts_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "get-feed-posts")
-    await posts_client.connect()
+    await wait_and_connect(posts_client)
 
-    follows_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "follows_queue")
-    await follows_client.connect()
+    follows_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "get-followers-feed-queue")
+    await wait_and_connect(follows_client)
+
+async def wait_and_connect(client: RabbitMQClient):
+    while True:
+        try:
+            await client.connect()
+            break
+        except Exception as e:
+            print(f"Error al conectar: {e}. Reintentando~")
+            await asyncio.sleep(5)
