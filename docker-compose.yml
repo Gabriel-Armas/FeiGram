@@ -1,29 +1,47 @@
 services:
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    ports:
+      - "9090:80"     # Acceso público por HTTP (puerto personalizado)
+      - "4443:443"    # HTTPS personalizado si no quieres 443
+      - "8181:81"     # Admin Panel de NPM
+    networks:
+      - feinet
+    volumes:
+      - nginx_data:/data
+      - nginx_letsencrypt:/etc/letsencrypt
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
     networks:
-      - backend
+      - feinet
 
   mongo:
-    image: mongo:6.0
+    image: mongo:6
     container_name: mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: examplepassword
-    volumes:
-      - mongo-data:/data/db
     networks:
-      - backend
+      - feinet
+    volumes:
+      - mongo_data:/data/db
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: profiledb
+    ports:
+      - "5432:5432"
+    networks:
+      - feinet
+    volumes:
+      - profile_data:/var/lib/postgresql/data
 
   neo4j:
     image: neo4j:5
@@ -33,100 +51,149 @@ services:
       - "7687:7687"
     environment:
       - NEO4J_AUTH=neo4j/admin123
+    networks:
+      - feinet
     volumes:
       - neo4j_data:/data
-    networks:
-      - backend
 
-  chart-api:
-    platform: linux/amd64
-    build:
-      context: ./services/chart-api
-      dockerfile: Dockerfile
-    container_name: chart-api
-    depends_on:
-      - rabbitmq
-      - mongo
-    ports:
-      - "8081:8081"
-    networks:
-      - backend
-
-  posts-api:
+  post-api:
     build:
       context: ./services/post-api
       dockerfile: Dockerfile
-    container_name: post-api
-    depends_on:
-      - rabbitmq
-      - mongo
     ports:
-      - "8000:8000"
+      - "8080:8080"
     networks:
-      - backend
+      - feinet
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  profile-api:
+    build:
+      context: ./services/profile-api
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    ports:
+      - "8081:8080"
     environment:
-      - MONGODB_URI=mongodb://root:examplepassword@mongo:27017
-      - MONGODB_DBNAME=feigram
-      - PYTHONUNBUFFERED=1
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=profiledb;Username=postgres;Password=admin123
+      - RabbitMQ__HostName=rabbitmq
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - feinet
 
   likes-api:
     build:
       context: ./services/likes-api
       dockerfile: Dockerfile
-    container_name: likes-api
-    depends_on:
-      - rabbitmq
-      - mongo
     ports:
       - "8082:8082"
-    networks:
-      - backend
     environment:
-      - MONGODB_URI=mongodb://root:examplepassword@mongo:27017
-      - MONGODB_DBNAME=feigram
+      - MongoDb__ConnectionString=mongodb://mongo:27017
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - feinet
+
+  comments-api:
+    build:
+      context: ./services/comments-api
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - MongoDb__ConnectionString=mongodb://mongo:27017
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - feinet
+
+  authentication-api:
+    build:
+      context: ./services/authentication-api
+    ports:
+      - "8084:8084"
+    environment:
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+      - RabbitMQ__HostName=rabbitmq
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - feinet
 
   feed-api:
     build:
       context: ./services/feed-api
-      dockerfile: Dockerfile
-    container_name: feed-api
-    depends_on:
-      - rabbitmq
-      - mongo
-      - likes-api
-      - posts-api
     ports:
       - "8085:8085"
+    depends_on:
+      - rabbitmq
     networks:
-      - backend
-    environment:
-      - MONGODB_URI=mongodb://root:examplepassword@mongo:27017
-      - MONGODB_DBNAME=feigram
-      - PYTHONUNBUFFERED=1
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8085
+      - feinet
 
   follow-api:
     build:
       context: ./services/follow-api
-    container_name: follow-api
+      dockerfile: Dockerfile
     ports:
-      - "8086:8086"
-    networks:
-      - backend
+      - "8086:8000"
     environment:
       - NEO4J_URI=bolt://neo4j:7687
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=admin123
-      - RABBITMQ_HOST=rabbitmq
     depends_on:
       - neo4j
       - rabbitmq
+    networks:
+      - feinet
+
+  chart-api:
+    build:
+      context: ./services/chart-api
+      dockerfile: Dockerfile
+    ports:
+      - "8087:8087"
+    depends_on:
+      - rabbitmq
+    networks:
+      - feinet
+
+  message-api:
+    build:
+      context: ./services/message-api
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - JWT_SECRET_KEY=V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5
+      - JWT_ISSUER=authentication-api
+      - JWT_AUDIENCE=FeigramClient
+    depends_on:
+      - mongo
+    networks:
+      - feinet
+
+  # feigram-web:
+  #   build:
+  #     context: ./clients/feigram-web
+  #     dockerfile: ../Dockerfile
+  #   ports:
+  #     - "8089:8089"
+  #   networks:
+  #     - feinet
 
 networks:
-  backend:
-    driver: bridge
+  feinet:
 
 volumes:
-  mongo-data:
+  mongo_data:
+  profile_data:
   neo4j_data:
+  nginx_data:
+  nginx_letsencrypt:
