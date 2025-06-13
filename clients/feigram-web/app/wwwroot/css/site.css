@@ -42,3 +42,12 @@ html, body {
     padding: 20px;
     box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
 }
+
+#chatMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* espacio entre mensajes */
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px;
+}
