@@ -55,6 +55,7 @@ var rabbitClient = app.Services.GetRequiredService<RabbitMqClient>();
 
 // Inicia el listener
 rabbitClient.ListenForPostCountRequests();
+rabbitClient.ListenForCommentListRequests();
 
 app.Urls.Add("http://0.0.0.0:8088");
 app.Run();

@@ -4,7 +4,8 @@ from src.db import posts_collection, get_next_post_id
 from src.schemas import PostCreate
 from bson.objectid import ObjectId
 from src.auth import get_current_user
-from src.CommentCountRpcClient import CommentCountRpcClient 
+from src.CommentCountRpcClient import CommentCountRpcClient
+from src.CommentListRpcClient import CommentListRpcClient
 
 
 router = APIRouter()
@@ -89,3 +90,16 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
         })
 
     return result
+
+@router.get("/posts/{post_id}/comments")
+def get_post_comments(post_id: int, user_id: str = Depends(get_current_user)):
+    rpc = CommentListRpcClient()
+    response = rpc.get_comments(str(post_id))
+
+    if response is None or "comments" not in response:
+        raise HTTPException(status_code=404, detail="No comments found or RPC failed")
+
+    return {
+        "post_id": post_id,
+        "comments": response["comments"]
+    }
