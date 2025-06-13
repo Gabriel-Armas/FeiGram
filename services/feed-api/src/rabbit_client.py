@@ -49,23 +49,31 @@ class RabbitMQClient:
         response = await future
         return json.loads(response)
 
-rabbitmq_client: RabbitMQClient = None
+likes_client: RabbitMQClient = None
+posts_client: RabbitMQClient = None
+follows_client: RabbitMQClient = None
 
 async def request_likes_by_user(user_id: str):
     payload = {"action": "get_likes_by_user", "user_id": user_id}
-    return await rabbitmq_client.call_rpc(payload)
+    return await likes_client.call_rpc(payload)
 
 async def request_followed_users_by_user(user_id: str):
     payload = {"action": "get_follows_by_user", "user_id": user_id}
-    return await rabbitmq_client.call_rpc(payload)
+    return await follows_client.call_rpc(payload)
 
 async def request_posts_from_post_service(skip: int = 0, limit: int = 10):
-    payload = {"action": "get_posts", "skip": skip, "limit": limit}
-    return await rabbitmq_client.call_rpc(payload)
+    payload = {"action": "get_recommendations", "skip": skip, "limit": limit}
+    return await posts_client.call_rpc(payload)
 
 
 async def init_rabbitmq():
-    global rabbitmq_client
+    global likes_client, posts_client, follows_client
     loop = asyncio.get_event_loop()
-    rabbitmq_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "likes_queue")
-    await rabbitmq_client.connect()
+    likes_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "likes_queue")
+    await likes_client.connect()
+
+    posts_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "get-feed-posts")
+    await posts_client.connect()
+
+    follows_client = RabbitMQClient(loop, "amqp://guest:guest@rabbitmq:5672/", "follows_queue")
+    await follows_client.connect()
