@@ -13,7 +13,9 @@ def create_user(user: UserCreate):
             """, id=user.id)
         return {"message": f"User with ID '{user.id}' created."}
     except Neo4jError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Neo4j error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 @router.post("/follow/{follower}/{followed}")
 def follow_user(follower: str, followed: str):
