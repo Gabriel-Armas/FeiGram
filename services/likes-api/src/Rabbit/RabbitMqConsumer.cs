@@ -40,11 +40,26 @@ public class RabbitMqConsumer
             var message = Encoding.UTF8.GetString(body);
             var request = JsonSerializer.Deserialize<LikesRequest>(message);
 
-            Console.WriteLine($"[x] Received request for user_id: {request.UserId}");
+            object responseObj = null;
 
-            var likedPostIds = await GetLikedPostIdsAsync(request.UserId);
+            if (request.Action == "liked_post_ids")
+            {
+                Console.WriteLine($"[x] Received liked_post_ids request for user_id: {request.UserId}");
+                var likedPostIds = await GetLikedPostIdsAsync(request.UserId);
+                responseObj = new { liked_post_ids = likedPostIds };
+            }
+            else if (request.Action == "count_likes")
+            {
+                Console.WriteLine($"[x] Received count_likes request for post_id: {request.PostId}");
+                var count = await CountLikesByPostIdAsync(request.PostId);
+                responseObj = new { like_count = count };
+            }
+            else
+            {
+                Console.WriteLine($"[!] Unknown action: {request.Action}");
+                responseObj = new { error = "Unknown action" }; 
+            }
 
-            var responseObj = new { liked_post_ids = likedPostIds };
             var responseJson = JsonSerializer.Serialize(responseObj);
             var responseBytes = Encoding.UTF8.GetBytes(responseJson);
 
@@ -82,8 +97,17 @@ public class RabbitMqConsumer
         return postIds;
     }
 
+    public async Task<int> CountLikesByPostIdAsync(string postId)
+    {
+        var filter = Builders<LikesApi.Models.Like>.Filter.Eq(l => l.PostId, postId);
+        var count = await _dbContext.Likes.CountDocumentsAsync(filter);
+        return (int)count;
+    }
+
+
     public record LikesRequest(
         [property: JsonPropertyName("action")] string Action,
-        [property: JsonPropertyName("user_id")] string UserId
+        [property: JsonPropertyName("user_id")] string UserId,
+        [property: JsonPropertyName("post_id")] string PostId
     );
 }

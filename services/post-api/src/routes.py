@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from src.auth import get_current_user
 from src.CommentCountRpcClient import CommentCountRpcClient
 from src.CommentListRpcClient import CommentListRpcClient
-
+from src.LikesCountRpcClient import LikesCountRpcClient
 
 router = APIRouter()
 
@@ -73,12 +73,15 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
     }))
 
     rpc = CommentCountRpcClient()
+    rpc1 = LikesCountRpcClient()
 
     result = []
     for post in recent_posts:
         # Llamada RPC para contar los comentarios
         response = rpc.get_comment_count(str(post["post_id"]))
         count = response.get("count", 0)
+        response2 = rpc1.get_likes_count(str(post["post_id"]))
+        count2 = response2.get("like_count", 0)
 
         result.append({
             "post_id": post["post_id"],
@@ -86,7 +89,8 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
             "descripcion": post["descripcion"],
             "url_media": post["url_media"],
             "fechaPublicacion": post["fechaPublicacion"],
-            "comentarios": count  # 👍 número de comentarios
+            "comentarios": count,  # 👍 número de comentarios
+            "likes": count2
         })
 
     return result
@@ -102,4 +106,17 @@ def get_post_comments(post_id: int, user_id: str = Depends(get_current_user)):
     return {
         "post_id": post_id,
         "comments": response["comments"]
+    }
+
+@router.get("/posts/{post_id}/likes-count")
+def get_post_likes_count(post_id: str, user_id: str = Depends(get_current_user)):
+    rpc = LikesCountRpcClient()
+    response = rpc.get_likes_count(post_id)
+
+    if response is None or "like_count" not in response:
+        raise HTTPException(status_code=404, detail="No likes found or RPC failed")
+
+    return {
+        "post_id": post_id,
+        "like_count": response["like_count"]
     }
