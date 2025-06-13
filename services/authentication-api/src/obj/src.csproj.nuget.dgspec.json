@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\authentication-api\\src\\src.csproj": {}
+    "/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/authentication-api/src/src.csproj": {}
   },
   "projects": {
-    "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\authentication-api\\src\\src.csproj": {
+    "/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/authentication-api/src/src.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\authentication-api\\src\\src.csproj",
+        "projectUniqueName": "/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/authentication-api/src/src.csproj",
         "projectName": "src",
-        "projectPath": "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\authentication-api\\src\\src.csproj",
-        "packagesPath": "C:\\Users\\yaela\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yaela\\Desktop\\Universidad\\Semestres\\Sexto\\Red\\Feigram\\FeiGram\\services\\authentication-api\\src\\obj\\",
+        "projectPath": "/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/authentication-api/src/src.csproj",
+        "packagesPath": "/Users/gabrielarmas/.nuget/packages/",
+        "outputPath": "/Users/gabrielarmas/Desktop/FeigramProject/feigram/services/authentication-api/src/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\yaela\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/gabrielarmas/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -44,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -64,7 +58,7 @@
             },
             "RabbitMQ.Client": {
               "target": "Package",
-              "version": "[7.1.2, )"
+              "version": "[6.7.0, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
@@ -90,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
