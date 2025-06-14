@@ -9,8 +9,8 @@ public class MongoDbContext
 
     public MongoDbContext(IConfiguration configuration)
     {
-        var connectionString = configuration["MONGODB_URI"];
-        var dbName = configuration["MONGODB_DBNAME"];
+        var connectionString = configuration["MongoDb:ConnectionString"];
+        var dbName = configuration["MongoDb:DatabaseName"];
 
         var client = new MongoClient(connectionString);
         _database = client.GetDatabase(dbName);

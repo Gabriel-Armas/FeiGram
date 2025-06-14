@@ -2,8 +2,8 @@ import os
 from pymongo import MongoClient
 from pymongo import ReturnDocument
 
-MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://root:examplepassword@mongo:27017")
-MONGODB_DBNAME = os.environ.get("MONGODB_DBNAME", "feigram")
+MONGODB_URI = os.environ.get("MONGODB_URI")
+MONGODB_DBNAME = os.environ.get("MONGODB_DBNAME")
 
 client = MongoClient(MONGODB_URI)
 db = client[MONGODB_DBNAME]

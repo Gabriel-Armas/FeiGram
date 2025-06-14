@@ -64,6 +64,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DBNAME=feigram
     networks:
       - feinet
     depends_on:
@@ -94,6 +97,7 @@ services:
       - "8082:8082"
     environment:
       - MongoDb__ConnectionString=mongodb://mongo:27017
+      - MongoDb__DatabaseName=feigram
     depends_on:
       - mongo
       - rabbitmq
@@ -106,8 +110,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8083:8083"
-    environment:
+    environment:  
       - MongoDb__ConnectionString=mongodb://mongo:27017
+      - MongoDb__DatabaseName=feigram
     depends_on:
       - mongo
       - rabbitmq
@@ -115,6 +120,7 @@ services:
       - feinet
 
   authentication-api:
+    platform: linux/amd64
     build:
       context: ./services/authentication-api
     ports:
