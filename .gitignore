@@ -1,3 +1,9 @@
+# Ignorar solution
+FeiGram.sln
+
+# Ignorar carpetas de build
+**/bin/
+**/obj/
 .vscode/
 .DS_Store
 feigram.sln

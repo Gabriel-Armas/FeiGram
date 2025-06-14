@@ -1,0 +1,53 @@
+@page "/Chat"
+@model app.Pages.Chats.ChatModel
+@{
+    ViewData["Title"] = "Mensajes";
+    Layout = "_Layout";
+}
+
+<div style="margin-left: 320px; padding-top: 1rem;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4 border-end" style="max-height: 85vh; overflow-y: auto;">
+                <h5 class="fw-bold mt-3 ms-2">Chats</h5>
+                <ul class="list-group list-group-flush">
+                    @foreach (var friend in Model.Friends)
+                    {
+                        <li class="list-group-item list-group-item-action d-flex align-items-center"
+                            style="cursor: pointer;"
+                            onclick="openChat(@friend.Id)">
+                            <img src="@friend.ProfilePictureUrl" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <strong>@friend.Username</strong><br />
+                                <small class="text-muted">@friend.LastMessagePreview</small>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <div class="col-md-8 d-flex flex-column" style="height: 85vh;">
+                <div class="border-bottom p-3 d-flex align-items-center">
+                    <h5 id="chatTitle" class="fw-bold mb-0">Selecciona un chat</h5>
+                </div>
+
+                <div id="chatMessages" class="flex-grow-1 overflow-auto p-3" style="background-color: #f9f9f9;">
+                    <!-- Aquí se cargan los mensajes dinámicamente -->
+                </div>
+
+                <div class="border-top p-3">
+                    <form id="chatForm" onsubmit="sendMessage(); return false;">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" class="form-control" placeholder="Escribe tu mensaje" />
+                            <button type="submit" class="btn btn-primary">Enviar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/chats.js"></script>
+}
