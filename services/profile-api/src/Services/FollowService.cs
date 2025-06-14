@@ -17,7 +17,6 @@ public class FollowService
         var consumer = new EventingBasicConsumer(channel);
 
         var tcs = new TaskCompletionSource<FollowerCountResponse>();
-
         var correlationId = Guid.NewGuid().ToString();
 
         consumer.Received += (model, ea) =>
@@ -26,6 +25,8 @@ public class FollowService
             {
                 var body = ea.Body.ToArray();
                 var responseJson = Encoding.UTF8.GetString(body);
+                Console.WriteLine($"[x] Received follower count response: {responseJson}");
+
                 var response = JsonSerializer.Deserialize<FollowerCountResponse>(responseJson);
                 tcs.SetResult(response!);
             }
@@ -34,20 +35,26 @@ public class FollowService
         channel.BasicConsume(consumer: consumer, queue: replyQueueName, autoAck: true);
 
         var request = new FollowerCountRequest { ProfileId = profileId };
-        var messageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var requestJson = JsonSerializer.Serialize(request, options);
+        var messageBytes = Encoding.UTF8.GetBytes(requestJson);
 
         var props = channel.CreateBasicProperties();
         props.ReplyTo = replyQueueName;
         props.CorrelationId = correlationId;
 
-        channel.BasicPublish(exchange: "",
-                             routingKey: "get-followers-count",
-                             basicProperties: props,
-                             body: messageBytes);
+        Console.WriteLine($"[>] Sending follower count request: {requestJson}");
+
+        channel.BasicPublish(
+            exchange: "",
+            routingKey: "get-followers-count",
+            basicProperties: props,
+            body: messageBytes
+        );
 
         return await tcs.Task;
     }
-    
+
     public async Task<FollowingListResponse?> GetFollowingListAsync(string profileId)
     {
         var factory = new ConnectionFactory() { HostName = "rabbitmq" };
@@ -58,7 +65,6 @@ public class FollowService
         var consumer = new EventingBasicConsumer(channel);
 
         var tcs = new TaskCompletionSource<FollowingListResponse>();
-
         var correlationId = Guid.NewGuid().ToString();
 
         consumer.Received += (model, ea) =>
@@ -67,6 +73,8 @@ public class FollowService
             {
                 var body = ea.Body.ToArray();
                 var responseJson = Encoding.UTF8.GetString(body);
+                Console.WriteLine($"[x] Received following list response: {responseJson}");
+
                 var response = JsonSerializer.Deserialize<FollowingListResponse>(responseJson);
                 tcs.SetResult(response!);
             }
@@ -75,18 +83,23 @@ public class FollowService
         channel.BasicConsume(consumer: consumer, queue: replyQueueName, autoAck: true);
 
         var request = new FollowingListRequest { ProfileId = profileId };
-        var messageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var requestJson = JsonSerializer.Serialize(request, options);
+        var messageBytes = Encoding.UTF8.GetBytes(requestJson);
 
         var props = channel.CreateBasicProperties();
         props.ReplyTo = replyQueueName;
         props.CorrelationId = correlationId;
 
-        channel.BasicPublish(exchange: "",
-                            routingKey: "get-following-profiles",
-                            basicProperties: props,
-                            body: messageBytes);
+        Console.WriteLine($"[>] Sending following list request: {requestJson}");
+
+        channel.BasicPublish(
+            exchange: "",
+            routingKey: "get-following-profiles",
+            basicProperties: props,
+            body: messageBytes
+        );
 
         return await tcs.Task;
     }
-
 }
