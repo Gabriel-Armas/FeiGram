@@ -51,19 +51,19 @@ public class UserProfileRpcConsumer : BackgroundService
                 arguments: null
             );
 
-            Console.WriteLine("✅ Conectado a RabbitMQ");
+            Console.WriteLine("Conectado a RabbitMQ");
             break;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"🔁 Reintentando conexión a RabbitMQ ({attempt}/5): {ex.Message}");
+            Console.WriteLine($"Reintentando conexión a RabbitMQ ({attempt}/5): {ex.Message}");
             await Task.Delay(2000, stoppingToken);
         }
     }
 
     if (_channel == null)
     {
-        Console.WriteLine("❌ No se pudo conectar a RabbitMQ después de varios intentos.");
+        Console.WriteLine("No se pudo conectar a RabbitMQ después de varios intentos.");
         return;
     }
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from src.db import posts_collection, get_next_post_id
 from src.schemas import PostCreate
 from bson.objectid import ObjectId
@@ -7,6 +7,7 @@ from src.auth import get_current_user
 from src.CommentCountRpcClient import CommentCountRpcClient
 from src.CommentListRpcClient import CommentListRpcClient
 from src.LikesCountRpcClient import LikesCountRpcClient
+import cloudinary.uploader
 
 router = APIRouter()
 
@@ -19,6 +20,17 @@ def create_post(post: PostCreate, user_id: str = Depends(get_current_user)):
     result = posts_collection.insert_one(data)
     return {"message": "Post created", "post_id": data["post_id"]}
 
+@router.post("/upload-image")
+async def upload_image(file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user)):
+    try:
+        result = cloudinary.uploader.upload(file.file)
+        return {
+            "url": result["secure_url"],
+            "public_id": result["public_id"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/posts")
 def get_all_posts(user_id: str = Depends(get_current_user)):  # protegida también

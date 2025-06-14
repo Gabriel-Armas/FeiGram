@@ -29,7 +29,7 @@ def handle_get_followers_count(ch, method, props, body):
 
     with driver.session() as session:
         result = session.run("""
-            MATCH (p:Profile {id: $id})<-[:FOLLOWS]-(:Profile)
+            MATCH (p:User {id: $id})<-[:FOLLOWS]-(:User)
             RETURN count(*) as followersCount
         """, {"id": profile_id})
         count = result.single()["followersCount"]
@@ -55,7 +55,7 @@ def handle_get_following_profiles(ch, method, props, body):
 
     with driver.session() as session:
         result = session.run("""
-            MATCH (p:Profile {id: $id})-[:FOLLOWS]->(followed:Profile)
+            MATCH (p:User {id: $id})-[:FOLLOWS]->(followed:User)
             RETURN followed.id AS id
         """, {"id": profile_id})
 
