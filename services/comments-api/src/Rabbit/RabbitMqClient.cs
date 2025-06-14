@@ -119,7 +119,6 @@ public class RabbitMqClient
             })
             .ToListAsync();
 
-        // Aquí envuelves la lista dentro de un objeto con clave "comments"
         var responseObj = new { comments = comments };
         var responseJson = JsonSerializer.Serialize(responseObj);
         var responseBytes = Encoding.UTF8.GetBytes(responseJson);
