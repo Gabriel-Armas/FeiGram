@@ -26,6 +26,8 @@ builder.Services.AddSingleton(provider =>
         config["Cloudinary:ApiSecret"]
     ));
 });
+builder.Services.AddHostedService<UserProfileRpcConsumer>();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

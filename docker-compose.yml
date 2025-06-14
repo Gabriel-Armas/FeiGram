@@ -11,6 +11,20 @@ services:
     networks:
       - backend
 
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: profiledb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - profile_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
   mongo:
     image: mongo:6.0
     container_name: mongo
@@ -123,6 +137,23 @@ services:
       - neo4j
       - rabbitmq
 
+  profile-api:
+    platform: linux/amd64
+    build:
+      context: ./services/profile-api
+    ports:
+      - "8089:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=profiledb;Username=postgres;Password=admin123
+      - RabbitMQ__HostName=rabbitmq  
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - backend
+
+
 networks:
   backend:
     driver: bridge
@@ -130,3 +161,4 @@ networks:
 volumes:
   mongo-data:
   neo4j_data:
+  profile_data:
