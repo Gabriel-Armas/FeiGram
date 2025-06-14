@@ -212,7 +212,7 @@ var builder = WebApplication.CreateBuilder(args);
         return Results.Ok($"User {user.Username} has been banned");
     });
 
-
+app.Urls.Add("http://0.0.0.0:8084");
 app.Run();
 
     record RegisterRequest(string Username, string Password, string Email, string Photo, string Sex);

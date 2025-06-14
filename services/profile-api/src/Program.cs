@@ -287,4 +287,6 @@ app.MapGet("/profiles/{id}/following", [Authorize] async (
     }
 });
 
+app.Urls.Add("http://0.0.0.0:8081");
+
 app.Run();

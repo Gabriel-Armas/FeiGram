@@ -12,5 +12,5 @@ FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-EXPOSE 8081
+EXPOSE 8087
 ENTRYPOINT ["dotnet", "ChartApi.dll"]
