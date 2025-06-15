@@ -293,6 +293,41 @@ app.MapGet("/profiles/{id}/following", [Authorize] async (
     }
 });
 
+app.MapGet("/profiles/enrollment/{enrollment}", [Authorize] async (
+    HttpContext httpContext,
+    string enrollment,
+    ProfileDbContext db,
+    FollowService followService) =>
+{
+    var role = httpContext.User.FindFirst(roleClaimType)?.Value;
+    if (role == "Banned") return Results.Forbid();
+
+    try
+    {
+        var profile = await db.Profiles.FirstOrDefaultAsync(p => p.Enrollment == enrollment);
+        if (profile is null) return Results.NotFound();
+
+        var followerData = await followService.GetFollowerCountAsync(profile.Id);
+        var count = followerData?.FollowerCount ?? 0;
+
+        var result = new
+        {
+            profile.Id,
+            profile.Name,
+            profile.Photo,
+            profile.Sex,
+            profile.Enrollment,
+            FollowerCount = count
+        };
+
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem("Error al buscar el perfil por matrícula: " + ex.Message);
+    }
+});
+
 app.Urls.Add("http://0.0.0.0:8081");
 
 app.Run();
