@@ -56,3 +56,10 @@ function openPostModal(postId) {
             modal.show();
         });
 }
+
+fetch('/api/posts', {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(response => response.json())
+  .catch(err => console.error("Error al obtener posts:", err));

@@ -2,36 +2,94 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using app.ViewModel;
 using app.DTO;
+using System.Text;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authorization; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace app.Pages.Account
 {
+    [Authorize]
     public class AccountsModel : PageModel
     {
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<AccountsModel> _logger;
+
+        public AccountsModel(IHttpClientFactory httpClientFactory, ILogger<AccountsModel> logger)
+        {
+            _httpClientFactory = httpClientFactory;
+            _logger = logger;
+        }
+
         public List<AccountViewModel> Accounts { get; set; } = new();
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            Accounts = GetAccounts();
-        }
-
-        public IActionResult OnPostBan(int id)
-        {
-            BanAccount(id);
-            return RedirectToPage();
-        }
-
-        private List<AccountViewModel> GetAccounts()
-        {
-            return new List<AccountViewModel>
+            var handler = new HttpClientHandler
             {
-                new AccountViewModel { Id = 1, FullName = "Aki", Email = "aki@example.com", StudentId = "UV123456" },
-                new AccountViewModel { Id = 2, FullName = "Yuu", Email = "yuu@example.com", StudentId = "UV654321" }
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             };
+
+            using var client = new HttpClient(handler);
+            client.BaseAddress = new Uri("https://feigram-nginx");
+
+            try
+            {
+                var response = await client.GetAsync("/profiles/profiles");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("Se obtuvieron los perfiles exitosamente");
+
+                    Accounts = JsonSerializer.Deserialize<List<AccountViewModel>>(json) ?? new();
+                }
+                else
+                {
+                    _logger.LogWarning("No se pudo obtener la lista de perfiles Código: {StatusCode}", response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al obtener perfiles");
+            }
         }
 
-        private void BanAccount(int id)
+        public async Task<IActionResult> OnPostBan(int id, string email)
         {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
 
+            using var client = new HttpClient(handler);
+            client.BaseAddress = new Uri("https://feigram-nginx");
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(new { Email = email }),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            try
+            {
+                var response = await client.PostAsync("/auth/ban-user", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Usuario con ID {Id} y correo {Email} fue baneado exitosamente", id, email);
+                }
+                else
+                {
+                    _logger.LogWarning("No se pudo banear al usuario {Email} 😿 Status: {StatusCode}", email, response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "¡Error! No se pudo banear al usuario {Email} 😢", email);
+            }
+
+            return RedirectToPage();
         }
     }
 }

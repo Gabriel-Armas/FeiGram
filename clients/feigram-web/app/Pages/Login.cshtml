@@ -1,4 +1,4 @@
-@page
+@page "/Login"
 @model LoginModel
 @{
     Layout = null;
@@ -29,15 +29,16 @@
 
             <form method="post">
               <div class="form-floating">
-                <input type="email" class="form-control" id="correoElectronico" placeholder="Correo electrónico" required>
+                <input type="email" class="form-control" id="correoElectronico" name="Input.Email" placeholder="Correo electrónico" required>
                 <label for="correoElectronico">Correo electrónico</label>
               </div>
+
               <div class="form-floating">
-                <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
+                <input type="password" class="form-control" id="password" name="Input.Password" placeholder="Contraseña" required>
                 <label for="password">Contraseña</label>
               </div>
 
-              <button class="btn btn-feigram w-100" type="submit">Iniciar Sesión</button>
+              <button class="btn btn-feigram w-100 mt-3" type="submit">Iniciar Sesión</button>
 
               <div class="text-center mt-3">
                 <a href="/ForgotPassword" class="text-decoration-none">¿Has olvidado tu contraseña?</a>

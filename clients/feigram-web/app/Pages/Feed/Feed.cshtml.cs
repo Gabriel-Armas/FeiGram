@@ -2,42 +2,58 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using app.ViewModel;
 using app.DTO;
+using System.Net.Http.Headers;
 
 namespace app.Pages.Feed
 {
     public class FeedModel : PageModel
     {
-        public List<PostViewModel> Posts { get; set; } = new List<PostViewModel>();
+        private readonly IHttpClientFactory _clientFactory;
+        private readonly IWebHostEnvironment _env;
 
-        public IActionResult OnGet()
+        public List<PostViewModel> Posts { get; set; } = new();
+
+        public FeedModel(IHttpClientFactory clientFactory, IWebHostEnvironment env)
         {
-            var usuario_token = "123";
+            _clientFactory = clientFactory;
+            _env = env;
+        }
 
-            if (string.IsNullOrEmpty(usuario_token))
-            {
+        public async Task<IActionResult> OnGetAsync()
+        {
+            if (!User.Identity.IsAuthenticated)
                 return RedirectToPage("/Login");
-            }
 
-            Posts = new List<PostViewModel>
+            var userId = User.FindFirst("id")?.Value;
+
+            var client = _clientFactory.CreateClient();
+            client.BaseAddress = new Uri("https://feigram-nginx");
+            client.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", Request.Cookies["jwt_token"]);
+
+            try
             {
-                new PostViewModel
-                {
-                    ImageUrl = "/images/DojaCat.jpg",
-                    Caption = "¡Hoy cociné algo rico con Kirito! 😋🍳"
-                },
-                new PostViewModel
-                {
-                    ImageUrl = "/images/Perfil.jpg",
-                    Caption = "Miau"
-                }
-            };
+                var response = await client.GetFromJsonAsync<List<PostViewModel>>($"feed/recommendations/{userId}");
+                if (response != null)
+                    Posts = response;
+            }
+            catch
+            {
+                // Puedes loguear error si deseas UwU
+            }
 
             return Page();
         }
 
-        public IActionResult OnGetPostModal(int postId)
+        public async Task<IActionResult> OnGetPostModalAsync(int postId)
         {
-            var post = GetPostById(postId);
+            var client = _clientFactory.CreateClient();
+            client.BaseAddress = new Uri("https://feigram-nginx");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", Request.Cookies["jwt_token"]);
+
+            var post = await client.GetFromJsonAsync<PostDTO>($"api/posts/{postId}");
+            if (post == null) return NotFound();
 
             var model = new PostPartialViewModel
             {
@@ -55,20 +71,35 @@ namespace app.Pages.Feed
             return Partial("PostPartial", model);
         }
 
-        private PostDTO GetPostById(int id)
+        public async Task<IActionResult> OnPostNuevoPostAsync(IFormFile imagen, string description)
         {
-            return new PostDTO
+            if (imagen == null || imagen.Length == 0)
             {
-                Id = id,
-                ImageUrl = "/images/logo-fei.png",
-                Caption = "Post de prueba~ nyaa~ 💖",
-                Likes = 12,
-                Comments = new List<CommentDTO>
-                {
-                    new CommentDTO { Author = "Sakura", Text = "Kawaii~!" },
-                    new CommentDTO { Author = "Naruto", Text = "¡Dattebayo!" }
-                }
-            };
+                TempData["Error"] = "Debes seleccionar una imagen.";
+                return RedirectToPage();
+            }
+
+            var client = _clientFactory.CreateClient();
+            client.BaseAddress = new Uri("https://feigram-nginx");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", Request.Cookies["jwt_token"]);
+
+            using var content = new MultipartFormDataContent();
+            using var fileStream = imagen.OpenReadStream();
+            var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+
+            content.Add(streamContent, "imagen", imagen.FileName);
+            content.Add(new StringContent(description ?? ""), "description");
+
+            var response = await client.PostAsync("posts/posts", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = "Ocurrió un error al subir la publicación.";
+            }
+
+            return RedirectToPage();
         }
     }
 }

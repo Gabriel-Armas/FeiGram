@@ -49,6 +49,20 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Authentication.Cookies": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
+            "Microsoft.AspNetCore.Authorization": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[6.34.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
