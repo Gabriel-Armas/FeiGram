@@ -101,7 +101,7 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
             "descripcion": post["descripcion"],
             "url_media": post["url_media"],
             "fechaPublicacion": post["fechaPublicacion"],
-            "comentarios": count,  # 👍 número de comentarios
+            "comentarios": count, 
             "likes": count2
         })
 
@@ -116,7 +116,7 @@ def get_post_comments(post_id: int, user_id: str = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="No comments found or RPC failed")
 
     return {
-        "post_id": post_id,
+        "post_id": str(post_id),
         "comments": response["comments"]
     }
 

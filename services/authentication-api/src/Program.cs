@@ -64,7 +64,7 @@ var builder = WebApplication.CreateBuilder(args);
         }
             
         var token = await authService.AuthenticateUserAsync(request.Email, request.Password);
-        return Results.Ok(new { token });
+        return Results.Ok(new { token, userId= user.Id, rol = user.Role});
     })
     .Produces<LoginRequest>()
     .Produces(StatusCodes.Status200OK)
