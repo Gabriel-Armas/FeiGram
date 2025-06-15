@@ -199,24 +199,27 @@ app.MapPut("/profiles/{id}", [Authorize] async (
             if (!string.IsNullOrEmpty(sex))
                 profile.Sex = sex;
 
-            if (photoFile != null)
-            {
-                using var stream = photoFile.OpenReadStream();
-                var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
-                {
-                    File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
-                };
-                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+            if (!string.IsNullOrEmpty(enrollment))
+                profile.Enrollment = enrollment;
 
-                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+            if (photoFile != null)
                 {
-                    profile.Photo = uploadResult.SecureUrl.ToString();
+                    using var stream = photoFile.OpenReadStream();
+                    var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
+                    {
+                        File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+                    };
+                    var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+                    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        profile.Photo = uploadResult.SecureUrl.ToString();
+                    }
+                    else
+                    {
+                        return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
+                    }
                 }
-                else
-                {
-                    return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
-                }
-            }
 
             await db.SaveChangesAsync();
             return Results.NoContent();

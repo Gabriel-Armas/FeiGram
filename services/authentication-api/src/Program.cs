@@ -214,6 +214,30 @@ var builder = WebApplication.CreateBuilder(args);
         return Results.Ok($"User {user.Username} has been banned");
     });
 
+    app.MapPut("/users/{id}/email", async (string id, UpdateEmailRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Id == id).FirstOrDefaultAsync();
+        if (user == null)
+        {
+            return Results.NotFound("User not found");
+        }
+
+        var existingUser = await dbContext.Users.Find(u => u.Email == request.NewEmail).FirstOrDefaultAsync();
+        if (existingUser != null)
+        {
+            return Results.BadRequest("Email already in use");
+        }
+
+        var update = Builders<User>.Update.Set(u => u.Email, request.NewEmail);
+        await dbContext.Users.UpdateOneAsync(u => u.Id == id, update);
+
+        return Results.Ok("Email updated successfully");
+    })
+    .RequireAuthorization()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status404NotFound);
+
 app.Urls.Add("http://0.0.0.0:8084");
 app.Run();
 
