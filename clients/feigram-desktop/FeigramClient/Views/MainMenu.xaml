@@ -1,0 +1,346 @@
+﻿<Page x:Class="FeigramClient.Views.MainMenu"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FeigramClient.Views"
+        mc:Ignorable="d"
+        Title="Feigram" >
+
+    <Page.Resources>
+        <Style x:Key="RoundedHoverButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#ececed"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#ececed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+
+    <DockPanel Background="#F0F2F5">
+        <Grid>
+            <Grid Margin="20" Name="GridMenu" Visibility="Visible">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="280"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="280"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Línea entre columna 0 y 1 -->
+                <Border Grid.Column="0" 
+            HorizontalAlignment="Right"
+            Width="1"
+            Background="LightGray"
+            Margin="0"/>
+
+                <Border Grid.Column="1" 
+            HorizontalAlignment="Right"
+            Width="1"
+            Background="LightGray"
+            Margin="0"/>
+
+                <StackPanel Grid.Column="0" Margin="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,30">
+                        <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
+                        <TextBlock Text="Feigram"
+                    Foreground="Black"
+                    FontSize="24"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"/>
+                    </StackPanel>
+                    <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                HorizontalContentAlignment="Left" Click="Home_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="/Resources/hogar.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="Inicio"
+               VerticalAlignment="Center"
+               FontSize="14"
+               Foreground="Black"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                HorizontalContentAlignment="Left" Click="Profile_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="/Resources/usuario.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="Perfil"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="Black"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                HorizontalContentAlignment="Left" Click="Messages_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="/Resources/mensajes.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="Mensajes"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="Black"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                HorizontalContentAlignment="Left" Click="Accounts_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="Cuentas"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="Black"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                HorizontalContentAlignment="Left" Click="Stadistic_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="Estadísticas"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="Black"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                HorizontalContentAlignment="Left" Click="CloseSession_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="/Resources/salida.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="Cerrar Sesión"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="Black"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- COLUMNA CENTRAL - PUBLICACIONES CON SCROLL -->
+                <StackPanel Grid.Column="1" Margin="10" HorizontalAlignment="Center" Width="800">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding PostsCompletos}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" 
+                                        CornerRadius="10" 
+                                        Padding="10" 
+                                        Margin="0,0,0,40" 
+                                        MaxWidth="500">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="3" Opacity="0.4"/>
+                                        </Border.Effect>
+                                        <StackPanel>
+                                            <!-- Header de publicación -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Ellipse Width="40" Height="40" Margin="0,0,10,0">
+                                                    <Ellipse.Fill>
+                                                        <ImageBrush ImageSource="{Binding UserProfileImage}" />
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Username}" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding TimeAgo}" FontSize="10" Foreground="Gray"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <Button Click="Post_Click"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="0"
+                                            Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <ContentPresenter />
+                                                    </ControlTemplate>
+                                                </Button.Template>
+
+                                                <Border CornerRadius="10" ClipToBounds="True" Margin="0,0,0,10">
+                                                    <Image Source="{Binding PostImage}"
+                                                    Height="400"
+                                                    Stretch="UniformToFill"/>
+                                                </Border>
+                                            </Button>
+                                            <!-- Descripción -->
+                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Margin="0,10,0,10"/>
+
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                                <Button Margin="0,0,10,0"
+            Cursor="Hand"
+            Background="Transparent"
+            BorderThickness="0">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="OverridesDefaultStyle" Value="True"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <ContentPresenter />
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Image Source="/Resources/megusta.png" Width="27" Height="27"/>
+                                                </Button>
+
+                                                <Button Cursor="Hand"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Click="Post_Click">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="OverridesDefaultStyle" Value="True"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <ContentPresenter />
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Image Source="/Resources/comentario.png" Width="27" Height="27"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Button Margin="0,10,20,0"
+                        Cursor="Hand"
+                        HorizontalAlignment="Right"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="AddPost_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Image Source="/Resources/add.png" Width="50" Height="50"/>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+
+                <!-- COLUMNA DERECHA - AMIGOS -->
+                <StackPanel Grid.Column="2" Margin="10">
+                    <TextBlock Text="Amigos" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                    <!-- Buscador con imagen de lupa fuera del borde blanco -->
+                    <Grid Height="40" Margin="0,0,0,10">
+                        <!-- Border blanco con esquina redonda para el TextBox -->
+                        <Border Background="White"
+                    BorderBrush="#CCC"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    VerticalAlignment="Stretch">
+                            <Grid>
+                                <TextBox x:Name="SearchBox"
+                            Margin="10,0,40,0"
+                            VerticalContentAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontSize="14"
+                            Foreground="Black"
+                            Height="40"
+                            Padding="0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Imagen de lupa fuera del fondo blanco -->
+                        <Image Source="/Resources/busqueda.png"
+                    Width="22"
+                    Height="22"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Right"
+                    Margin="5,0,5,0"
+                    Panel.ZIndex="1"/>
+                    </Grid>
+
+                    <!-- Lista de amigos con imagen de perfil circular -->
+                    <ListBox BorderThickness="0" Background="Transparent">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Margin" Value="0,0,0,10"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="5"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
+                        <!-- Amigos con imagen de perfil -->
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="35" Height="35" Margin="0,0,10,0">
+                                    <Ellipse.Fill>
+                                        <ImageBrush ImageSource="/Resources/noprofile.png"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="Amigo 1" VerticalAlignment="Center" FontSize="14"/>
+                            </StackPanel>
+                        </ListBoxItem>
+
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="35" Height="35" Margin="0,0,10,0">
+                                    <Ellipse.Fill>
+                                        <ImageBrush ImageSource="/Resources/noprofile.png"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="Amigo 2" VerticalAlignment="Center" FontSize="14"/>
+                            </StackPanel>
+                        </ListBoxItem>
+
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="35" Height="35" Margin="0,0,10,0">
+                                    <Ellipse.Fill>
+                                        <ImageBrush ImageSource="/Resources/noprofile.png"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="Amigo 3" VerticalAlignment="Center" FontSize="14"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                    </ListBox>
+                </StackPanel>
+
+            </Grid>
+            <Grid Name="ModalOverlay" Visibility="Collapsed" Background="#80000000">
+                <Frame Name="ModalFrame" NavigationUIVisibility="Hidden"/>
+            </Grid>
+        </Grid>
+    </DockPanel>
+
+</Page>

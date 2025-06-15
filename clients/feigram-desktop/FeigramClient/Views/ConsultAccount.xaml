@@ -1,0 +1,142 @@
+﻿<Page x:Class="FeigramClient.Views.ConsultAccount"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Consultar cuentas"
+        Background="#F0F2F5">
+    <Page.Resources>
+        <Style x:Key="RoundedHoverButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#ececed"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#ececed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Línea divisoria -->
+        <Border Grid.Column="0" HorizontalAlignment="Right" Width="1" Background="LightGray"/>
+
+        <!-- Panel de Navegación -->
+        <StackPanel Grid.Column="0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,30">
+                <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
+                <TextBlock Text="Feigram"
+                           Foreground="Black"
+                           FontSize="24"
+                           VerticalAlignment="Center"
+                           FontWeight="Bold"/>
+            </StackPanel>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                    HorizontalContentAlignment="Left">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Resources/hogar.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Inicio" FontSize="14" Foreground="Black"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                    HorizontalContentAlignment="Left">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Resources/usuario.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Perfil" FontSize="14" Foreground="Black"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                    HorizontalContentAlignment="Left">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Resources/paleta.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Temas" FontSize="14" Foreground="Black"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                    HorizontalContentAlignment="Left">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Resources/salida.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Cerrar Sesión" FontSize="14" Foreground="Black"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Panel Principal -->
+        <DockPanel Grid.Column="1" Margin="20">
+            <!-- Botón Agregar -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 0 0 10">
+                <Button Content="Agregar cuenta" Padding="10 5" Background="#4CAF50" Foreground="White"
+                        BorderBrush="Transparent" Cursor="Hand" Click="AgregarCuenta_Click"/>
+            </StackPanel>
+
+            <!-- Lista de Cuentas -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding ListaDeCuentas}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="10"
+                                    Margin="0 0 0 10" Background="White">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="Bold" Foreground="#333"/>
+                                    <TextBlock Text="{Binding Email, StringFormat=Correo: {0}}" FontSize="14" Foreground="#666" Margin="0 2 0 0"/>
+                                    <TextBlock Text="{Binding Tuition, StringFormat=Matricula |: {0}}" FontSize="14" Foreground="#666" Margin="0 2 0 5"/>
+
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 5 0 0">
+                                        <Button Content="Editar" Padding="6 3" Margin="5 0"
+                                                Background="#2196F3" Foreground="White"
+                                                BorderBrush="Transparent" Cursor="Hand" Click="Editar_Click" Tag="{Binding}"/>
+                                        <Button Content="Banear" Padding="6 3" Margin="5 0"
+                                                Background="#F44336" Foreground="White"
+                                                BorderBrush="Transparent" Cursor="Hand"
+                                                Click="Banear_Click" Tag="{Binding}"/>
+
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+        <Border x:Name="Overlay"
+        Background="#80000000"
+        Visibility="Collapsed"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch" Grid.Column="1">
+            <Grid>
+                <Frame x:Name="ModalFrame"
+               Width="550"
+               Height="450"
+               HorizontalAlignment="Stretch"
+               VerticalAlignment="Stretch"
+               Background="White"
+               NavigationUIVisibility="Hidden"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Page>

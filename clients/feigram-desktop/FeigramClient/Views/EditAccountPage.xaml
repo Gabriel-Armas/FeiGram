@@ -1,0 +1,42 @@
+﻿<Page x:Class="FeigramClient.Views.EditAccountPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:FeigramClient.Views"
+      mc:Ignorable="d" 
+      d:DesignHeight="500" d:DesignWidth="800"
+      Title="EditAccountPage"
+      Background="White">
+
+    <Grid Margin="30">
+        <TextBlock Text="Editar Cuenta" FontSize="24" FontWeight="Bold" Margin="0 0 0 20"/>
+
+        <StackPanel Margin="0,40,0,0">
+            <Label Content="Nombre"/>
+            <TextBox Text="{Binding Nombre}" Margin="0 0 0 10"/>
+
+            <Label Content="Apellidos"/>
+            <TextBox Text="{Binding Apellidos}" Margin="0 0 0 10"/>
+
+            <Label Content="Matrícula"/>
+            <TextBox Text="{Binding Matricula}" Margin="0 0 0 10"/>
+
+            <Label Content="Correo Electrónico"/>
+            <TextBox Text="{Binding Correo}" Margin="0 0 0 10"/>
+
+            <Label Content="Contraseña"/>
+            <PasswordBox x:Name="PasswordBox" Margin="0 0 0 10"/>
+
+            <Label Content="Confirmar Contraseña"/>
+            <PasswordBox x:Name="ConfirmPasswordBox" Margin="0 0 0 20"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancelar" Margin="0 0 10 0" Padding="10 5"
+                    Click="Cancelar_Click" Background="Gray" Foreground="White"/>
+                <Button Content="Guardar" Padding="10 5"
+                    Click="Guardar_Click" Background="#4CAF50" Foreground="White"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>
