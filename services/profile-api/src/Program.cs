@@ -104,6 +104,7 @@ app.MapGet("/profiles", [Authorize] async (
                 profile.Name,
                 profile.Photo,
                 profile.Sex,
+                profile.Enrollment,
                 FollowerCount = count
             });
         }
@@ -139,6 +140,7 @@ app.MapGet("/profiles/{id}", [Authorize] async (
             profile.Name,
             profile.Photo,
             profile.Sex,
+            profile.Enrollment,
             FollowerCount = count
         };
 
@@ -181,6 +183,7 @@ app.MapPut("/profiles/{id}", [Authorize] async (
 
     var name = form["Name"].ToString();
     var sex = form["Sex"].ToString();
+    var enrollment = form["Enrollment"].ToString();
     var photoFile = form.Files.GetFile("Photo");
 
     try
@@ -277,7 +280,8 @@ app.MapGet("/profiles/{id}/following", [Authorize] async (
             {
                 p.Id,
                 p.Name,
-                p.Photo
+                p.Photo,
+                p.Enrollment
             })
             .ToListAsync();
 

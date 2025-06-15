@@ -83,6 +83,7 @@ var builder = WebApplication.CreateBuilder(args);
     var password = form["Password"].ToString();
     var email = form["Email"].ToString();
     var sex = form["Sex"].ToString();
+    var enrollment = form["Enrollment"].ToString();
     var photoFile = form.Files.GetFile("Photo");
 
     if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
@@ -137,6 +138,7 @@ var builder = WebApplication.CreateBuilder(args);
             UserId = user.Id,
             Name = user.Username,
             Photo = photoUrl,
+            Enrollment = enrollment,
             Sex = sex
         };
 
