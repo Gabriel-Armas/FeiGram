@@ -1,0 +1,6 @@
+projectKey=feigram
+serverUrl=http://localhost:9000
+serverVersion=25.5.0.107428
+dashboardUrl=http://localhost:9000/dashboard?id=feigram
+ceTaskId=0ca8b80d-2858-4fa5-a368-e19f2cc9274b
+ceTaskUrl=http://localhost:9000/api/ce/task?id=0ca8b80d-2858-4fa5-a368-e19f2cc9274b
