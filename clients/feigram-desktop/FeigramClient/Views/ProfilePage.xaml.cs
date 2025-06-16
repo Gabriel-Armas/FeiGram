@@ -42,6 +42,12 @@ namespace FeigramClient.Views
             _postsService = App.Services.GetRequiredService<PostsService>();
             _viewModel = new ProfileViewModel(profile, friend);
             this.DataContext = _viewModel;
+            if (_friend != null)
+            {
+                btnFollow.Content = "Following";
+                btnFollow.IsEnabled = false;
+
+            }
             if (isOwnProfile)
             {
                 btnFollow.Visibility = isOwnProfile ? Visibility.Collapsed : Visibility.Visible;
@@ -130,7 +136,7 @@ namespace FeigramClient.Views
             if (!this.isOwnProfile)
             {
                 var followService = App.Services.GetRequiredService<FollowService>();
-                await followService.FollowUserAsync(_viewModel.Me.Id, "usuarioAseguirId");
+                await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
             }
         }
     }

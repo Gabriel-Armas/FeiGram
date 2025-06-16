@@ -22,6 +22,13 @@ app.MapGet("/likes", async (MongoDbContext db) =>
     return Results.Ok(likes);
 });
 
+app.MapGet("/likes/check", async (string userId, string postId, MongoDbContext db) =>
+{
+    var filter = Builders<Like>.Filter.Eq(l => l.UserId, userId) & Builders<Like>.Filter.Eq(l => l.PostId, postId);
+    var exists = await db.Likes.Find(filter).AnyAsync();
+    return Results.Ok(exists);
+});
+
 app.MapGet("/likes/{id}", async (int id, MongoDbContext db) =>
 {
     var like = await db.Likes.Find(l => l.Id == id).FirstOrDefaultAsync();

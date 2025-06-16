@@ -39,6 +39,7 @@ namespace FeigramClient.Views
             _me = profile;
             this._overlay = overlay;
             _post = post;
+            likesService = App.Services.GetRequiredService<LikesService>();
             this.DataContext = _post;
             postService = App.Services.GetRequiredService<PostsService>();
             postService.SetToken(_me.Token);

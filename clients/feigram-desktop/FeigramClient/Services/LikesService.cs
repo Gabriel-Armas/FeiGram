@@ -41,5 +41,30 @@ namespace FeigramClient.Services
                 return null;
             }
         }
+
+        public async Task<bool> CheckIfUserLikedPostAsync(string userId, string postId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"/likes/check?userId={userId}&postId={postId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<bool>();
+                    return result;
+                }
+                else
+                {
+                    Console.WriteLine($"Error al consultar like. StatusCode: {response.StatusCode}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Excepción en CheckIfUserLikedPostAsync: " + ex.Message);
+                return false;
+            }
+        }
+
     }
 }

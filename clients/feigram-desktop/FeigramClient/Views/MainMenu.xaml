@@ -185,9 +185,10 @@
                                                 <!-- Acciones -->
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                                     <Button Margin="0,0,10,0"
-                                            Cursor="Hand"
-                                            Background="Transparent"
-                                            BorderThickness="0">
+                                                        Click="Like_Click"
+                                                        Cursor="Hand"
+                                                        Background="Transparent"
+                                                        BorderThickness="0">
                                                         <Button.Style>
                                                             <Style TargetType="Button">
                                                                 <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -200,7 +201,7 @@
                                                                 </Setter>
                                                             </Style>
                                                         </Button.Style>
-                                                        <Image Source="/Resources/megusta.png" Width="27" Height="27"/>
+                                                        <Image x:Name="ImgLike" Source="/Resources/megusta.png" Width="27" Height="27"/>
                                                     </Button>
 
                                                     <Button Cursor="Hand"
@@ -265,14 +266,15 @@
                     VerticalAlignment="Stretch">
                             <Grid>
                                 <TextBox x:Name="SearchBox"
-                            Margin="10,0,40,0"
-                            VerticalContentAlignment="Center"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            FontSize="14"
-                            Foreground="Black"
-                            Height="40"
-                            Padding="0"/>
+         Margin="10,0,40,0"
+         VerticalContentAlignment="Center"
+         Background="Transparent"
+         BorderThickness="0"
+         FontSize="14"
+         Foreground="Black"
+         Height="40"
+         Padding="0"
+         KeyDown="SearchBox_KeyDown"/>
                             </Grid>
                         </Border>
 

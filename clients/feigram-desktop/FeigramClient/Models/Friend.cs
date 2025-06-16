@@ -8,7 +8,7 @@ namespace FeigramClient.Models
 {
     public class Friend
     {
-        public required string Id { get; set; }
+        public string Id { get; set; }
         public string? Photo { get; set; }
         public string? Name { get; set; }
         public string? Sex { get; set; }

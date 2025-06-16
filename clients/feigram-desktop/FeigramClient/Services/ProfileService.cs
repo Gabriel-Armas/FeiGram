@@ -57,5 +57,17 @@ namespace FeigramClient.Services
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<ProfileWithFollowerCount?> GetByEnrollmentAsync(string enrollment)
+        {
+            var response = await _httpClient.GetAsync($"/profiles/profiles/enrollment/{enrollment}");
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var profile = await response.Content.ReadFromJsonAsync<ProfileWithFollowerCount>();
+            return profile;
+        }
+
+
     }
 }

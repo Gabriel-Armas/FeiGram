@@ -27,12 +27,15 @@ namespace FeigramClient.Views
         public ObservableCollection<Friend> Friends { get; set; } = new();
 
         private List<PostDto> PostsRecommendations { get; set; }
+        private LikesService likesService;
+
         private ProfileSingleton _me;
 
         public MainMenu(ProfileSingleton profile)
         {
             InitializeComponent();
             _me = profile;
+            likesService = App.Services.GetRequiredService<LikesService>();
             LoadRecommendations();
             LoadFriends();
             DataContext = this;
@@ -109,6 +112,8 @@ namespace FeigramClient.Views
                         UserProfileImage = profile.Photo,
                         PostImage = p.UrlMedia,
                         TimeAgo = GetTimeAgo(p.FechaPublicacion),
+                        Likes = p.Likes,
+                        Comentarios = p.Comentarios
                     });
 
                 }
@@ -198,6 +203,86 @@ namespace FeigramClient.Views
             ModalFrame.Navigate(addpost);
             ModalOverlay.Visibility = Visibility.Visible;
         }
+
+        private async void Like_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is Post post)
+            {
+                Like like = new Like
+                {
+                    PostId = post.Id.ToString(),
+                    UserId = _me.Id
+                };
+
+                likesService = App.Services.GetRequiredService<LikesService>();
+                var result = await likesService.CreateLikeAsync(like);
+
+                if (result != null)
+                {
+                    var img = FindVisualChild<Image>(button);
+                    if (img != null)
+                    {
+                        img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No se pudo crear el like.");
+                }
+            }
+        }
+
+        private T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T typedChild)
+                {
+                    return typedChild;
+                }
+
+                var descendant = FindVisualChild<T>(child);
+                if (descendant != null)
+                {
+                    return descendant;
+                }
+            }
+
+            return null;
+        }
+
+
+
+        private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                string query = SearchBox.Text.Trim();
+
+                if (!string.IsNullOrEmpty(query))
+                {
+                    var profileService = App.Services.GetRequiredService<ProfileService>();
+                    profileService.SetToken(_me.Token);
+                    var profile = await profileService.GetByEnrollmentAsync(query);
+                    Friend friend = new Friend();
+                    friend.Id = profile.Id;
+                    friend.Name = profile.Name;
+                    friend.Tuition = profile.Enrollment;
+                    friend.Photo = profile.Photo;
+                    friend.Sex = profile.Sex;
+                    friend.FollowerCount = profile.FollowerCount;
+                    if (profile != null)
+                    {
+                        GridMenu.Visibility = Visibility.Collapsed;
+                        var profilePage = new Profile(_me, false, friend);
+                        ModalFrame.Navigate(profilePage);
+                        ModalOverlay.Visibility = Visibility.Visible;
+                    }
+                }
+            }
+        }
+
     }
 
     public class Post
@@ -208,5 +293,7 @@ namespace FeigramClient.Views
         public string Description { get; set; }
         public string UserProfileImage { get; set; }
         public string PostImage { get; set; }
+        public string Comentarios { get; set; }
+        public string Likes { get; set; }
     }
 }

@@ -23,5 +23,9 @@ namespace FeigramClient.Models
 
         [JsonPropertyName("fechaPublicacion")]
         public DateTime FechaPublicacion { get; set; }
+        [JsonPropertyName("comentarios")]
+        public string Comentarios { get; set; }
+        [JsonPropertyName("likes")]
+        public string Likes { get; set; }
     }
 }
