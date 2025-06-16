@@ -50,25 +50,8 @@ namespace FeigramClient.Services
             return profiles ?? new List<Profile>();
         }
 
-        public async Task<bool> EditAsync(string id, string? name, string? sex, string? photoPath = null)
+        public async Task<bool> EditAsync(string id, MultipartFormDataContent form)
         {
-            using var form = new MultipartFormDataContent();
-
-            if (!string.IsNullOrWhiteSpace(name))
-                form.Add(new StringContent(name), "Name");
-
-            if (!string.IsNullOrWhiteSpace(sex))
-                form.Add(new StringContent(sex), "Sex");
-
-            if (!string.IsNullOrEmpty(photoPath) && File.Exists(photoPath))
-            {
-                var fileStream = File.OpenRead(photoPath);
-                var fileContent = new StreamContent(fileStream);
-                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
-
-                form.Add(fileContent, "Photo", Path.GetFileName(photoPath));
-            }
-
             var response = await _httpClient.PutAsync($"/profiles/{id}", form);
 
             return response.IsSuccessStatusCode;

@@ -39,7 +39,7 @@ namespace FeigramClient.Views
         {
             if (string.IsNullOrEmpty(selectedPhotoPath))
             {
-                MessageBox.Show("¡Debes seleccionar una foto! 🖼️", "Foto requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("¡Debes seleccionar una foto!", "Foto requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace FeigramClient.Views
             form.Add(new StringContent(FullNameBox.Text), "Username");
             form.Add(new StringContent(EmailBox.Text), "Email");
             form.Add(new StringContent(PasswordBox.Password), "Password");
-            //form.Add(new StringContent(TuitionBox.Text), "Tuition");
+            form.Add(new StringContent(TuitionBox.Text), "Enrollment");
 
             using var fileStream = File.OpenRead(selectedPhotoPath);
             var fileContent = new StreamContent(fileStream);
@@ -100,20 +100,5 @@ namespace FeigramClient.Views
                 SelectedImage.Source = imagen;
             }
         }
-
-
-        private string ConvertImageToBase64(BitmapImage bitmapImage)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BitmapEncoder encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
-                encoder.Save(ms);
-                byte[] imageBytes = ms.ToArray();
-                return Convert.ToBase64String(imageBytes);
-            }
-        }
-
-
     }
 }

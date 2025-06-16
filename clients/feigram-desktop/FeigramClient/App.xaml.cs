@@ -4,6 +4,8 @@ using System.Data;
 using System.Net.Http;
 using System.Windows;
 using FeigramClient.Services;
+using LiveCharts.Wpf.Charts.Base;
+using ChartApi.Grpc;
 
 namespace FeigramClient
 {
@@ -102,6 +104,25 @@ namespace FeigramClient
                 {
                     ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
                 };
+            });
+            
+            var httpHandler = new HttpClientHandler();
+            httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+            var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://localhost", new Grpc.Net.Client.GrpcChannelOptions
+            {
+                HttpHandler = httpHandler
+            });
+
+            var client = new ChartApi.Grpc.ChartService.ChartServiceClient(channel);
+
+            services.AddSingleton(channel);
+            services.AddSingleton(client);
+
+            services.AddTransient<StatisticsService>(sp =>
+            {
+                var grpcClient = sp.GetRequiredService<ChartApi.Grpc.ChartService.ChartServiceClient>();
+                return new StatisticsService(grpcClient);
             });
 
             Services = services.BuildServiceProvider();

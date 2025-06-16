@@ -159,7 +159,10 @@ namespace FeigramClient.Views
 
         private void Stadistic_Click(object sender, RoutedEventArgs e)
         {
-            //stadistics
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new Statistics(_me);
+            ModalFrame.Navigate(consultAccounts);
+            ModalOverlay.Visibility = Visibility.Visible;
         }
 
         private void CloseSession_Click(object sender, RoutedEventArgs e)

@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Protobuf Include="Protos\chart.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Resources\add.png" />
     <None Remove="Resources\belcast.jpg" />
     <None Remove="Resources\busqueda.png" />
@@ -76,6 +80,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>

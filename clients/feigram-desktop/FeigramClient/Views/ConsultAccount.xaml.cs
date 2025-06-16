@@ -61,9 +61,10 @@ namespace FeigramClient.Views
                 {
                     var response = await authService.GetAccountAsync(p.Id ?? "");
 
-                    MessageBox.Show(response.Role);
+                    MessageBox.Show(p.Tuition);
                     return new FullUser
                     {
+                        Id = p.Id,
                         Name = p.Name,
                         Email = response.Email,
                         Tuition = p.Tuition,

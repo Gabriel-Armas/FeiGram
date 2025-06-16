@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,11 +12,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using FeigramClient.Models;
 using FeigramClient.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
+using System.IO;
+using System.IO.Pipes;
 
 namespace FeigramClient.Views
 {
@@ -96,32 +98,53 @@ namespace FeigramClient.Views
                 return;
             }
 
-            bool success;
+            var form = new MultipartFormDataContent();
+            form.Add(new StringContent(FullNameBox.Text), "Name");
+            form.Add(new StringContent(TuitionBox.Text), "Enrollment");
+            form.Add(new StringContent("Male"), "Sex");
+
+            FileStream? fileStream = null;
+
+            if (!string.IsNullOrEmpty(selectedPhotoPath) && File.Exists(selectedPhotoPath))
+            {
+                fileStream = File.OpenRead(selectedPhotoPath);
+                var fileContent = new StreamContent(fileStream);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+                form.Add(fileContent, "Photo", Path.GetFileName(selectedPhotoPath));
+            }
+
+            bool success = false;
             try
             {
-                success = await profileService.EditAsync(
-                    userId,
-                    _cuenta.Name,
-                    _cuenta.Tuition,
-                    selectedPhotoPath
-                );
+                var response = await profileService.EditAsync(userId, form);
+
+                success = response;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"¡Error al editar el perfil!\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+            finally
+            {
+                if (fileStream != null)
+                {
+                    fileStream.Dispose();
+                    fileStream = null;
+                }
+            }
 
             if (success)
             {
-                MessageBox.Show("¡Perfil actualizado con éxito!", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("¡Perfil actualizado con éxito", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 cerrarModalCallback?.Invoke();
             }
             else
             {
-                MessageBox.Show("¡No se pudo actualizar el perfil!", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("¡No se pudo actualizar el perfil", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
