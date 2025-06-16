@@ -1,4 +1,7 @@
-﻿using System;
+﻿using FeigramClient.Models;
+using FeigramClient.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,10 +24,19 @@ namespace FeigramClient.Views
     public partial class CreatePost : Page
     {
         private string? selectedImagePath;
+        private Grid _overlay;
+        private ProfileSingleton _me;
+        private PostsService postService;
 
-        public CreatePost()
+
+        public CreatePost(Grid overlay, ProfileSingleton profile)
         {
             InitializeComponent();
+            _overlay = overlay;
+            _me = profile;
+            postService = App.Services.GetRequiredService<PostsService>();
+            postService.SetToken(_me.Token);
+            MessageBox.Show("Mi token es " + _me.Token);
         }
         private void SelectImage_Click(object sender, RoutedEventArgs e)
         {
@@ -50,15 +62,48 @@ namespace FeigramClient.Views
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            // Cierra esta Page, regresa al menú o limpia campos
+            _overlay.Visibility = Visibility.Collapsed;
+            var frame = _overlay.Children.OfType<Frame>().FirstOrDefault();
+            if (frame != null)
+            {
+                frame.Content = null;
+            }
         }
 
-        private void Publish_Click(object sender, RoutedEventArgs e)
+        private async void Publish_Click(object sender, RoutedEventArgs e)
         {
-            var description = DescriptionBox.Text;
-            var imagePath = selectedImagePath;
+            try
+            {
+                string? imageUrl = null;
 
-            // Aquí puedes subir la imagen y descripción a tu backend
+                if (!string.IsNullOrEmpty(selectedImagePath))
+                {
+                    var uploadResult = await postService.UploadImageAsync(selectedImagePath);
+                    imageUrl = uploadResult.Url;
+                }
+
+                var descripcion = DescriptionBox.Text;
+                MessageBox.Show("" + imageUrl);
+                await postService.CreatePostAsync(descripcion, imageUrl ?? "", _me);
+
+                MessageBox.Show("¡Publicación creada exitosamente!", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                Cancel_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al publicar: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
+        private void ImagePreview_MouseEnter(object sender, MouseEventArgs e)
+        {
+            HoverText.Visibility = Visibility.Visible;
+        }
+
+        private void ImagePreview_MouseLeave(object sender, MouseEventArgs e)
+        {
+            HoverText.Visibility = Visibility.Collapsed;
         }
     }
 }

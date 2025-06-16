@@ -31,26 +31,6 @@ namespace FeigramClient.Views
         {
             InitializeComponent();
             _me = profile;
-            /*
-            Posts = new List<Post>
-            {
-                new Post
-                {
-                    Username = "Selena Gomez",
-                    TimeAgo = "Hace 2 horas",
-                    Description = "Esta es una publicación de prueba 1.",
-                    UserProfileImage = "/Resources/SelenaGomez.png",
-                    PostImage = "/Resources/SelenaGomez.png"
-                },
-                new Post
-                {
-                    Username = "Belcast",
-                    TimeAgo = "Hace 4 horas",
-                    Description = "Esta es una publicación de prueba 2.",
-                    UserProfileImage = "/Resources/belcast.jpg",
-                    PostImage = "/Resources/belcast.jpg"
-                }
-            };*/
             LoadRecommendations();
             DataContext = this;
         }
@@ -61,9 +41,7 @@ namespace FeigramClient.Views
             {
                 var feedService = App.Services.GetRequiredService<FeedService>();
                 var recomendaciones = await feedService.GetRecommendations(_me.Id);
-                MessageBox.Show("" + _me.Id);
                 PostsRecommendations = recomendaciones;
-                MessageBox.Show(""+PostsRecommendations.Count);
                 PostsCompletos.Clear();
                 foreach (var p in recomendaciones)
                 {
@@ -76,10 +54,8 @@ namespace FeigramClient.Views
                         PostImage = p.UrlMedia,
                         TimeAgo = GetTimeAgo(p.FechaPublicacion)
                     });
-                    
+
                 }
-                MessageBox.Show("" + PostsRecommendations.Count);
-                MessageBox.Show("" + PostsRecommendations.First().UrlMedia);
             }
             catch (Exception ex)
             {
@@ -107,7 +83,7 @@ namespace FeigramClient.Views
         private void Profile_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
-            var profilePage = new Profile();
+            var profilePage = new Profile(_me);
             ModalFrame.Navigate(profilePage);
             ModalOverlay.Visibility = Visibility.Visible;
         }
@@ -116,7 +92,7 @@ namespace FeigramClient.Views
         {
             //messages
         }
-        
+
         private void Accounts_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
@@ -156,8 +132,9 @@ namespace FeigramClient.Views
 
         private void AddPost_Click(object sender, RoutedEventArgs e)
         {
-            // Abre modal o navega a pantalla de crear publicación
-            MessageBox.Show("Agregar nueva publicación");
+            var addpost = new CreatePost(ModalOverlay, _me);
+            ModalFrame.Navigate(addpost);
+            ModalOverlay.Visibility = Visibility.Visible;
         }
     }
 

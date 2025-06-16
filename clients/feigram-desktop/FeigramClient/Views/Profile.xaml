@@ -102,66 +102,80 @@
             </StackPanel>
 
             <!-- COLUMNA CENTRAL - INFORMACIÓN DEL PERFIL -->
-            <StackPanel Grid.Column="1" Margin="20" VerticalAlignment="Top">
+            <ScrollViewer Grid.Column="1" Margin="20" VerticalAlignment="Top">
+                <StackPanel>
 
-                <!-- SECCIÓN SUPERIOR: INFORMACIÓN DEL USUARIO CENTRADA -->
-                <Border Background="White" Padding="20" CornerRadius="10" Margin="0,0,0,20">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <!-- Foto de perfil circular -->
-                        <Ellipse Width="100" Height="100" Margin="0,0,0,10">
-                            <Ellipse.Fill>
-                                <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                            </Ellipse.Fill>
-                        </Ellipse>
+                    <!-- SECCIÓN SUPERIOR: INFORMACIÓN DEL USUARIO CENTRADA -->
+                    <Border Background="White" Padding="20" CornerRadius="10" Margin="0,0,0,20">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Foto de perfil circular -->
+                            <Ellipse Width="100" Height="100" Margin="0,0,0,10">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding Me.Photo}" />
+                                </Ellipse.Fill>
+                            </Ellipse>
 
-                        <!-- Información del usuario -->
-                        <TextBlock Text="Nombre del Usuario" FontSize="20" FontWeight="Bold" Foreground="Black" TextAlignment="Center"/>
-                        <TextBlock Text="Matrícula: 12345678" FontSize="14" Foreground="Gray" Margin="0,5,0,5" TextAlignment="Center"/>
+                            <!-- Información del usuario -->
+                            <TextBlock Text="{Binding Me.Name}" FontSize="20" FontWeight="Bold" Foreground="Black" TextAlignment="Center"/>
+                            <TextBlock Text="{Binding Me.Matricula}" FontSize="14" Foreground="Gray" Margin="0,5,0,5" TextAlignment="Center"/>
 
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                            <TextBlock Text="Seguidores: 120" FontSize="14" Foreground="Black" Margin="0,0,20,0"/>
-                            <Button Content="Seguir" Background="#1877F2" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                <TextBlock Text="{Binding Me.Seguidores, StringFormat='Seguidores: {0}'}" FontSize="14" Foreground="Black" Margin="0,0,20,0"/>
+                                <Button Content="Seguir" Background="#1877F2" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Border>
+                    </Border>
 
-                <!-- SECCIÓN INFERIOR - MATRIZ DE FOTOS DINÁMICA CON 3 COLUMNAS -->
-                <Border Background="White" CornerRadius="10">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsControl>
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <!-- WrapPanel permite scroll y acomoda en columnas dinámicas -->
-                                    <WrapPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                    <!-- SECCIÓN INFERIOR - MATRIZ DE FOTOS DINÁMICA CON 3 COLUMNAS -->
+                    <Border Background="White" CornerRadius="10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding UserPosts}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
 
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Margin="5" Width="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ViewportWidth, Converter={StaticResource WidthToThirdConverter}}">
-                                        <Image Source="{Binding}" 
-                               Stretch="UniformToFill" 
-                               VerticalAlignment="Center" 
-                               HorizontalAlignment="Center" 
-                               ClipToBounds="True"/>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Margin="5"
+                    Width="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ViewportWidth, Converter={StaticResource WidthToThirdConverter}}"
+                    Height="400"
+                    Padding="0"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="PostImage_Click">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="ImageBorder"
+                                Background="Transparent"
+                                CornerRadius="5"
+                                SnapsToDevicePixels="True">
+                                                        <Image Source="{Binding UrlMedia}"
+                                   Stretch="UniformToFill"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   ClipToBounds="True"
+                                   Opacity="1.0"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="ImageBorder" Property="Background" Value="#F0F0F0"/>
+                                                            <Setter TargetName="ImageBorder" Property="Opacity" Value="0.8"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                            <!-- Tus imágenes aquí -->
-                            <ItemsControl.Items>
-                                <BitmapImage UriSource="/Resources/SelenaGomez.png"/>
-                                <BitmapImage UriSource="/Resources/SelenaGomez.png"/>
-                                <BitmapImage UriSource="/Resources/Selena.jpg"/>
-                                <BitmapImage UriSource="/Resources/SelenaGomez.png"/>
-                                <BitmapImage UriSource="/Resources/Selena.jpg"/>
-                                <BitmapImage UriSource="/Resources/SelenaGomez.png"/>
-                            </ItemsControl.Items>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Border>
-            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
 
+            </ScrollViewer>
 
 
             <!-- COLUMNA DERECHA - AMIGOS -->
@@ -230,6 +244,16 @@
                     </ListBoxItem>
                 </ListBox>
             </StackPanel>
+            <Grid x:Name="ModalOverlay"
+      Grid.ColumnSpan="3"
+      Visibility="Collapsed"
+      Background="#80000000"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch">
+                <Frame x:Name="ModalFrame"
+           HorizontalAlignment="Center"
+           VerticalAlignment="Center"/>
+            </Grid>
         </Grid>
     </DockPanel>
 </Page>

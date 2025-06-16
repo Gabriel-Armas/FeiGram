@@ -13,6 +13,7 @@ namespace FeigramClient
     public partial class App : Application
     {
         public static IServiceProvider Services { get; private set; }
+        public static HttpClient HttpClient { get; internal set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -80,6 +81,18 @@ namespace FeigramClient
             });
 
             services.AddHttpClient<LikesService>(client =>
+            {
+                client.BaseAddress = new Uri("https://localhost");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                return new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                };
+            });
+
+            services.AddHttpClient<FollowService>(client =>
             {
                 client.BaseAddress = new Uri("https://localhost");
             })

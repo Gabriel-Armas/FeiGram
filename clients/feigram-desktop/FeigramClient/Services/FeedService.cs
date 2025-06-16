@@ -26,7 +26,7 @@ namespace FeigramClient.Services
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<RecommendationResponse>(json, new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true 
+                PropertyNameCaseInsensitive = true
             });
 
             return result?.Posts ?? new List<PostDto>();
