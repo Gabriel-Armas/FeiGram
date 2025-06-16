@@ -125,6 +125,7 @@ namespace FeigramClient
                 return new StatisticsService(grpcClient);
             });
 
+            services.AddSingleton<ChatWebSocketService>();
             Services = services.BuildServiceProvider();
 
             base.OnStartup(e);

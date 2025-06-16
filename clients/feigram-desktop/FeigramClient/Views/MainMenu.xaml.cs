@@ -146,7 +146,10 @@ namespace FeigramClient.Views
 
         private void Messages_Click(object sender, RoutedEventArgs e)
         {
-            //messages
+            GridMenu.Visibility = Visibility.Collapsed;
+            var messagesPage = new Messages(_me);
+            ModalFrame.Navigate(messagesPage);
+            ModalOverlay.Visibility = Visibility.Visible;
         }
 
         private void Accounts_Click(object sender, RoutedEventArgs e)
