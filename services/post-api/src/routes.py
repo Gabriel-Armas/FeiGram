@@ -48,7 +48,7 @@ def get_all_posts(user_id: str = Depends(get_current_user)):  # protegida tambi√
 
 
 @router.get("/posts/user/{id_usuario}")
-def get_user_posts(id_usuario: int, _: str = Depends(get_current_user)):  # Solo valida token
+def get_user_posts(id_usuario: str, _: str = Depends(get_current_user)):
     posts = list(posts_collection.find({"id_usuario": id_usuario}))
     return [
         {
@@ -63,7 +63,7 @@ def get_user_posts(id_usuario: int, _: str = Depends(get_current_user)):  # Solo
 
 
 @router.delete("/posts/{post_id}")
-def delete_post(post_id: int, user_id: str = Depends(get_current_user)):
+def delete_post(post_id: str, user_id: str = Depends(get_current_user)):
     post = posts_collection.find_one({"post_id": post_id})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -101,14 +101,14 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
             "descripcion": post["descripcion"],
             "url_media": post["url_media"],
             "fechaPublicacion": post["fechaPublicacion"],
-            "comentarios": count, 
+            "comentarios": count,  
             "likes": count2
         })
 
     return result
 
 @router.get("/posts/{post_id}/comments")
-def get_post_comments(post_id: int, user_id: str = Depends(get_current_user)):
+def get_post_comments(post_id: str, user_id: str = Depends(get_current_user)):
     rpc = CommentListRpcClient()
     response = rpc.get_comments(str(post_id))
 

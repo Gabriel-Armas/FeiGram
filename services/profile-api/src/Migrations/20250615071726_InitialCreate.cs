@@ -16,6 +16,7 @@ namespace profileapi.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     Photo = table.Column<string>(type: "text", nullable: true),
+                    Enrollment = table.Column<string>(type: "text", nullable: true),
                     Name = table.Column<string>(type: "text", nullable: true),
                     Sex = table.Column<string>(type: "text", nullable: true)
                 },

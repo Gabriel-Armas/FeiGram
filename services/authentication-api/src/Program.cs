@@ -83,6 +83,7 @@ var builder = WebApplication.CreateBuilder(args);
     var password = form["Password"].ToString();
     var email = form["Email"].ToString();
     var sex = form["Sex"].ToString();
+    var enrollment = form["Enrollment"].ToString();
     var photoFile = form.Files.GetFile("Photo");
 
     if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
@@ -137,6 +138,7 @@ var builder = WebApplication.CreateBuilder(args);
             UserId = user.Id,
             Name = user.Username,
             Photo = photoUrl,
+            Enrollment = enrollment,
             Sex = sex
         };
 
@@ -225,6 +227,29 @@ var builder = WebApplication.CreateBuilder(args);
             role = user.Role
         });
     });
+    app.MapPut("/users/{id}/email", async (string id, UpdateEmailRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Id == id).FirstOrDefaultAsync();
+        if (user == null)
+        {
+            return Results.NotFound("User not found");
+        }
+
+        var existingUser = await dbContext.Users.Find(u => u.Email == request.NewEmail).FirstOrDefaultAsync();
+        if (existingUser != null)
+        {
+            return Results.BadRequest("Email already in use");
+        }
+
+        var update = Builders<User>.Update.Set(u => u.Email, request.NewEmail);
+        await dbContext.Users.UpdateOneAsync(u => u.Id == id, update);
+
+        return Results.Ok("Email updated successfully");
+    })
+    .RequireAuthorization()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status404NotFound);
 
 app.Urls.Add("http://0.0.0.0:8084");
 app.Run();

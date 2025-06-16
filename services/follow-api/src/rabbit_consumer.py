@@ -3,6 +3,9 @@ import threading
 import time
 import pika
 from db import driver
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def handle_create_user_event(ch, method, properties, body):
     message = json.loads(body.decode())
@@ -23,9 +26,12 @@ def handle_create_user_event(ch, method, properties, body):
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def handle_get_followers_count(ch, method, props, body):
-    request = json.loads(body.decode())
+    body_str = body.decode()
+    print(f"Solicitud de conteo de seguidores recibida (raw): {body_str}")
+
+    request = json.loads(body_str)
     profile_id = request.get("profileId")
-    print(f"Solicitud de conteo de seguidores para: {profile_id}")
+    print(f"Solicitud de conteo de seguidores para profileId: {profile_id}")
 
     with driver.session() as session:
         result = session.run("""
@@ -39,6 +45,8 @@ def handle_get_followers_count(ch, method, props, body):
         "followerCount": count
     })
 
+    logging.info(f"following count response: {response}")
+
     ch.basic_publish(
         exchange='',
         routing_key=props.reply_to,
@@ -49,9 +57,12 @@ def handle_get_followers_count(ch, method, props, body):
 
 
 def handle_get_following_profiles(ch, method, props, body):
-    request = json.loads(body.decode())
+    body_str = body.decode()
+    print(f"Solicitud perfiles seguidos recibida (raw): {body_str}")
+
+    request = json.loads(body_str)
     profile_id = request.get("profileId")
-    print(f"Solicitud de perfiles seguidos por: {profile_id}")
+    print(f"Solicitud de perfiles seguidos por profileId: {profile_id}")
 
     with driver.session() as session:
         result = session.run("""
@@ -64,6 +75,8 @@ def handle_get_following_profiles(ch, method, props, body):
     response = json.dumps({
         "followingIds": following_ids
     })
+
+    logging.info(f"profile response: {response}")
 
     ch.basic_publish(
         exchange='',
@@ -88,6 +101,8 @@ def handle_feed_following_request(ch, method, props, body):
     response = json.dumps({
         "followed_user_ids": following
     })
+
+    logging.info(f"feed response{response}")
 
     ch.basic_publish(
         exchange='',
