@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Consultar cuentas"
-        Background="#F0F2F5">
+        Background="#F0F2F5"
+        xmlns:local="clr-namespace:FeigramClient.Resources">
     <Page.Resources>
         <Style x:Key="RoundedHoverButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -34,6 +35,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <local:RoleToBackgroundBrushConverter x:Key="RoleToBackgroundBrushConverter"/>
     </Page.Resources>
 
     <Grid Margin="20">
@@ -42,10 +45,8 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Línea divisoria -->
         <Border Grid.Column="0" HorizontalAlignment="Right" Width="1" Background="LightGray"/>
 
-        <!-- Panel de Navegación -->
         <StackPanel Grid.Column="0">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,30">
                 <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
@@ -85,21 +86,33 @@
             </Button>
         </StackPanel>
 
-        <!-- Panel Principal -->
         <DockPanel Grid.Column="1" Margin="20">
-            <!-- Botón Agregar -->
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 0 0 10">
                 <Button Content="Agregar cuenta" Padding="10 5" Background="#4CAF50" Foreground="White"
-                        BorderBrush="Transparent" Cursor="Hand" Click="AgregarCuenta_Click"/>
+                        BorderBrush="Transparent" Cursor="Hand" Click="AddAccount_Click"/>
             </StackPanel>
 
-            <!-- Lista de Cuentas -->
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding ListaDeCuentas}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="10"
-                                    Margin="0 0 0 10" Background="White">
+                            <Border 
+                                Background="{Binding Role, Converter={StaticResource RoleToBackgroundBrushConverter}}"
+                                BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="10"
+                                Margin="0 0 0 10">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="BorderBrush" Value="#DDD"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Role}" Value="Banned">
+                                                <Setter Property="Background" Value="LightPink"/>
+                                                <Setter Property="BorderBrush" Value="HotPink"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+
                                 <StackPanel>
                                     <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="Bold" Foreground="#333"/>
                                     <TextBlock Text="{Binding Email, StringFormat=Correo: {0}}" FontSize="14" Foreground="#666" Margin="0 2 0 0"/>
@@ -108,12 +121,13 @@
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 5 0 0">
                                         <Button Content="Editar" Padding="6 3" Margin="5 0"
                                                 Background="#2196F3" Foreground="White"
-                                                BorderBrush="Transparent" Cursor="Hand" Click="Editar_Click" Tag="{Binding}"/>
+                                                BorderBrush="Transparent" Cursor="Hand" Click="Editar_Click" Tag="{Binding}"
+                                                 IsEnabled="{Binding Role, Converter={StaticResource RoleToBackgroundBrushConverter}}"/>
                                         <Button Content="Banear" Padding="6 3" Margin="5 0"
                                                 Background="#F44336" Foreground="White"
                                                 BorderBrush="Transparent" Cursor="Hand"
-                                                Click="Banear_Click" Tag="{Binding}"/>
-
+                                                Click="Ban_Click" Tag="{Binding}"
+                                                 IsEnabled="{Binding Role, Converter={StaticResource RoleToBackgroundBrushConverter}}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -126,17 +140,16 @@
         Background="#80000000"
         Visibility="Collapsed"
         HorizontalAlignment="Stretch"
-        VerticalAlignment="Stretch" Grid.Column="1">
-            <Grid>
+        VerticalAlignment="Stretch"
+        Grid.Column="1">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+          MaxWidth="600" MaxHeight="700" Background="Transparent">
                 <Frame x:Name="ModalFrame"
                Width="550"
-               Height="450"
-               HorizontalAlignment="Stretch"
-               VerticalAlignment="Stretch"
+               Height="Auto"
                Background="White"
                NavigationUIVisibility="Hidden"/>
             </Grid>
         </Border>
-
     </Grid>
 </Page>

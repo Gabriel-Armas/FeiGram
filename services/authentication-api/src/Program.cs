@@ -212,6 +212,20 @@ var builder = WebApplication.CreateBuilder(args);
         return Results.Ok($"User {user.Username} has been banned");
     });
 
+    app.MapGet("/users/{id}", async (string id, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Id == id).FirstOrDefaultAsync();
+
+        if (user == null)
+            return Results.NotFound();
+
+        return Results.Ok(new 
+        { 
+            email = user.Email,
+            role = user.Role
+        });
+    });
+
 app.Urls.Add("http://0.0.0.0:8084");
 app.Run();
 

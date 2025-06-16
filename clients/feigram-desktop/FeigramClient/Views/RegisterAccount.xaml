@@ -1,52 +1,104 @@
 ﻿<Page x:Class="FeigramClient.Views.RegisterAccount"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:FeigramClient.Views"
-        mc:Ignorable="d"
-        Title="Registrar nueva cuenta"
-        Height="400" Width="600"
-        Background="#F0F2F5">
-    <Border Background="White" Padding="20" CornerRadius="10" Width="500" Height="300">
-        <StackPanel>
-            <TextBlock Text="Registro de cuenta" FontSize="20" FontWeight="Bold" Margin="0 0 0 0" TextAlignment="Center"/>
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="RegisterAccount">
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+    <Border CornerRadius="15"
+            Padding="10"
+            Background="White"
+            Width="550"
+            Height="Auto"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
 
-                <StackPanel Grid.Column="0" Margin="5">
-                    <Label Content="Nombre(s)" />
-                    <TextBox Margin="0 5"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                    <Label Content="Email" />
-                    <TextBox Margin="0 5"/>
+            <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                <Border
+            Width="160" Height="160"
+            Background="#FAFAFA"
+            BorderBrush="#CCC"
+            BorderThickness="1"
+            CornerRadius="80"
+            Cursor="Hand"
+            ClipToBounds="True"
+            MouseLeftButtonUp="SelectPhoto_Click">
 
-                    <Label Content="Matrícula" />
-                    <TextBox Margin="0 5"/>
-                </StackPanel>
+                    <Grid>
+                        <Image x:Name="SelectedImage"
+                       Stretch="UniformToFill"
+                       Width="160" Height="160">
+                            <Image.Clip>
+                                <EllipseGeometry Center="80,80" RadiusX="80" RadiusY="80"/>
+                            </Image.Clip>
+                        </Image>
 
-                <StackPanel Grid.Column="1" Margin="5">
-                    <Label Content="Apellidos" />
-                    <TextBox Margin="0 5"/>
+                        <TextBlock Text="Selecciona tu foto"
+                           Foreground="White"
+                           Background="#80000000"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"
+                           Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
 
-                    <Label Content="Contraseña" />
-                    <PasswordBox Margin="0 5"/>
-
-                    <Label Content="Confirmar contraseña" />
-                    <PasswordBox Margin="0 5"/>
-                </StackPanel>
-            </Grid>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="Registrar" Background="#4CAF50" Foreground="White" Padding="8 4"
-                    BorderBrush="Transparent" Margin="0 20 30 0" HorizontalAlignment="Center" Cursor="Hand" Click="Register_Click"/>
-                <Button Content="Cancelar" Background="#4CAF50" Foreground="White" Padding="8 4"
-                    BorderBrush="Transparent" Margin="0 20 0 0" HorizontalAlignment="Center" Cursor="Hand" Click="Cancel_Click"/>
+                <TextBlock Text="Foto"
+                   FontWeight="Bold"
+                   FontSize="16"
+                   Foreground="#444"
+                   Margin="0,10,0,0"
+                   HorizontalAlignment="Center"/>
             </StackPanel>
-        </StackPanel>
+
+            <StackPanel Grid.Column="1" Margin="30,0,0,0" VerticalAlignment="Top">
+                <TextBlock Text="Nombre completo" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <TextBox x:Name="FullNameBox" Padding="5" Width="300"/>
+
+                <TextBlock Text="Correo electrónico" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <TextBox x:Name="EmailBox" Padding="5" Width="300"/>
+
+                <TextBlock Text="Matrícula" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <TextBox x:Name="TuitionBox" Padding="5" Width="300"/>
+
+                <TextBlock Text="Contraseña" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <PasswordBox x:Name="PasswordBox" Padding="5" Width="300"/>
+
+                <TextBlock Text="Confirmar contraseña" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <PasswordBox x:Name="ConfirmPasswordBox" Padding="5" Width="300"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" >
+                    <Button Content="Cancelar"
+                            Click="Cancel_Click"
+                            Padding="15,5"
+                            Background="#E0E0E0"
+                            BorderBrush="Transparent"
+                            Cursor="Hand" Margin="0,0,10,0"/>
+                    <Button Content="Registrar"
+                            Click="Register_Click"
+                            Padding="15,5"
+                            Background="#4CAF50"
+                            Foreground="White"
+                            BorderBrush="Transparent"
+                            Cursor="Hand"/>
+                </StackPanel>
+            </StackPanel>
+
+            <Button HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="Cancel_Click"
+                    Grid.ColumnSpan="2">
+                <Image Source="/Resources/close.png" Width="10" Height="10"/>
+            </Button>
+        </Grid>
     </Border>
 </Page>

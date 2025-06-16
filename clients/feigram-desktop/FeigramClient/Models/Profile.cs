@@ -12,6 +12,7 @@ namespace FeigramClient.Models
         public string? Photo { get; set; }
         public string? Name { get; set; }
         public string? Sex { get; set; }
+        public string? Tuition { get; set; }
         public int? FollowerCount { get; set; }
     }
 }

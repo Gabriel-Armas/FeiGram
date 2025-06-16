@@ -4,39 +4,98 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:FeigramClient.Views"
-      mc:Ignorable="d" 
-      d:DesignHeight="500" d:DesignWidth="800"
-      Title="EditAccountPage"
-      Background="White">
+      Title="EditAccountPage">
 
-    <Grid Margin="30">
-        <TextBlock Text="Editar Cuenta" FontSize="24" FontWeight="Bold" Margin="0 0 0 20"/>
+    <Border CornerRadius="15"
+    Padding="10"
+    Background="White"
+    Width="550"
+    Height="Auto"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Center">
 
-        <StackPanel Margin="0,40,0,0">
-            <Label Content="Nombre"/>
-            <TextBox Text="{Binding Nombre}" Margin="0 0 0 10"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <Label Content="Apellidos"/>
-            <TextBox Text="{Binding Apellidos}" Margin="0 0 0 10"/>
+            <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                <Border
+    Width="160" Height="160"
+    Background="#FAFAFA"
+    BorderBrush="#CCC"
+    BorderThickness="1"
+    CornerRadius="80"
+    Cursor="Hand"
+    ClipToBounds="True"
+    MouseLeftButtonUp="SelectPhoto_Click">
 
-            <Label Content="Matrícula"/>
-            <TextBox Text="{Binding Matricula}" Margin="0 0 0 10"/>
+                    <Grid>
+                        <Image x:Name="SelectedImage"
+               Stretch="UniformToFill"
+               Width="160" Height="160">
+                            <Image.Clip>
+                                <EllipseGeometry Center="80,80" RadiusX="80" RadiusY="80"/>
+                            </Image.Clip>
+                        </Image>
 
-            <Label Content="Correo Electrónico"/>
-            <TextBox Text="{Binding Correo}" Margin="0 0 0 10"/>
+                        <TextBlock Text="Selecciona tu foto"
+                   Foreground="White"
+                   Background="#80000000"
+                   FontSize="14"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextAlignment="Center"
+                   Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
 
-            <Label Content="Contraseña"/>
-            <PasswordBox x:Name="PasswordBox" Margin="0 0 0 10"/>
-
-            <Label Content="Confirmar Contraseña"/>
-            <PasswordBox x:Name="ConfirmPasswordBox" Margin="0 0 0 20"/>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Cancelar" Margin="0 0 10 0" Padding="10 5"
-                    Click="Cancelar_Click" Background="Gray" Foreground="White"/>
-                <Button Content="Guardar" Padding="10 5"
-                    Click="Guardar_Click" Background="#4CAF50" Foreground="White"/>
+                <TextBlock Text="Foto"
+           FontWeight="Bold"
+           FontSize="16"
+           Foreground="#444"
+           Margin="0,10,0,0"
+           HorizontalAlignment="Center"/>
             </StackPanel>
-        </StackPanel>
-    </Grid>
+
+            <StackPanel Grid.Column="1" Margin="30,0,0,0" VerticalAlignment="Top">
+                <TextBlock Text="Nombre completo" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <TextBox x:Name="FullNameBox" Padding="5" Width="300" Text="{Binding Name, Mode=TwoWay}" />
+
+                <TextBlock Text="Correo electrónico" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <TextBox x:Name="EmailBox" Padding="5" Width="300" Text="{Binding Email, Mode=TwoWay}"/>
+
+                <TextBlock Text="Matrícula" FontWeight="Bold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
+                <TextBox x:Name="TuitionBox" Padding="5" Width="300" Text="{Binding Tuition, Mode=TwoWay}"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" >
+                    <Button Content="Cancelar"
+                    Click="Cancel_Click"
+                    Padding="15,5"
+                    Background="#E0E0E0"
+                    BorderBrush="Transparent"
+                    Cursor="Hand" Margin="0,0,10,0"/>
+                    <Button Content="Save"
+                    Click="Save_Click"
+                    Padding="15,5"
+                    Background="#4CAF50"
+                    Foreground="White"
+                    BorderBrush="Transparent"
+                    Cursor="Hand"/>
+                </StackPanel>
+            </StackPanel>
+
+            <Button HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Background="Transparent"
+            BorderThickness="0"
+            Cursor="Hand"
+            Click="Cancel_Click"
+            Grid.ColumnSpan="2">
+                <Image Source="/Resources/close.png" Width="10" Height="10"/>
+            </Button>
+        </Grid>
+    </Border>
 </Page>

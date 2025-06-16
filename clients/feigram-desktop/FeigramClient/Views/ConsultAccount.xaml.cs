@@ -1,4 +1,6 @@
 ﻿using FeigramClient.Models;
+using FeigramClient.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,64 +24,107 @@ namespace FeigramClient.Views
     public partial class ConsultAccount : Page
     {
         public ObservableCollection<FullUser> ListaDeCuentas { get; set; }
+        private ProfileService _profileService;
+        private AuthenticationService _authService;
+        private ProfileSingleton _me;
 
-        public ConsultAccount()
+        public ConsultAccount(ProfileSingleton me)
         {
             InitializeComponent();
+            _me = me;
             ListaDeCuentas = new ObservableCollection<FullUser>();
+            DataContext = this;
 
-            // Simulación: agrega un usuario de ejemplo
-            ListaDeCuentas.Add(new FullUser
-            {
-                Name = "Ana López",
-                Email = "ana.lopez@ejemplo.com",
-                Tuition = "A12345678"
-            });
-
-            this.DataContext = this;
+            Loaded += ConsultAccount_Loaded;
         }
 
-        private void AgregarCuenta_Click(object sender, RoutedEventArgs e)
+        private async void ConsultAccount_Loaded(object sender, RoutedEventArgs e)
         {
-            Overlay.Visibility = Visibility.Visible;
-            ModalFrame.Navigate(new RegisterAccount(Overlay));
+            _profileService = App.Services.GetRequiredService<ProfileService>();
+            _profileService.SetToken(_me.Token);
+
+            _authService = App.Services.GetRequiredService<AuthenticationService>();
+
+            await LoadProfilesAsync();
         }
+
+        private async Task LoadProfilesAsync()
+        {
+            ListaDeCuentas.Clear();
+
+            try
+            {
+                var perfiles = await _profileService.GetProfilesAsync();
+                var authService = App.Services.GetRequiredService<AuthenticationService>();
+
+                var tasks = perfiles.Select(async p =>
+                {
+                    var response = await authService.GetAccountAsync(p.Id ?? "");
+
+                    MessageBox.Show(response.Role);
+                    return new FullUser
+                    {
+                        Name = p.Name,
+                        Email = response.Email,
+                        Tuition = p.Tuition,
+                        Role = response.Role?.Trim() ?? "User",
+                        Photo = p.Photo
+                    };
+                });
+
+                var usuariosCompletos = await Task.WhenAll(tasks);
+
+                foreach (var usuario in usuariosCompletos)
+                {
+                    ListaDeCuentas.Add(usuario);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ocurrió un error cargando los perfiles: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
+        private void AddAccount_Click(object sender, RoutedEventArgs e)
+        {
+            ModalFrame.Navigate(new RegisterAccount(Overlay));
+            Overlay.Visibility = Visibility.Visible;
+        }
+
 
         private void Editar_Click(object sender, RoutedEventArgs e)
         {
-            var boton = sender as Button;
+            var button = sender as Button;
+            var cuenta = button?.Tag as FullUser;
 
-            var cuenta = boton?.Tag as FullUser;
+            if (cuenta == null)
+                return;
 
-            if (cuenta != null)
-            {
-                ModalFrame.Navigate(new EditAccountPage(cuenta, CerrarModal));
-                Overlay.Visibility = Visibility.Visible;
-            }
+            Action cerrarModal = () => Overlay.Visibility = Visibility.Collapsed;
+
+            var editarPage = new EditAccountPage(cuenta, cerrarModal);
+
+            ModalFrame.Navigate(editarPage);
+            Overlay.Visibility = Visibility.Visible;
         }
 
-        private void Banear_Click(object sender, RoutedEventArgs e)
+        private void Ban_Click(object sender, RoutedEventArgs e)
         {
             var boton = sender as Button;
             var cuenta = boton?.Tag as FullUser;
 
-            if (cuenta != null)
-            {
-                ModalFrame.Navigate(new BanAccountPage(cuenta, CerrarModal));
-                Overlay.Visibility = Visibility.Visible;
-            }
-        }
+            if (cuenta == null)
+                return;
 
-        private void CerrarModal()
-        {
-            ModalFrame.Content = null;
-            Overlay.Visibility = Visibility.Collapsed;
-        }
+            Action cerrarModal = () => Overlay.Visibility = Visibility.Collapsed;
+            
+            var banearPage = new BanAccountPage(cuenta, cerrarModal);
 
+            ModalFrame.Navigate(banearPage);
+            Overlay.Visibility = Visibility.Visible;
+        }
     }
-
-
-
 
     public class Cuenta
     {

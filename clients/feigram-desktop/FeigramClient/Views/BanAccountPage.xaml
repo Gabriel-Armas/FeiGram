@@ -16,9 +16,9 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0 20 0 0">
                 <Button Content="Cancelar" Margin="0 0 10 0" Padding="10 5"
-                    Click="Cancelar_Click" Background="Gray" Foreground="White"/>
+                    Click="Cancel_Click" Background="Gray" Foreground="White"/>
                 <Button Content="Confirmar" Padding="10 5"
-                    Click="Confirmar_Click" Background="#F44336" Foreground="White"/>
+                    Click="Confirm_Click" Background="#F44336" Foreground="White"/>
             </StackPanel>
         </StackPanel>
     </Grid>

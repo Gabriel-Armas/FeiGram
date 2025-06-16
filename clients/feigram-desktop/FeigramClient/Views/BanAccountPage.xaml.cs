@@ -1,4 +1,6 @@
 ﻿using FeigramClient.Models;
+using FeigramClient.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,15 +20,38 @@ namespace FeigramClient.Views
             cerrarModalCallback = cerrarModal;
         }
 
-        private void Confirmar_Click(object sender, RoutedEventArgs e)
+        private async void Confirm_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí va la lógica de banear, por ejemplo: llamada a API, etc.
-            MessageBox.Show($"Usuario {_cuenta.Name} baneado.");
+            try
+            {
+                var user = DataContext as FullUser;
 
-            cerrarModalCallback?.Invoke();
+                if (user == null || string.IsNullOrEmpty(user.Email))
+                {
+                    MessageBox.Show("No se pudo obtener la cuenta a banear~", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var authService = App.Services.GetRequiredService<AuthenticationService>();
+                bool success = await authService.BanAsync(user.Email);
+
+                if (success)
+                {
+                    MessageBox.Show("¡Cuenta baneada con éxito! 👿💥", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("¡No se pudo banear al usuario! 😿", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ocurrió un error al banear~: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void Cancelar_Click(object sender, RoutedEventArgs e)
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             cerrarModalCallback?.Invoke();
         }

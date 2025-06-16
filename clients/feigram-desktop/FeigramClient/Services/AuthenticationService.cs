@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.Http.Json;
 using FeigramClient.Models;
-using static System.Net.WebRequestMethods;
+using System.IO;
 
 namespace FeigramClient.Services
 {
@@ -31,6 +31,33 @@ namespace FeigramClient.Services
             }
 
             return null;
+        }
+
+        public async Task<bool> RegisterAsync(MultipartFormDataContent form)
+        {
+            var response = await _httpClient.PostAsync("/auth/register", form);
+            return response.IsSuccessStatusCode;
+        }
+
+
+        public async Task<AuthResponse> GetAccountAsync(string id)
+        {
+            var response = await _httpClient.GetAsync($"/auth/users/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var account = await response.Content.ReadFromJsonAsync<AuthResponse>();
+                return account ?? new AuthResponse { Email = string.Empty, Role = string.Empty };
+            }
+            return new AuthResponse { Email = string.Empty, Role = string.Empty };
+        }
+
+
+        public async Task<bool> BanAsync(string email)
+        {
+            var content = JsonContent.Create(new { Email = email });
+            var response = await _httpClient.PostAsync("/auth/ban-user", content);
+            return response.IsSuccessStatusCode;
         }
     }
 }
