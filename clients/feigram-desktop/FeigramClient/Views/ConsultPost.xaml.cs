@@ -33,7 +33,7 @@ namespace FeigramClient.Views
         private CommentsService commentsService;
         private LikesService likesService;
 
-        public ConsultPost(Post post, Grid overlay, ProfileSingleton profile)
+        public ConsultPost(Post post, Grid overlay, ProfileSingleton profile, Friend? friend = null)
         {
             InitializeComponent();
             _me = profile;

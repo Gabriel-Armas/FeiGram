@@ -287,59 +287,51 @@
                     </Grid>
 
                     <!-- Lista de amigos con imagen de perfil circular -->
-                    <ListBox BorderThickness="0" Background="Transparent">
+                    <ListBox x:Name="FriendsListBox"
+         ItemsSource="{Binding Friends}" 
+         BorderThickness="0" 
+         Background="Transparent"
+         SelectionMode="Single"
+         SelectionChanged="FriendsListBox_SelectionChanged">
+
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="Margin" Value="0,0,0,10"/>
-                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Background" Value="#f0f0f0"/>
+                                <!-- Gris claro -->
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Padding" Value="5"/>
                                 <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="OverridesDefaultStyle" Value="True"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
-                                            <ContentPresenter />
+                                            <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6">
+                                                <ContentPresenter />
+                                            </Border>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
-                                <Setter Property="OverridesDefaultStyle" Value="True"/>
                             </Style>
                         </ListBox.ItemContainerStyle>
 
-                        <!-- Amigos con imagen de perfil -->
-                        <ListBoxItem>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse Width="35" Height="35" Margin="0,0,10,0">
-                                    <Ellipse.Fill>
-                                        <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="Amigo 1" VerticalAlignment="Center" FontSize="14"/>
-                            </StackPanel>
-                        </ListBoxItem>
-
-                        <ListBoxItem>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse Width="35" Height="35" Margin="0,0,10,0">
-                                    <Ellipse.Fill>
-                                        <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="Amigo 2" VerticalAlignment="Center" FontSize="14"/>
-                            </StackPanel>
-                        </ListBoxItem>
-
-                        <ListBoxItem>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse Width="35" Height="35" Margin="0,0,10,0">
-                                    <Ellipse.Fill>
-                                        <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="Amigo 3" VerticalAlignment="Center" FontSize="14"/>
-                            </StackPanel>
-                        </ListBoxItem>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse Width="35" Height="35" Margin="0,0,10,0">
+                                        <Ellipse.Fill>
+                                            <ImageBrush ImageSource="{Binding Photo}" />
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <TextBlock Text="{Binding Name}" 
+                           VerticalAlignment="Center" 
+                           FontSize="14"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
                     </ListBox>
+
                 </StackPanel>
 
             </Grid>

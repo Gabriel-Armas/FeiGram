@@ -24,6 +24,8 @@ namespace FeigramClient.Views
     public partial class MainMenu : Page
     {
         public ObservableCollection<Post> PostsCompletos { get; set; } = new();
+        public ObservableCollection<Friend> Friends { get; set; } = new();
+
         private List<PostDto> PostsRecommendations { get; set; }
         private ProfileSingleton _me;
 
@@ -32,7 +34,58 @@ namespace FeigramClient.Views
             InitializeComponent();
             _me = profile;
             LoadRecommendations();
+            LoadFriends();
             DataContext = this;
+        }
+
+        private async void LoadFriends()
+        {
+            try
+            {
+                var followService = App.Services.GetRequiredService<FollowService>();
+                var profileService = App.Services.GetRequiredService<ProfileService>();
+                profileService.SetToken(_me.Token);
+
+                var followingIds = await followService.GetFollowingAsync(_me.Id);
+                Friends.Clear();
+                MessageBox.Show(""+ _me.Id);
+                MessageBox.Show("followers" + followingIds.Count);
+
+                foreach (var id in followingIds)
+                {
+                    var profile = await profileService.GetProfileAsync(id);
+                    Friends.Add(new Friend
+                    {
+                        Name = profile.Name,
+                        Id = profile.Id,
+                        Photo = profile.Photo,
+                        Sex = profile.Sex,
+                        Tuition = profile.Tuition,
+                        FollowerCount = profile.FollowerCount
+                    });
+                }
+                MessageBox.Show($"Se cargaron {Friends.Count} amigos.");
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error cargando amigos: " + ex.Message);
+            }
+        }
+
+        private void FriendsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (FriendsListBox.SelectedItem is Friend selectedFriend)
+            {
+                GridMenu.Visibility = Visibility.Collapsed;
+                var profilePage = new Profile(_me, false, selectedFriend);
+                ModalFrame.Navigate(profilePage);
+                ModalOverlay.Visibility = Visibility.Visible;
+
+            }
+
+            // Deseleccionar para que no quede resaltado
+            FriendsListBox.SelectedItem = null;
         }
 
         private async void LoadRecommendations()
@@ -43,16 +96,19 @@ namespace FeigramClient.Views
                 var recomendaciones = await feedService.GetRecommendations(_me.Id);
                 PostsRecommendations = recomendaciones;
                 PostsCompletos.Clear();
+                var profileService = App.Services.GetRequiredService<ProfileService>();
+                profileService.SetToken(_me.Token);
                 foreach (var p in recomendaciones)
                 {
+                    var profile = await profileService.GetProfileAsync(p.IdUsuario);
                     PostsCompletos.Add(new Post
                     {
                         Id = p.PostId,
-                        Username = _me.Name,
+                        Username = profile.Name,
                         Description = p.Descripcion,
-                        UserProfileImage = _me.Photo,
+                        UserProfileImage = profile.Photo,
                         PostImage = p.UrlMedia,
-                        TimeAgo = GetTimeAgo(p.FechaPublicacion)
+                        TimeAgo = GetTimeAgo(p.FechaPublicacion),
                     });
 
                 }
@@ -83,7 +139,7 @@ namespace FeigramClient.Views
         private void Profile_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
-            var profilePage = new Profile(_me);
+            var profilePage = new Profile(_me, true);
             ModalFrame.Navigate(profilePage);
             ModalOverlay.Visibility = Visibility.Visible;
         }

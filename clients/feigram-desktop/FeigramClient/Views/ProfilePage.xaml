@@ -111,17 +111,17 @@
                             <!-- Foto de perfil circular -->
                             <Ellipse Width="100" Height="100" Margin="0,0,0,10">
                                 <Ellipse.Fill>
-                                    <ImageBrush ImageSource="{Binding Me.Photo}" />
+                                    <ImageBrush ImageSource="{Binding Photo}" />
                                 </Ellipse.Fill>
                             </Ellipse>
 
                             <!-- Información del usuario -->
-                            <TextBlock Text="{Binding Me.Name}" FontSize="20" FontWeight="Bold" Foreground="Black" TextAlignment="Center"/>
-                            <TextBlock Text="{Binding Me.Matricula}" FontSize="14" Foreground="Gray" Margin="0,5,0,5" TextAlignment="Center"/>
+                            <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="Bold" Foreground="Black" TextAlignment="Center"/>
+                            <TextBlock Text="{Binding Matricula}" FontSize="14" Foreground="Gray" Margin="0,5,0,5" TextAlignment="Center"/>
 
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
-                                <TextBlock Text="{Binding Me.Seguidores, StringFormat='Seguidores: {0}'}" FontSize="14" Foreground="Black" Margin="0,0,20,0"/>
-                                <Button Content="Seguir" Background="#1877F2" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
+                                <TextBlock Text="{Binding Seguidores, StringFormat='Seguidores: {0}'}" FontSize="14" Foreground="Black" Margin="0,0,20,0"/>
+                                <Button Name="btnFollow" Content="Seguir" Background="#1877F2" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Click="Follow_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
