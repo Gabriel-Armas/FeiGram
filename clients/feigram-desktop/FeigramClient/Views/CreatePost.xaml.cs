@@ -36,7 +36,6 @@ namespace FeigramClient.Views
             _me = profile;
             postService = App.Services.GetRequiredService<PostsService>();
             postService.SetToken(_me.Token);
-            MessageBox.Show("Mi token es " + _me.Token);
         }
         private void SelectImage_Click(object sender, RoutedEventArgs e)
         {
@@ -83,10 +82,8 @@ namespace FeigramClient.Views
                 }
 
                 var descripcion = DescriptionBox.Text;
-                MessageBox.Show("" + imageUrl);
                 await postService.CreatePostAsync(descripcion, imageUrl ?? "", _me);
 
-                MessageBox.Show("¡Publicación creada exitosamente!", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 Cancel_Click(sender, e);
             }
             catch (Exception ex)

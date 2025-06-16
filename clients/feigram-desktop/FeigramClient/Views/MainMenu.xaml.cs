@@ -51,8 +51,6 @@ namespace FeigramClient.Views
 
                 var followingIds = await followService.GetFollowingAsync(_me.Id);
                 Friends.Clear();
-                MessageBox.Show(""+ _me.Id);
-                MessageBox.Show("followers" + followingIds.Count);
 
                 foreach (var id in followingIds)
                 {
@@ -67,7 +65,6 @@ namespace FeigramClient.Views
                         FollowerCount = profile.FollowerCount
                     });
                 }
-                MessageBox.Show($"Se cargaron {Friends.Count} amigos.");
 
             }
             catch (Exception ex)
@@ -87,7 +84,6 @@ namespace FeigramClient.Views
 
             }
 
-            // Deseleccionar para que no quede resaltado
             FriendsListBox.SelectedItem = null;
         }
 

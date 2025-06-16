@@ -39,7 +39,6 @@ namespace FeigramClient.Views
         {
             if (string.IsNullOrEmpty(selectedPhotoPath))
             {
-                MessageBox.Show("¡Debes seleccionar una foto!", "Foto requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

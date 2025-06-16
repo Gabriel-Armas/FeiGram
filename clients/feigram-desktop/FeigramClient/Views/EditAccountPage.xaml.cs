@@ -44,7 +44,6 @@ namespace FeigramClient.Views
             FullNameBox.Text = _cuenta.Name;
             EmailBox.Text = _cuenta.Email;
             TuitionBox.Text = _cuenta.Tuition;
-            MessageBox.Show(_cuenta.Photo ?? "No hay foto de perfil");
 
             if (!string.IsNullOrWhiteSpace(_cuenta.Photo))
             {

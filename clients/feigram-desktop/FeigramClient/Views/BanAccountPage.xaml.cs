@@ -37,11 +37,11 @@ namespace FeigramClient.Views
 
                 if (success)
                 {
-                    MessageBox.Show("¡Cuenta baneada con éxito! 👿💥", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("¡Cuenta baneada con éxito!", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("¡No se pudo banear al usuario! 😿", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("¡No se pudo banear al usuario!", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)

@@ -41,27 +41,6 @@ namespace FeigramClient.Views
             this.DataContext = this;
 
             _chatService.OnMessageReceived += OnIncomingMessage;
-            _chatService.OnConnected += () =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    MessageBox.Show("¡Conectado al chat! UwU 🌟");
-                });
-            };
-            _chatService.OnError += (errorMsg) =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    MessageBox.Show($"¡Error en conexión WebSocket! T_T\n{errorMsg}");
-                });
-            };
-            _chatService.OnDisconnected += () =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    MessageBox.Show("¡Se desconectó el chat! Cuida tu internet~ (´･ω･`)");
-                });
-            };
 
             this.Loaded += Messages_Loaded;
             LoadFriends();
@@ -146,8 +125,6 @@ namespace FeigramClient.Views
                         FollowerCount = profile.FollowerCount
                     });
                 }
-
-                MessageBox.Show($"Se cargaron {Friends.Count} amigos.");
             }
             catch (Exception ex)
             {
@@ -160,8 +137,6 @@ namespace FeigramClient.Views
             var msgObj = JObject.Parse(rawJson);
             Dispatcher.Invoke(() =>
             {
-                MessageBox.Show("Llegó mensaje: " + rawJson);
-
                 if (msgObj["from_user"] != null && msgObj["to"] != null && msgObj["content"] != null)
                 {
                     var from = msgObj["from_user"]?.ToString();
