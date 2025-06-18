@@ -21,16 +21,8 @@ namespace AuthenticationApi.Services
             _configuration = configuration;
         }
 
-        public async Task<string?> AuthenticateUserAsync(string email, string password)
+        public string GenerateTokenForUser(User user)
         {
-            var user = await _repo.GetUserByEmailAsync(email);
-
-            if (user == null)
-                return null;
-
-            if (!PasswordService.VerifyPassword(password, user.Password))
-                return null;
-
             return GenerateToken(user);
         }
 

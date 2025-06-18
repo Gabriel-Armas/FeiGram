@@ -56,15 +56,17 @@ var builder = WebApplication.CreateBuilder(args);
 
     app.MapPost("/login", async (LoginRequest request, AuthService authService, AuthenticationDbContext dbContext) =>
     {
-        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+        var filter = Builders<User>.Filter.Eq(u => u.Email, request.Email);
+        var user = await dbContext.Users.Find(filter).FirstOrDefaultAsync();
 
         if (user is null || !PasswordService.VerifyPassword(request.Password, user.Password))
         {
             return Results.Unauthorized();
         }
-            
-        var token = await authService.AuthenticateUserAsync(request.Email, request.Password);
-        return Results.Ok(new { token, userId= user.Id, rol = user.Role});
+
+        var token = authService.GenerateTokenForUser(user);
+
+        return Results.Ok(new { token, userId = user.Id, rol = user.Role });
     })
     .Produces<LoginRequest>()
     .Produces(StatusCodes.Status200OK)

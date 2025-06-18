@@ -17,6 +17,7 @@ builder.Services.AddDbContext<ProfileDbContext>(options =>
 builder.Services.AddHostedService<RabbitMqConsumer>();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 builder.Services.AddSingleton<FollowService>();
+builder.Services.AddSingleton<RabbitMqClient>();
 builder.Services.AddSingleton(provider =>
 {
     var config = builder.Configuration;
