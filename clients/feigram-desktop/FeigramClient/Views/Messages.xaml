@@ -34,7 +34,7 @@
 
         <!-- Lista de amigos kawaii -->
         <StackPanel Grid.Column="0" Background="#FFEDF4FF">
-            <TextBlock Text="Mis Senpais ✨" FontWeight="Bold" FontSize="20" 
+            <TextBlock Text="Seguidos" FontWeight="Bold" FontSize="20" 
                        Margin="10" Foreground="#FF4A90E2" />
             <ListBox x:Name="FriendsList"
                      ItemsSource="{Binding Friends}"
@@ -56,7 +56,7 @@
 
             <!-- Título del chat -->
             <TextBlock x:Name="ChatTitle" 
-                       Text="Selecciona a un amigo~ 💬" 
+                       Text="Chat" 
                        FontSize="22" FontWeight="Bold"
                        Foreground="#FF4A90E2" Margin="0 0 0 10"/>
 

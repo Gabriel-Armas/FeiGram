@@ -45,7 +45,7 @@ namespace FeigramClient.Views
             if (_friend != null)
             {
                 btnFollow.Content = "Following";
-                btnFollow.IsEnabled = false;
+                btnFollow.IsEnabled = true;
 
             }
             if (isOwnProfile)
