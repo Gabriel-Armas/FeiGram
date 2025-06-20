@@ -1,0 +1,2290 @@
+{
+	"info": {
+		"_postman_id": "8a715ca5-36e7-4b32-993e-6bdf9f606d5b",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42265633"
+	},
+	"item": [
+		{
+			"name": "nginx",
+			"item": [
+				{
+					"name": "https://localhost/auth/register",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "usuario3",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password1",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "mail3@gmail.com",
+									"type": "text"
+								},
+								{
+									"key": "sex",
+									"value": "Female",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/Users/gabrielarmas/Downloads/happytree.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost/auth/register",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/auth/login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"mail@gmail.com\",\n    \"password\": \"password1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/auth/login",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/auth/forgot-password",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"yaelalfredosalazaraguilar14@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/auth/forgot-password",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/auth/reset-password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"yaelalfredosalazaraguilar14@gmail.com\",\n  \"token\": \"93a633a9-c73e-4838-8307-6e9bad4fd0e8\",\n  \"newPassword\": \"Gabol12345\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/auth/reset-password",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/auth/reset-password Copy",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"yaelalfredosalazaraguilar14@gmail.com\",\n  \"token\": \"93a633a9-c73e-4838-8307-6e9bad4fd0e8\",\n  \"newPassword\": \"Gabol12345\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/auth/reset-password",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/auth/ban-user",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"yaelalfredosalazaraguilar14@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/auth/ban-user",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"ban-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/posts",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_usuario\": 101,\n  \"descripcion\": \"Primer post de prueba\",\n  \"url_media\": \"https://example.com/media1.jpg\",\n  \"fechaPublicacion\": \"2025-06-12T10:00:00Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/posts/posts",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/posts",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/posts/posts",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/posts/1",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/posts/posts/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"posts",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/posts/recent",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/posts/posts/recent",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"posts",
+								"recent"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/posts/1/comments",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/posts/posts/1/comments",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"posts",
+								"1",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/posts/1/likes-count",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/posts/posts/1/likes-count",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"posts",
+								"1",
+								"likes-count"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/upload-image",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/gabrielarmas/Downloads/instagram-1785355_1920.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost/posts/upload-image",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"upload-image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/likes/likes",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"PostId\": \"3\",\n  \"UserId\": \"6849228a30500134f30c079z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/likes/likes",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"likes",
+								"likes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/likes/likes",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"PostId\": \"3\",\n  \"UserId\": \"6849228a30500134f30c079z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/likes/likes",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"likes",
+								"likes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/likes/likes/1",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/likes/likes/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"likes",
+								"likes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/likes/likes/1",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/likes/likes/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"likes",
+								"likes",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/posts/user/101",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/posts/user/101",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"posts",
+								"user",
+								"101"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/comments/comments",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/comments/profiles/user101",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"comments",
+								"profiles",
+								"user101"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/comments/comments",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"UserId\": \"user101\",\n  \"PostId\": \"1\",\n  \"TextComment\": \"Comentario para el primer post\",\n  \"CreatedAt\": \"2025-06-12T15:30:00Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/comments/comments",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"comments",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/comments/comments/1",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/comments/comments/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"comments",
+								"comments",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/follow/user",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"684d1432702338e3e3d87d29\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/follow/user",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"follow",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/follow/followers/456",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/follow/delete/123",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"follow",
+								"delete",
+								"123"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/profiles/profiles",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/profiles/profiles",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"profiles",
+								"profiles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/profiles/profiles",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/profiles/profiles",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"profiles",
+								"profiles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/profiles/profiles/684d372eb02bf933d34d9763",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/Users/gabrielarmas/Downloads/instagram-1785355_1920.png"
+								},
+								{
+									"key": "name",
+									"value": "Gabriel",
+									"type": "text"
+								},
+								{
+									"key": "sex",
+									"value": "Male",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost/profiles/profiles/684d372eb02bf933d34d9763",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"profiles",
+								"profiles",
+								"684d372eb02bf933d34d9763"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/follow/follow/684d372eb02bf933d34d9763/684d1432702338e3e3d87d29",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/follow/follow/684d372eb02bf933d34d9763/684d1432702338e3e3d87d29",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"follow",
+								"follow",
+								"684d372eb02bf933d34d9763",
+								"684d1432702338e3e3d87d29"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/feed/likes/user?user_id=684d1432702338e3e3d87d29",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/feed/follows/user?user_id=684d372eb02bf933d34d9763",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"feed",
+								"follows",
+								"user"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "684d372eb02bf933d34d9763"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/feed/likes/user?user_id=684d1432702338e3e3d87d29",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/feed/posts/recommendations?user_id=684d1432702338e3e3d87d29",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"feed",
+								"posts",
+								"recommendations"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "684d1432702338e3e3d87d29"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/feed/likes/user?user_id=684d1432702338e3e3d87d29",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost/feed/posts/recommendations?user_id=684d372eb02bf933d34d9763",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"feed",
+								"posts",
+								"recommendations"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "684d372eb02bf933d34d9763"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "https://localhost/auth/users/684e760f9c7b4ead24293771/email",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "payload",
+									"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "secret",
+									"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+									"type": "string"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "bearer",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newEmail\": \"mail@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost/auth/users/684e760f9c7b4ead24293771/email",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"users",
+								"684e760f9c7b4ead24293771",
+								"email"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "http://localhost:3033/api/usuarios",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"_id\": \"680816bb88c694a4dcfee068\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3033/api/usuarios/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3033",
+					"path": [
+						"api",
+						"usuarios",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/posts",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id_usuario\": 1,\n  \"descripcion\": \"Mi segundo post desde Postman\",\n  \"url_media\": \"https://example.com/media.jpg\",\n  \"fechaPublicacion\": \"2025-06-05T15:00:00Z\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/posts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"posts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8084/register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "cloud1user",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Test@123",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "cloud@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "sex",
+							"value": "Female",
+							"type": "text"
+						},
+						{
+							"key": "photo",
+							"type": "file",
+							"src": "/Users/gabrielarmas/Downloads/instagram-1785355_1920.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8084/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8084/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"rabbit10@example.com\",\n  \"password\": \"Test@123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8084/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8088/profiles",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": [
+						{
+							"key": "secret",
+							"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+							"type": "string"
+						},
+						{
+							"key": "payload",
+							"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+							"type": "string"
+						},
+						{
+							"key": "algorithm",
+							"value": "HS256",
+							"type": "string"
+						},
+						{
+							"key": "isSecretBase64Encoded",
+							"value": false,
+							"type": "boolean"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "headerPrefix",
+							"value": "Bearer",
+							"type": "string"
+						},
+						{
+							"key": "queryParamKey",
+							"value": "token",
+							"type": "string"
+						},
+						{
+							"key": "header",
+							"value": "{}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8088/profiles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"profiles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8088/profiles/684b9f89ea0e3849f91bf625",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": [
+						{
+							"key": "payload",
+							"value": "{\n  \"sub\": \"6849228a30500134f30c079z\",\n  \"role\": \"Admin\",\n  \"exp\": 17499999999,\n  \"iss\": \"authentication-api\",\n  \"aud\": \"FeigramClient\"\n}",
+							"type": "string"
+						},
+						{
+							"key": "isSecretBase64Encoded",
+							"value": false,
+							"type": "boolean"
+						},
+						{
+							"key": "secret",
+							"value": "V7hX!3tZq@wL9rM8k#1P&2oH8nD2u7Vb9G5wI8sL5kYwJ0tR0bB4cX9Q3fTg5",
+							"type": "string"
+						},
+						{
+							"key": "headerPrefix",
+							"value": "bearer",
+							"type": "string"
+						},
+						{
+							"key": "algorithm",
+							"value": "HS256",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "queryParamKey",
+							"value": "token",
+							"type": "string"
+						},
+						{
+							"key": "header",
+							"value": "{}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "id",
+							"value": "684b9f89ea0e3849f91bf625",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "NuevaPrueba",
+							"type": "text"
+						},
+						{
+							"key": "photo",
+							"type": "file",
+							"src": "/Users/gabrielarmas/Downloads/instagram-1785355_1920.png"
+						},
+						{
+							"key": "sex",
+							"value": "Male",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8088/profiles/684b9f89ea0e3849f91bf625",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"profiles",
+						"684b9f89ea0e3849f91bf625"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8087/unfollow/user123/user789",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8087/unfollow/user123/user789",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8087",
+					"path": [
+						"unfollow",
+						"user123",
+						"user789"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8087/followers/user123",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8087/followers/user123",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8087",
+					"path": [
+						"followers",
+						"user123"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8087/follow/684b7c64b805f5bfa07fff48/684b7ab0b805f5bfa07fff46",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8087/follow/684b7c64b805f5bfa07fff48/684b7ab0b805f5bfa07fff46",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8087",
+					"path": [
+						"follow",
+						"684b7c64b805f5bfa07fff48",
+						"684b7ab0b805f5bfa07fff46"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://example.com/avatar.jpg",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://example.com/avatar.jpg",
+					"protocol": "https",
+					"host": [
+						"example",
+						"com"
+					],
+					"path": [
+						"avatar.jpg"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://res.cloudinary.com/dqmerfyok/image/upload/v1749786504/h8lcom0blxrcr1yzznhs.png",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://res.cloudinary.com/dqmerfyok/image/upload/v1749786504/h8lcom0blxrcr1yzznhs.png",
+					"protocol": "https",
+					"host": [
+						"res",
+						"cloudinary",
+						"com"
+					],
+					"path": [
+						"dqmerfyok",
+						"image",
+						"upload",
+						"v1749786504",
+						"h8lcom0blxrcr1yzznhs.png"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
