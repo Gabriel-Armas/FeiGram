@@ -32,25 +32,36 @@ namespace FeigramClient.Views
         private readonly ProfileViewModel _viewModel;
         public bool isOwnProfile;
         private Friend _friend;
+        private Frame _ModalFrame;
+        private Grid _ModalOverlay;
+        private MainWindow _mainWindow;
+        private bool _following;
 
-
-        public Profile(ProfileSingleton profile, bool isOwnProfile = false, Friend? friend = null)
+        public Profile(ProfileSingleton profile, MainWindow mainWindow, Frame modalFrame, Grid modalOverlay, bool isOwnProfile = false, Friend? friend = null, bool following = false)
         {
             InitializeComponent();
             _friend = friend;
+            _following = following;
             this.isOwnProfile = isOwnProfile;
             _postsService = App.Services.GetRequiredService<PostsService>();
             _viewModel = new ProfileViewModel(profile, friend);
+            _mainWindow = mainWindow;
+            _ModalFrame = modalFrame;
+            _ModalOverlay = modalOverlay;
             this.DataContext = _viewModel;
-            if (_friend != null)
+            if (_friend != null && following == true)
             {
-                btnFollow.Content = "Following";
-                btnFollow.IsEnabled = true;
+                btnFollow.Content = "Siguiendo";
+                btnFollow.IsEnabled = false;
+            }
+            else if (_friend != null)
+            {
 
             }
             if (isOwnProfile)
             {
                 btnFollow.Visibility = isOwnProfile ? Visibility.Collapsed : Visibility.Visible;
+                btnFollow.IsEnabled = false;
             }
             LoadUserPosts();
         }
@@ -119,6 +130,55 @@ namespace FeigramClient.Views
                 }
             }
         }
+
+        private void Home_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var home = new MainMenu(_viewModel.Me, _mainWindow);
+            _ModalFrame.Navigate(home);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Profile_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var profilePage = new Profile(_viewModel.Me, _mainWindow, _ModalFrame, _ModalOverlay, true);
+            _ModalFrame.Navigate(profilePage);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Messages_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var messagesPage = new Messages(_viewModel.Me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(messagesPage);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Accounts_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new ConsultAccount(_viewModel.Me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(consultAccounts);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Stadistic_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new Statistics(_viewModel.Me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(consultAccounts);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void CloseSession_Click(object sender, RoutedEventArgs e)
+        {
+            _mainWindow.MainFrame.Content = null;
+            _mainWindow.GridLogin.Visibility = Visibility.Visible;
+            _mainWindow.GridMainMenu.Visibility = Visibility.Hidden;
+            _mainWindow.EmailTextBox.Text = "";
+            _mainWindow.PasswordBox.Password = "";
+        }
         private string GetTimeAgo(DateTime fecha)
         {
             var diff = DateTime.Now - fecha;
@@ -137,6 +197,8 @@ namespace FeigramClient.Views
             {
                 var followService = App.Services.GetRequiredService<FollowService>();
                 await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
+                btnFollow.Content = "Siguiendo";
+                btnFollow.Visibility = Visibility.Collapsed;
             }
         }
     }

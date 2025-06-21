@@ -39,7 +39,7 @@
         <local:RoleToBackgroundBrushConverter x:Key="RoleToBackgroundBrushConverter"/>
     </Page.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="20" Name="GridMenu">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280"/>
             <ColumnDefinition Width="*"/>
@@ -47,41 +47,73 @@
 
         <Border Grid.Column="0" HorizontalAlignment="Right" Width="1" Background="LightGray"/>
 
-        <StackPanel Grid.Column="0">
+        <StackPanel Grid.Column="0" Margin="0">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,30">
                 <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
                 <TextBlock Text="Feigram"
-                           Foreground="Black"
-                           FontSize="24"
-                           VerticalAlignment="Center"
-                           FontWeight="Bold"/>
+     Foreground="Black"
+     FontSize="24"
+     VerticalAlignment="Center"
+     FontWeight="Bold"/>
             </StackPanel>
             <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Home_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="/Resources/hogar.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                    <TextBlock Text="Inicio" FontSize="14" Foreground="Black"/>
+                    <TextBlock Text="Inicio"
+VerticalAlignment="Center"
+FontSize="14"
+Foreground="Black"/>
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Profile_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="/Resources/usuario.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                    <TextBlock Text="Perfil" FontSize="14" Foreground="Black"/>
+                    <TextBlock Text="Perfil"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Messages_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Source="/Resources/paleta.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                    <TextBlock Text="Temas" FontSize="14" Foreground="Black"/>
+                    <Image Source="/Resources/mensajes.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Mensajes"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
                 </StackPanel>
             </Button>
             <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Accounts_Click">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Cuentas"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+ HorizontalContentAlignment="Left" Click="Stadistic_Click">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Estadísticas"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+ HorizontalContentAlignment="Left" Click="CloseSession_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="/Resources/salida.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                    <TextBlock Text="Cerrar Sesión" FontSize="14" Foreground="Black"/>
+                    <TextBlock Text="Cerrar Sesión"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
                 </StackPanel>
             </Button>
         </StackPanel>
@@ -136,6 +168,7 @@
                 </ItemsControl>
             </ScrollViewer>
         </DockPanel>
+        
         <Border x:Name="Overlay"
         Background="#80000000"
         Visibility="Collapsed"

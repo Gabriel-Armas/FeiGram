@@ -53,7 +53,7 @@ namespace FeigramClient
                         _profileSingleton.FollowerCount = profile.FollowerCount;
                         _profileSingleton.Role = loginresponse.Rol;
                         _profileSingleton.Token = loginresponse.Token;
-                        MainFrame.Navigate(new MainMenu(_profileSingleton));
+                        MainFrame.Navigate(new MainMenu(_profileSingleton, this));
                         GridMainMenu.Visibility = Visibility.Visible;
                         GridLogin.Visibility = Visibility.Hidden;
                     }

@@ -46,7 +46,7 @@ namespace FeigramClient.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/likes/check?userId={userId}&postId={postId}");
+                var response = await _httpClient.GetAsync($"/likes/likes/check?userId={userId}&postId={postId}");
 
                 if (response.IsSuccessStatusCode)
                 {

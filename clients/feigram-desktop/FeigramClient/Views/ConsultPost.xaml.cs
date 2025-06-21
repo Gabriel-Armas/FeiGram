@@ -94,20 +94,46 @@ namespace FeigramClient.Views
 
         private async void LikeButton_Click(object sender, RoutedEventArgs e)
         {
-            Like like = new Like();
-            like.PostId = _post.Id.ToString();
-            like.UserId = _me.Id;
-            likesService = App.Services.GetRequiredService<LikesService>();
-            var result = await likesService.CreateLikeAsync(like);
-            if (result != null)
+            if (_post.IsLiked)
             {
-                ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                // Descomenta esto si deseas permitir quitar el like
+                /*
+                bool success = await likesService.UnlikePostAsync(_me.Id, _post.Id.ToString());
+                if (success)
+                {
+                    _post.Likes--;
+                    _post.IsLiked = false;
+
+                    ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megusta.png"));
+                }
+                */
             }
             else
             {
-                Console.WriteLine("No se pudo crear el like.");
+                Like like = new Like
+                {
+                    PostId = _post.Id.ToString(),
+                    UserId = _me.Id
+                };
+
+                var result = await likesService.CreateLikeAsync(like);
+
+                if (result != null)
+                {
+                    _post.Likes++;
+                    _post.IsLiked = true;
+
+                    ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                }
+                else
+                {
+                    Console.WriteLine("No se pudo crear el like.");
+                }
             }
+
+            LikesCount.Text = _post.Likes.ToString();
         }
+
 
         private async void Send_Click(object sender, RoutedEventArgs e)
         {

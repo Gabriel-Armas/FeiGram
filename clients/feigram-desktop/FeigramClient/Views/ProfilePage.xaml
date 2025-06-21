@@ -36,7 +36,7 @@
     </Page.Resources>
 
     <DockPanel Background="#F0F2F5">
-        <Grid Margin="20">
+        <Grid Margin="20" x:Name="GridMenu">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="*"/>
@@ -54,49 +54,69 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,30">
                     <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
                     <TextBlock Text="Feigram"
-                        Foreground="Black"
-                        FontSize="24"
-                        VerticalAlignment="Center"
-                        FontWeight="Bold"/>
+     Foreground="Black"
+     FontSize="24"
+     VerticalAlignment="Center"
+     FontWeight="Bold"/>
                 </StackPanel>
                 <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Home_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="/Resources/hogar.png" Width="20" Height="20" Margin="0,0,10,0"/>
                         <TextBlock Text="Inicio"
-                            VerticalAlignment="Center"
-                            FontSize="14"
-                            Foreground="Black"/>
+VerticalAlignment="Center"
+FontSize="14"
+Foreground="Black"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Profile_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="/Resources/usuario.png" Width="20" Height="20" Margin="0,0,10,0"/>
                         <TextBlock Text="Perfil"
-                            VerticalAlignment="Center"
-                            FontSize="14"
-                            Foreground="Black"/>
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Messages_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Image Source="/Resources/paleta.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Temas"
-                            VerticalAlignment="Center"
-                            FontSize="14"
-                            Foreground="Black"/>
+                        <Image Source="/Resources/mensajes.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                        <TextBlock Text="Mensajes"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
-                    HorizontalContentAlignment="Left">
+ HorizontalContentAlignment="Left" Click="Accounts_Click">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                        <TextBlock Text="Cuentas"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+ HorizontalContentAlignment="Left" Click="Stadistic_Click">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                        <TextBlock Text="Estadísticas"
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+ HorizontalContentAlignment="Left" Click="CloseSession_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="/Resources/salida.png" Width="20" Height="20" Margin="0,0,10,0"/>
                         <TextBlock Text="Cerrar Sesión"
-                            VerticalAlignment="Center"
-                            FontSize="14"
-                            Foreground="Black"/>
+         VerticalAlignment="Center"
+         FontSize="14"
+         Foreground="Black"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -121,7 +141,27 @@
 
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
                                 <TextBlock Text="{Binding Seguidores, StringFormat='Seguidores: {0}'}" FontSize="14" Foreground="Black" Margin="0,0,20,0"/>
-                                <Button Name="btnFollow" Content="Seguir" Background="#1877F2" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand" Click="Follow_Click"/>
+                                <Button Name="btnFollow"
+        Content="Seguir"
+        Background="#1877F2"
+        Foreground="White"
+        Padding="10,5"
+        BorderThickness="0"
+        Cursor="Hand"
+        Click="Follow_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Setter Property="Opacity" Value="1"/>
+                                                    <Setter Property="Cursor" Value="Arrow"/>
+                                                    <Setter Property="Background" Value="Gray"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </StackPanel>
                         </StackPanel>
                     </Border>

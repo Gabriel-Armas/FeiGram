@@ -4,6 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FeigramClient.Views"
+        xmlns:res="clr-namespace:FeigramClient.Resources"
+        xmlns:conv="clr-namespace:FeigramClient.Resources"
         mc:Ignorable="d"
         Title="Feigram" >
 
@@ -16,12 +18,12 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="10"
-                                Padding="{TemplateBinding Padding}">
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Left"
-                                              VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}" />
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -35,7 +37,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <res:LikeImageConverter x:Key="LikeImageConverter" />
+        <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <conv:NullToInvertedVisibilityConverter x:Key="NullToInvertedVisibilityConverter"/>
     </Page.Resources>
+
 
 
     <DockPanel Background="#F0F2F5">
@@ -134,7 +141,8 @@
                 <!-- COLUMNA CENTRAL - PUBLICACIONES CON SCROLL Y BOTÓN FIJO -->
                 <Grid Grid.Column="1" Margin="10">
                     <!-- Fondo principal con scroll -->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  ScrollChanged="ScrollViewer_ScrollChanged">
                         <StackPanel HorizontalAlignment="Center" Width="800">
                             <ItemsControl ItemsSource="{Binding PostsCompletos}">
                                 <ItemsControl.ItemTemplate>
@@ -183,8 +191,8 @@
                                                 <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Margin="0,10,0,10"/>
 
                                                 <!-- Acciones -->
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                                    <Button Margin="0,0,10,0"
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <Button Margin="0,0,5,0"
                                                         Click="Like_Click"
                                                         Cursor="Hand"
                                                         Background="Transparent"
@@ -201,10 +209,12 @@
                                                                 </Setter>
                                                             </Style>
                                                         </Button.Style>
-                                                        <Image x:Name="ImgLike" Source="/Resources/megusta.png" Width="27" Height="27"/>
+                                                        <Image Source="{Binding IsLiked, Converter={StaticResource LikeImageConverter}}" Width="27" Height="27"/>
                                                     </Button>
+                                                    <TextBlock Name="LikesCount" Text="{Binding Likes}" FontSize="15" Margin="0,3,10,0"></TextBlock>
 
-                                                    <Button Cursor="Hand"
+                                                    <Button Margin="0,0,5,0"
+                                                        Cursor="Hand"
                                             Background="Transparent"
                                             BorderThickness="0"
                                             Click="Post_Click">
@@ -222,6 +232,8 @@
                                                         </Button.Style>
                                                         <Image Source="/Resources/comentario.png" Width="27" Height="27"/>
                                                     </Button>
+                                                    <TextBlock Text="{Binding Comentarios}" FontSize="15" Margin="0,3,5,0"></TextBlock>
+
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
@@ -254,47 +266,128 @@
 
                 <!-- COLUMNA DERECHA - AMIGOS -->
                 <StackPanel Grid.Column="2" Margin="10">
-                    <TextBlock Text="Amigos" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <TextBlock Text="Buscar amigos" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
 
                     <!-- Buscador con imagen de lupa fuera del borde blanco -->
                     <Grid Height="40" Margin="0,0,0,10">
                         <!-- Border blanco con esquina redonda para el TextBox -->
                         <Border Background="White"
-                    BorderBrush="#CCC"
-                    BorderThickness="1"
-                    CornerRadius="10"
-                    VerticalAlignment="Stretch">
+                            BorderBrush="#CCC"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            VerticalAlignment="Stretch">
                             <Grid>
                                 <TextBox x:Name="SearchBox"
-         Margin="10,0,40,0"
-         VerticalContentAlignment="Center"
-         Background="Transparent"
-         BorderThickness="0"
-         FontSize="14"
-         Foreground="Black"
-         Height="40"
-         Padding="0"
-         KeyDown="SearchBox_KeyDown"/>
+                                    TextChanged="SearchBox_TextChanged"
+                                    Margin="10,0,40,0"
+                                    VerticalContentAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontSize="14"
+                                    Foreground="Black"
+                                    Height="40"
+                                    Padding="0"/>
                             </Grid>
                         </Border>
 
                         <!-- Imagen de lupa fuera del fondo blanco -->
                         <Image Source="/Resources/busqueda.png"
-                    Width="22"
-                    Height="22"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Right"
-                    Margin="5,0,5,0"
-                    Panel.ZIndex="1"/>
+                            Width="22"
+                            Height="22"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right"
+                            Margin="5,0,5,0"
+                            Panel.ZIndex="1"/>
                     </Grid>
 
+                    <Popup x:Name="SearchPopup"
+                        PlacementTarget="{Binding ElementName=SearchBox}"
+                        Placement="Bottom"
+                        IsOpen="False"
+                        StaysOpen="False"
+                        AllowsTransparency="True"
+                        PopupAnimation="Slide">
+
+                        <Border Background="White"
+                            BorderBrush="#CCC"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            MinWidth="250"
+                            Padding="5"
+                            MaxHeight="300">
+
+                            <ListBox x:Name="SearchResultsListBox"
+                                BorderThickness="0"
+                                Background="White"
+                                SelectionChanged="SearchResultsListBox_SelectionChanged">
+
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="5"/>
+                                        <Setter Property="Margin" Value="2"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                        <ContentPresenter />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#EEE"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="5">
+                                            <!-- Si hay matrícula, muestra el perfil -->
+                                            <ContentControl Visibility="{Binding Enrollment, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="35" Height="35" Margin="0,0,10,0">
+                                                        <Ellipse.Fill>
+                                                            <ImageBrush ImageSource="{Binding Photo}" />
+                                                        </Ellipse.Fill>
+                                                    </Ellipse>
+                                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" />
+                                                        <TextBlock Text="{Binding Enrollment, StringFormat=Matrícula: {0}}" FontSize="12" Foreground="Gray" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </ContentControl>
+
+                                            <!-- Si no hay matrícula, muestra “Sin resultados” -->
+                                            <TextBlock Text="{Binding Name}"
+                       FontStyle="Italic"
+                       Foreground="Gray"
+                       FontSize="13"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Visibility="{Binding Enrollment, Converter={StaticResource NullToInvertedVisibilityConverter}}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+
+                            </ListBox>
+                        </Border>
+                    </Popup>
+
+
+
                     <!-- Lista de amigos con imagen de perfil circular -->
+                    <TextBlock Text="Amigos" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                     <ListBox x:Name="FriendsListBox"
-         ItemsSource="{Binding Friends}" 
-         BorderThickness="0" 
-         Background="Transparent"
-         SelectionMode="Single"
-         SelectionChanged="FriendsListBox_SelectionChanged">
+                        ItemsSource="{Binding Friends}" 
+                        BorderThickness="0" 
+                        Background="Transparent"
+                        SelectionMode="Single"
+                        SelectionChanged="FriendsListBox_SelectionChanged">
 
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -309,7 +402,7 @@
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
                                             <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="6">
+                                                CornerRadius="6">
                                                 <ContentPresenter />
                                             </Border>
                                         </ControlTemplate>
@@ -327,8 +420,8 @@
                                         </Ellipse.Fill>
                                     </Ellipse>
                                     <TextBlock Text="{Binding Name}" 
-                           VerticalAlignment="Center" 
-                           FontSize="14"/>
+                                        VerticalAlignment="Center" 
+                                        FontSize="14"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

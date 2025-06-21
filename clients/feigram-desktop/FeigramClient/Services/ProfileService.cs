@@ -7,6 +7,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Text.Json;
 
 namespace FeigramClient.Services
 {
@@ -68,6 +69,16 @@ namespace FeigramClient.Services
             return profile;
         }
 
+        public async Task<List<ProfileWithFollowerCount>> SearchProfilesByNameAsync(string name)
+        {
+            var response = await _httpClient.GetAsync("/profiles/profiles/search/" + name);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<ProfileWithFollowerCount>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }) ?? new List<ProfileWithFollowerCount>();
+        }
 
     }
 }

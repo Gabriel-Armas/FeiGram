@@ -332,6 +332,48 @@ app.MapGet("/profiles/enrollment/{enrollment}", [Authorize] async (
     }
 });
 
+app.MapGet("/profiles/search/{name}", [Authorize] async (
+    HttpContext httpContext,
+    string name,
+    ProfileDbContext db,
+    FollowService followService) =>
+{
+    var role = httpContext.User.FindFirst(roleClaimType)?.Value;
+    if (role == "Banned") return Results.Forbid();
+
+    try
+    {
+        var matchingProfiles = await db.Profiles
+            .Where(p => p.Name.ToLower().Contains(name.ToLower()))
+            .ToListAsync();
+
+        var results = new List<object>();
+
+        foreach (var profile in matchingProfiles)
+        {
+            var followerData = await followService.GetFollowerCountAsync(profile.Id);
+            var count = followerData?.FollowerCount ?? 0;
+
+            results.Add(new
+            {
+                profile.Id,
+                profile.Name,
+                profile.Photo,
+                profile.Sex,
+                profile.Enrollment,
+                FollowerCount = count
+            });
+        }
+
+        return Results.Ok(results);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem("Error al buscar perfiles por nombre: " + ex.Message);
+    }
+});
+
+
 app.Urls.Add("http://0.0.0.0:8081");
 
 app.Run();

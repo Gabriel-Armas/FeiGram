@@ -27,14 +27,20 @@ namespace FeigramClient.Views
         private ProfileService _profileService;
         private AuthenticationService _authService;
         private ProfileSingleton _me;
+        private Frame _ModalFrame;
+        private Grid _ModalOverlay;
+        private MainWindow _mainWindow;
 
-        public ConsultAccount(ProfileSingleton me)
+
+        public ConsultAccount(ProfileSingleton me, MainWindow mainWindow, Frame modalFrame, Grid modalOverlay)
         {
             InitializeComponent();
             _me = me;
+            _mainWindow = mainWindow;
+            _ModalFrame = modalFrame;
+            _ModalOverlay = modalOverlay;
             ListaDeCuentas = new ObservableCollection<FullUser>();
             DataContext = this;
-
             Loaded += ConsultAccount_Loaded;
         }
 
@@ -86,6 +92,54 @@ namespace FeigramClient.Views
             }
         }
 
+        private void Home_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var home = new MainMenu(_me, _mainWindow);
+            _ModalFrame.Navigate(home);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Profile_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var profilePage = new Profile(_me, _mainWindow, _ModalFrame, _ModalOverlay, true);
+            _ModalFrame.Navigate(profilePage);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Messages_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var messagesPage = new Messages(_me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(messagesPage);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Accounts_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new ConsultAccount(_me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(consultAccounts);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Stadistic_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new Statistics(_me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(consultAccounts);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void CloseSession_Click(object sender, RoutedEventArgs e)
+        {
+            _mainWindow.MainFrame.Content = null;
+            _mainWindow.GridLogin.Visibility = Visibility.Visible;
+            _mainWindow.GridMainMenu.Visibility = Visibility.Hidden;
+            _mainWindow.EmailTextBox.Text = "";
+            _mainWindow.PasswordBox.Password = "";
+        }
 
         private void AddAccount_Click(object sender, RoutedEventArgs e)
         {

@@ -25,16 +25,17 @@ namespace FeigramClient.Views
     {
         public ObservableCollection<Post> PostsCompletos { get; set; } = new();
         public ObservableCollection<Friend> Friends { get; set; } = new();
-
+        private MainWindow _mainWindow;
         private List<PostDto> PostsRecommendations { get; set; }
         private LikesService likesService;
-
+        private bool _isLoadingRecommendations = false;
         private ProfileSingleton _me;
 
-        public MainMenu(ProfileSingleton profile)
+        public MainMenu(ProfileSingleton profile, MainWindow mainWindow)
         {
             InitializeComponent();
             _me = profile;
+            _mainWindow = mainWindow;
             likesService = App.Services.GetRequiredService<LikesService>();
             LoadRecommendations();
             LoadFriends();
@@ -78,7 +79,7 @@ namespace FeigramClient.Views
             if (FriendsListBox.SelectedItem is Friend selectedFriend)
             {
                 GridMenu.Visibility = Visibility.Collapsed;
-                var profilePage = new Profile(_me, false, selectedFriend);
+                var profilePage = new Profile(_me, _mainWindow, ModalFrame, ModalOverlay, false, selectedFriend, true);
                 ModalFrame.Navigate(profilePage);
                 ModalOverlay.Visibility = Visibility.Visible;
 
@@ -97,6 +98,7 @@ namespace FeigramClient.Views
                 PostsCompletos.Clear();
                 var profileService = App.Services.GetRequiredService<ProfileService>();
                 profileService.SetToken(_me.Token);
+                var likesService = App.Services.GetRequiredService<LikesService>();
                 foreach (var p in recomendaciones)
                 {
                     var profile = await profileService.GetProfileAsync(p.IdUsuario);
@@ -109,16 +111,32 @@ namespace FeigramClient.Views
                         PostImage = p.UrlMedia,
                         TimeAgo = GetTimeAgo(p.FechaPublicacion),
                         Likes = p.Likes,
-                        Comentarios = p.Comentarios
+                        Comentarios = p.Comentarios,
+                        IsLiked = await likesService.CheckIfUserLikedPostAsync(_me.Id, p.PostId.ToString())
                     });
-
                 }
+                _isLoadingRecommendations = false; 
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error cargando recomendaciones: " + ex.Message);
             }
         }
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            var scrollViewer = sender as ScrollViewer;
+
+            if (scrollViewer != null &&
+                scrollViewer.VerticalOffset + scrollViewer.ViewportHeight >= scrollViewer.ExtentHeight &&
+                !_isLoadingRecommendations)
+            {
+                _isLoadingRecommendations = true; // evitar múltiples llamadas
+                LoadRecommendations();
+            }
+        }
+
+
 
         private string GetTimeAgo(DateTime fecha)
         {
@@ -134,13 +152,16 @@ namespace FeigramClient.Views
 
         private void Home_Click(object sender, RoutedEventArgs e)
         {
-            //home
+            GridMenu.Visibility = Visibility.Collapsed;
+            var home = new MainMenu(_me, _mainWindow);
+            ModalFrame.Navigate(home);
+            ModalOverlay.Visibility = Visibility.Visible;
         }
 
         private void Profile_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
-            var profilePage = new Profile(_me, true);
+            var profilePage = new Profile(_me, _mainWindow, ModalFrame, ModalOverlay, true);
             ModalFrame.Navigate(profilePage);
             ModalOverlay.Visibility = Visibility.Visible;
         }
@@ -148,7 +169,7 @@ namespace FeigramClient.Views
         private void Messages_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
-            var messagesPage = new Messages(_me);
+            var messagesPage = new Messages(_me, _mainWindow, ModalFrame, ModalOverlay);
             ModalFrame.Navigate(messagesPage);
             ModalOverlay.Visibility = Visibility.Visible;
         }
@@ -156,7 +177,7 @@ namespace FeigramClient.Views
         private void Accounts_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
-            var consultAccounts = new ConsultAccount(_me);
+            var consultAccounts = new ConsultAccount(_me, _mainWindow , ModalFrame, ModalOverlay);
             ModalFrame.Navigate(consultAccounts);
             ModalOverlay.Visibility = Visibility.Visible;
         }
@@ -164,16 +185,18 @@ namespace FeigramClient.Views
         private void Stadistic_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
-            var consultAccounts = new Statistics(_me);
+            var consultAccounts = new Statistics(_me, _mainWindow, ModalFrame, ModalOverlay);
             ModalFrame.Navigate(consultAccounts);
             ModalOverlay.Visibility = Visibility.Visible;
         }
 
         private void CloseSession_Click(object sender, RoutedEventArgs e)
         {
-            /*var login = new MainWindow();
-            login.Show();
-            this.Close();*/
+            _mainWindow.MainFrame.Content = null;
+            _mainWindow.GridLogin.Visibility = Visibility.Visible;
+            _mainWindow.GridMainMenu.Visibility = Visibility.Hidden;
+            _mainWindow.EmailTextBox.Text = "";
+            _mainWindow.PasswordBox.Password = "";
         }
 
         public void CloseModal()
@@ -204,29 +227,56 @@ namespace FeigramClient.Views
         {
             if (sender is Button button && button.DataContext is Post post)
             {
-                Like like = new Like
-                {
-                    PostId = post.Id.ToString(),
-                    UserId = _me.Id
-                };
-
                 likesService = App.Services.GetRequiredService<LikesService>();
-                var result = await likesService.CreateLikeAsync(like);
 
-                if (result != null)
+                if (post.IsLiked)
                 {
-                    var img = FindVisualChild<Image>(button);
-                    if (img != null)
+                    // Descomenta esta sección si quieres permitir quitar el like
+                    /*
+                    bool success = await likesService.UnlikePostAsync(_me.Id, post.Id.ToString());
+                    if (success)
                     {
-                        img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                        post.Likes--;
+                        post.IsLiked = false;
+
+                        var img = FindVisualChild<Image>(button);
+                        if (img != null)
+                        {
+                            img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megusta.png"));
+                        }
                     }
+                    */
                 }
                 else
                 {
-                    Console.WriteLine("No se pudo crear el like.");
+                    Like like = new Like
+                    {
+                        PostId = post.Id.ToString(),
+                        UserId = _me.Id
+                    };
+
+                    var result = await likesService.CreateLikeAsync(like);
+
+                    if (result != null)
+                    {
+                        post.Likes++;
+                        post.IsLiked = true;
+
+                        var img = FindVisualChild<Image>(button);
+                        if (img != null)
+                        {
+                            img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("No se pudo crear el like.");
+                    }
                 }
+                //LikesCount.Text = post.Likes.ToString();
             }
         }
+
 
         private T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
@@ -249,33 +299,76 @@ namespace FeigramClient.Views
         }
 
 
-
-        private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (e.Key == Key.Enter)
-            {
-                string query = SearchBox.Text.Trim();
+            var profileService = App.Services.GetRequiredService<ProfileService>();
+            profileService.SetToken(_me.Token);
 
-                if (!string.IsNullOrEmpty(query))
+            string searchText = SearchBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                SearchPopup.IsOpen = false;
+                return;
+            }
+
+            try
+            {
+                var results = await profileService.SearchProfilesByNameAsync(searchText);
+                List<ProfileWithFollowerCount> filteredResults;
+
+                if (results != null)
                 {
-                    var profileService = App.Services.GetRequiredService<ProfileService>();
-                    profileService.SetToken(_me.Token);
-                    var profile = await profileService.GetByEnrollmentAsync(query);
-                    Friend friend = new Friend();
-                    friend.Id = profile.Id;
-                    friend.Name = profile.Name;
-                    friend.Tuition = profile.Enrollment;
-                    friend.Photo = profile.Photo;
-                    friend.Sex = profile.Sex;
-                    friend.FollowerCount = profile.FollowerCount;
-                    if (profile != null)
-                    {
-                        GridMenu.Visibility = Visibility.Collapsed;
-                        var profilePage = new Profile(_me, false, friend);
-                        ModalFrame.Navigate(profilePage);
-                        ModalOverlay.Visibility = Visibility.Visible;
-                    }
+                    filteredResults = results
+                        .Where(p => p.Id != _me.Id) // Excluirme a mí mismo
+                        .ToList();
                 }
+                else
+                {
+                    filteredResults = new List<ProfileWithFollowerCount>();
+                }
+
+                if (filteredResults.Any())
+                {
+                    SearchResultsListBox.ItemsSource = filteredResults;
+                }
+                else
+                {
+                    SearchResultsListBox.ItemsSource = new List<ProfileWithFollowerCount>
+            {
+                new ProfileWithFollowerCount { Name = "Sin resultados", Enrollment = "" }
+            };
+                }
+
+                SearchPopup.IsOpen = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error en búsqueda: " + ex.Message);
+                SearchPopup.IsOpen = false;
+            }
+        }
+
+
+
+        private void SearchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SearchResultsListBox.SelectedItem is ProfileWithFollowerCount profile)
+            {
+                Friend friend = new Friend();
+                friend.Id = profile.Id;
+                friend.Name = profile.Name;
+                friend.Tuition = profile.Enrollment;
+                friend.Photo = profile.Photo;
+                friend.Sex = profile.Sex;
+                friend.FollowerCount = profile.FollowerCount;
+                if (profile != null)
+                {
+                    GridMenu.Visibility = Visibility.Collapsed;
+                    var profilePage = new Profile(_me, _mainWindow, ModalFrame, ModalOverlay, false, friend);
+                    ModalFrame.Navigate(profilePage);
+                    ModalOverlay.Visibility = Visibility.Visible;
+                }
+                SearchPopup.IsOpen = false;
             }
         }
 
@@ -289,7 +382,8 @@ namespace FeigramClient.Views
         public string Description { get; set; }
         public string UserProfileImage { get; set; }
         public string PostImage { get; set; }
-        public string Comentarios { get; set; }
-        public string Likes { get; set; }
+        public int Comentarios { get; set; }
+        public int Likes { get; set; }
+        public bool IsLiked { get; set; }
     }
 }

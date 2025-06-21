@@ -25,14 +25,20 @@ namespace FeigramClient.Views
         private ProfileSingleton _me;
         private readonly ChatWebSocketService _chatService;
         private string _selectedFriendId;
+        private Frame _ModalFrame;
+        private Grid _ModalOverlay;
+        private MainWindow _mainWindow;
 
         // Aquí guardamos el historial de mensajes por cada amigo kawaii~
         private readonly Dictionary<string, List<MessageDto>> _messageHistory = new();
 
-        public Messages(ProfileSingleton profile)
+        public Messages(ProfileSingleton profile, MainWindow mainWindow, Frame modalFrame, Grid modalOverlay)
         {
             InitializeComponent();
             _me = profile;
+            _mainWindow = mainWindow;
+            _ModalFrame = modalFrame;
+            _ModalOverlay = modalOverlay;
             _chatService = App.Services.GetRequiredService<ChatWebSocketService>();
 
             ((MessageAlignmentConverter)Resources["MessageAlignmentConverter"]).CurrentUserId = _me.Id;
@@ -46,6 +52,54 @@ namespace FeigramClient.Views
             LoadFriends();
 
             ChatMessagesList.ItemsSource = ChatMessages;
+        }
+        private void Home_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var home = new MainMenu(_me, _mainWindow);
+            _ModalFrame.Navigate(home);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Profile_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var profilePage = new Profile(_me, _mainWindow, _ModalFrame, _ModalOverlay, true);
+            _ModalFrame.Navigate(profilePage);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Messages_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var messagesPage = new Messages(_me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(messagesPage);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Accounts_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new ConsultAccount(_me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(consultAccounts);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void Stadistic_Click(object sender, RoutedEventArgs e)
+        {
+            GridMenu.Visibility = Visibility.Collapsed;
+            var consultAccounts = new Statistics(_me, _mainWindow, _ModalFrame, _ModalOverlay);
+            _ModalFrame.Navigate(consultAccounts);
+            _ModalOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void CloseSession_Click(object sender, RoutedEventArgs e)
+        {
+            _mainWindow.MainFrame.Content = null;
+            _mainWindow.GridLogin.Visibility = Visibility.Visible;
+            _mainWindow.GridMainMenu.Visibility = Visibility.Hidden;
+            _mainWindow.EmailTextBox.Text = "";
+            _mainWindow.PasswordBox.Password = "";
         }
 
         private async Task LoadChatHistoryAsync(string userId, string friendId)
