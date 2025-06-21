@@ -1,11 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Depends
 from db import driver
+from neo4j.exceptions import Neo4jError
 from schemas import UserCreate
+from auth import get_current_user
 
 router = APIRouter()
 
 @router.post("/user")
-def create_user(user: UserCreate):
+def create_user(user: UserCreate, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
@@ -18,7 +20,7 @@ def create_user(user: UserCreate):
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 @router.post("/follow/{follower}/{followed}")
-def follow_user(follower: str, followed: str):
+def follow_user(follower: str, followed: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
@@ -31,7 +33,7 @@ def follow_user(follower: str, followed: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/followers/{user_id}")
-def get_followers(user_id: str):
+def get_followers(user_id: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             result = session.run("""
@@ -43,7 +45,7 @@ def get_followers(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.get("/following/{user_id}")
-def get_following(user_id: str):
+def get_following(user_id: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             result = session.run("""
@@ -55,7 +57,7 @@ def get_following(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.delete("/delete/{user_id}")
-def delete_user(user_id: str):
+def delete_user(user_id: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
@@ -69,7 +71,7 @@ def delete_user(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.delete("/unfollow/{follower}/{followed}")
-def unfollow_user(follower: str, followed: str):
+def unfollow_user(follower: str, followed: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
