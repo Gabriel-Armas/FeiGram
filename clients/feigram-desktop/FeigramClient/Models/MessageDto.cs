@@ -8,7 +8,7 @@ namespace FeigramClient.Models
         [JsonPropertyName("message_id")]
         public int MessageId { get; set; }
 
-        [JsonPropertyName("from")]
+        [JsonPropertyName("from_user")]
         public string FromUserId { get; set; } = string.Empty;
 
         [JsonPropertyName("to")]

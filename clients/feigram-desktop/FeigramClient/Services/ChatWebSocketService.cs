@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
@@ -19,7 +20,6 @@ namespace FeigramClient.Services
         public event Action? OnDisconnected;
 
         private TaskCompletionSource<string>? _historyResponseTcs;
-
 
         public async Task ConnectWithTokenAsync(string token)
         {
@@ -84,8 +84,15 @@ namespace FeigramClient.Services
                     using var reader = new StreamReader(ms, Encoding.UTF8);
                     string message = await reader.ReadToEndAsync();
 
+                    var json = JObject.Parse(message);
+                    if (json["type"]?.ToString() == "history")
+                    {
+                        var historyArray = json["messages"]?.ToString() ?? "[]";
+                        _historyResponseTcs?.TrySetResult(historyArray);
+                        continue;
+                    }
+
                     OnMessageReceived?.Invoke(message);
-                    Console.WriteLine("Recibido mensaje: " + message);
                 }
             }
             catch (Exception ex)
@@ -93,7 +100,6 @@ namespace FeigramClient.Services
                 OnError?.Invoke(ex.Message);
             }
         }
-
 
 
         public async Task DisconnectAsync()
@@ -119,7 +125,6 @@ namespace FeigramClient.Services
                 var json = System.Text.Json.JsonSerializer.Serialize(request);
                 await SendMessageAsync(json);
 
-                // Esperamos a que llegue la respuesta UwU
                 return await _historyResponseTcs.Task;
             }
 

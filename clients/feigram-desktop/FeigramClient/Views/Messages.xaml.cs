@@ -21,7 +21,6 @@ namespace FeigramClient.Views
     {
         public ObservableCollection<Friend> Friends { get; set; } = new();
         public ObservableCollection<MessageDto> ChatMessages { get; set; } = new();
-
         private ProfileSingleton _me;
         private readonly ChatWebSocketService _chatService;
         private string _selectedFriendId;
@@ -29,12 +28,13 @@ namespace FeigramClient.Views
         private Grid _ModalOverlay;
         private MainWindow _mainWindow;
 
-        // Aquí guardamos el historial de mensajes por cada amigo kawaii~
         private readonly Dictionary<string, List<MessageDto>> _messageHistory = new();
 
         public Messages(ProfileSingleton profile, MainWindow mainWindow, Frame modalFrame, Grid modalOverlay)
         {
             InitializeComponent();
+            this.DataContext = this;
+
             _me = profile;
             _mainWindow = mainWindow;
             _ModalFrame = modalFrame;
@@ -44,12 +44,9 @@ namespace FeigramClient.Views
             ((MessageAlignmentConverter)Resources["MessageAlignmentConverter"]).CurrentUserId = _me.Id;
             ((MessageBubbleColorConverter)Resources["MessageBubbleColorConverter"]).CurrentUserId = _me.Id;
 
-            this.DataContext = this;
-
             _chatService.OnMessageReceived += OnIncomingMessage;
 
             this.Loaded += Messages_Loaded;
-            LoadFriends();
 
             ChatMessagesList.ItemsSource = ChatMessages;
         }
@@ -119,7 +116,7 @@ namespace FeigramClient.Views
                 {
                     var msg = new MessageDto
                     {
-                        FromUserId = item["from_user"]?.ToString(),
+                        FromUserId = item["from"]?.ToString(),
                         ToUserId = item["to"]?.ToString(),
                         Content = item["content"]?.ToString(),
                     };
@@ -275,15 +272,6 @@ namespace FeigramClient.Views
                 ChatTitle.Text = selectedFriend.Name;
                 
                 await LoadChatHistoryAsync(_me.Id, _selectedFriendId);
-
-                var json = JsonConvert.SerializeObject(new
-                {
-                    type = "start_chat",
-                    from = _me.Id,
-                    with = _selectedFriendId
-                });
-
-                await _chatService.SendMessageAsync(json);
             }
         }
 
