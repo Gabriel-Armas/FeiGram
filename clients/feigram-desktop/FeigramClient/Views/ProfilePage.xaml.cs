@@ -3,6 +3,7 @@ using FeigramClient.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -89,6 +90,11 @@ namespace FeigramClient.Views
                         _viewModel.UserPosts.Add(post);
                 }
                 
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
@@ -193,12 +199,24 @@ namespace FeigramClient.Views
 
         private async void Follow_Click(object sender, RoutedEventArgs e)
         {
-            if (!this.isOwnProfile)
+            try
             {
-                var followService = App.Services.GetRequiredService<FollowService>();
-                await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
-                btnFollow.Content = "Siguiendo";
-                btnFollow.Visibility = Visibility.Collapsed;
+                if (!this.isOwnProfile)
+                {
+                    var followService = App.Services.GetRequiredService<FollowService>();
+                    await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
+                    btnFollow.Content = "Siguiendo";
+                    btnFollow.Visibility = Visibility.Collapsed;
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

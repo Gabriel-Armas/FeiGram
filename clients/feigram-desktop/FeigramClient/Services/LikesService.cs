@@ -66,5 +66,28 @@ namespace FeigramClient.Services
             }
         }
 
+        public async Task<bool> DeleteLikeAsync(string userId, string postId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"/likes/likes?userId={userId}&postId={postId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine($"Error al eliminar el like. StatusCode: {response.StatusCode}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Excepción en DeleteLikeAsync: " + ex.Message);
+                return false;
+            }
+        }
+
     }
 }

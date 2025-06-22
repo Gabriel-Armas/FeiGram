@@ -1,10 +1,14 @@
 ﻿using FeigramClient.Models;
+using FeigramClient.Resources;
 using FeigramClient.Services;
+using Google.Protobuf.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+
 
 namespace FeigramClient.Views
 {
@@ -30,12 +35,16 @@ namespace FeigramClient.Views
         private LikesService likesService;
         private bool _isLoadingRecommendations = false;
         private ProfileSingleton _me;
+        private RulesValidator _rulesValidator;
 
         public MainMenu(ProfileSingleton profile, MainWindow mainWindow)
         {
             InitializeComponent();
             _me = profile;
             _mainWindow = mainWindow;
+            _rulesValidator = new RulesValidator();
+            _rulesValidator.EviteDangerLettersInTextbox(SearchBox);
+            _rulesValidator.AddLimitToTextBox(SearchBox, 80);
             likesService = App.Services.GetRequiredService<LikesService>();
             LoadRecommendations();
             LoadFriends();
@@ -68,6 +77,11 @@ namespace FeigramClient.Views
                 }
 
             }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error cargando amigos: " + ex.Message);
@@ -93,6 +107,7 @@ namespace FeigramClient.Views
             try
             {
                 var feedService = App.Services.GetRequiredService<FeedService>();
+                feedService.SetToken(_me.Token);
                 var recomendaciones = await feedService.GetRecommendations(_me.Id);
                 PostsRecommendations = recomendaciones;
                 PostsCompletos.Clear();
@@ -116,6 +131,11 @@ namespace FeigramClient.Views
                     });
                 }
                 _isLoadingRecommendations = false; 
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
@@ -225,55 +245,64 @@ namespace FeigramClient.Views
 
         private async void Like_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.DataContext is Post post)
+            try
             {
-                likesService = App.Services.GetRequiredService<LikesService>();
-
-                if (post.IsLiked)
+                if (sender is Button button && button.DataContext is Post post)
                 {
-                    // Descomenta esta sección si quieres permitir quitar el like
-                    /*
-                    bool success = await likesService.UnlikePostAsync(_me.Id, post.Id.ToString());
-                    if (success)
-                    {
-                        post.Likes--;
-                        post.IsLiked = false;
+                    likesService = App.Services.GetRequiredService<LikesService>();
 
-                        var img = FindVisualChild<Image>(button);
-                        if (img != null)
+                    if (post.IsLiked)
+                    {
+                        bool success = await likesService.DeleteLikeAsync(_me.Id, post.Id.ToString());
+                        if (success)
                         {
-                            img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megusta.png"));
-                        }
-                    }
-                    */
-                }
-                else
-                {
-                    Like like = new Like
-                    {
-                        PostId = post.Id.ToString(),
-                        UserId = _me.Id
-                    };
+                            post.Likes--;
+                            post.IsLiked = false;
 
-                    var result = await likesService.CreateLikeAsync(like);
-
-                    if (result != null)
-                    {
-                        post.Likes++;
-                        post.IsLiked = true;
-
-                        var img = FindVisualChild<Image>(button);
-                        if (img != null)
-                        {
-                            img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                            var img = FindVisualChild<Image>(button);
+                            if (img != null)
+                            {
+                                img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megusta.png"));
+                            }
+                            
                         }
                     }
                     else
                     {
-                        Console.WriteLine("No se pudo crear el like.");
+                        Like like = new Like
+                        {
+                            PostId = post.Id.ToString(),
+                            UserId = _me.Id
+                        };
+
+                        var result = await likesService.CreateLikeAsync(like);
+
+                        if (result != null)
+                        {
+                            post.Likes++;
+                            post.IsLiked = true;
+
+                            var img = FindVisualChild<Image>(button);
+                            if (img != null)
+                            {
+                                img.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("No se pudo crear el like.");
+                        }
                     }
                 }
-                //LikesCount.Text = post.Likes.ToString();
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al dar like:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -341,6 +370,11 @@ namespace FeigramClient.Views
 
                 SearchPopup.IsOpen = true;
             }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             catch (Exception ex)
             {
                 Console.WriteLine("Error en búsqueda: " + ex.Message);
@@ -374,7 +408,7 @@ namespace FeigramClient.Views
 
     }
 
-    public class Post
+    public class Post : INotifyPropertyChanged
     {
         public int Id { get; set; }
         public string Username { get; set; }
@@ -383,7 +417,40 @@ namespace FeigramClient.Views
         public string UserProfileImage { get; set; }
         public string PostImage { get; set; }
         public int Comentarios { get; set; }
-        public int Likes { get; set; }
-        public bool IsLiked { get; set; }
+
+        private int likes;
+        public int Likes
+        {
+            get => likes;
+            set
+            {
+                if (likes != value)
+                {
+                    likes = value;
+                    OnPropertyChanged(nameof(Likes));
+                }
+            }
+        }
+
+        private bool isLiked;
+        public bool IsLiked
+        {
+            get => isLiked;
+            set
+            {
+                if (isLiked != value)
+                {
+                    isLiked = value;
+                    OnPropertyChanged(nameof(IsLiked));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
     }
 }

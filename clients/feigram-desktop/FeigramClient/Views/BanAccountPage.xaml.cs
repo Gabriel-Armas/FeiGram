@@ -2,6 +2,7 @@
 using FeigramClient.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -43,6 +44,11 @@ namespace FeigramClient.Views
                 {
                     MessageBox.Show("¡No se pudo banear al usuario!", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {

@@ -3,6 +3,30 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="RegisterAccount">
 
+    <Page.Resources>
+        <Style x:Key="PublishButtonStyle" TargetType="Button">
+            <!-- Valores por defecto -->
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+
+            <Style.Triggers>
+                <!-- Cuando IsEnabled == False -->
+                <Trigger Property="IsEnabled" Value="False">
+                    <!-- Gris de fondo -->
+                    <Setter Property="Background" Value="LightGray"/>
+                    <!-- Texto más oscuro -->
+                    <Setter Property="Foreground" Value="Gray"/>
+                    <!-- Opción: bajar opacidad -->
+                    <Setter Property="Opacity" Value="0.7"/>
+                    <!-- Cursor por defecto -->
+                    <Setter Property="Cursor" Value="Arrow"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
     <Border CornerRadius="15"
             Padding="10"
             Background="White"
@@ -77,13 +101,16 @@
                             Background="#E0E0E0"
                             BorderBrush="Transparent"
                             Cursor="Hand" Margin="0,0,10,0"/>
-                    <Button Content="Registrar"
-                            Click="Register_Click"
-                            Padding="15,5"
-                            Background="#4CAF50"
-                            Foreground="White"
-                            BorderBrush="Transparent"
-                            Cursor="Hand"/>
+                    <Button x:Name="RegisterButton"
+                        Content="Registrar"
+                        Style="{StaticResource PublishButtonStyle}"
+                        Click="Register_Click"
+                        Padding="15,5"
+                        Background="#4CAF50"
+                        Foreground="White"
+                        BorderBrush="Transparent"
+                        Cursor="Hand"
+                        IsEnabled="False"/>
                 </StackPanel>
             </StackPanel>
 

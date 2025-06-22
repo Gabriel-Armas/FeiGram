@@ -1,9 +1,11 @@
 ﻿using FeigramClient.Models;
+using FeigramClient.Resources;
 using FeigramClient.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -27,15 +29,19 @@ namespace FeigramClient.Views
         private Grid _overlay;
         private ProfileSingleton _me;
         private PostsService postService;
-
+        private RulesValidator _rulesValidator;
 
         public CreatePost(Grid overlay, ProfileSingleton profile)
         {
             InitializeComponent();
             _overlay = overlay;
+            _rulesValidator = new RulesValidator();
+            _rulesValidator.AddLimitToTextBox(DescriptionBox, 200);
+            _rulesValidator.EviteDangerLettersInTextbox(DescriptionBox);
             _me = profile;
             postService = App.Services.GetRequiredService<PostsService>();
             postService.SetToken(_me.Token);
+            PublishButton.IsEnabled = false;
         }
         private void SelectImage_Click(object sender, RoutedEventArgs e)
         {
@@ -49,6 +55,7 @@ namespace FeigramClient.Views
                 selectedImagePath = dialog.FileName;
                 PreviewImage.Source = new BitmapImage(new Uri(selectedImagePath));
                 PreviewImage.Visibility = Visibility.Visible;
+                PublishButton.IsEnabled = true;
             }
         }
 
@@ -57,6 +64,7 @@ namespace FeigramClient.Views
             selectedImagePath = null;
             PreviewImage.Source = null;
             PreviewImage.Visibility = Visibility.Collapsed;
+            PublishButton.IsEnabled = false;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -85,6 +93,11 @@ namespace FeigramClient.Views
                 await postService.CreatePostAsync(descripcion, imageUrl ?? "", _me);
 
                 Cancel_Click(sender, e);
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,12 +47,24 @@ namespace FeigramClient.Views
 
         private async void ConsultAccount_Loaded(object sender, RoutedEventArgs e)
         {
-            _profileService = App.Services.GetRequiredService<ProfileService>();
-            _profileService.SetToken(_me.Token);
+            try
+            {
+                _profileService = App.Services.GetRequiredService<ProfileService>();
+                _profileService.SetToken(_me.Token);
 
-            _authService = App.Services.GetRequiredService<AuthenticationService>();
+                _authService = App.Services.GetRequiredService<AuthenticationService>();
 
-            await LoadProfilesAsync();
+                await LoadProfilesAsync();
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al consultar cuentas:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            } 
         }
 
         private async Task LoadProfilesAsync()
@@ -85,6 +98,11 @@ namespace FeigramClient.Views
                 {
                     ListaDeCuentas.Add(usuario);
                 }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {

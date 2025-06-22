@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using LiveCharts.Defaults;
 using LiveCharts.Configurations;
 using System.Windows;
+using System.Net.Http;
 
 namespace FeigramClient.Views
 {
@@ -102,27 +103,29 @@ namespace FeigramClient.Views
 
         private async Task LoadWeeklyStatsAsync()
         {
-            var response = await _statisticsService.GetWeeklyStatsAsync();
-            if (response != null)
+            try
             {
-                var dayCounts = response.Counts.ToDictionary(p => DateTime.Parse(p.Day), p => p.Count);
-
-                var firstDay = dayCounts.Keys.Min();
-                var monday = firstDay.AddDays(-(int)firstDay.DayOfWeek + (firstDay.DayOfWeek == DayOfWeek.Sunday ? -6 : 1));
-                var weekDays = Enumerable.Range(0, 7).Select(i => monday.AddDays(i)).ToList();
-
-                var labels = new List<string>();
-                var values = new ChartValues<int>();
-
-                foreach (var day in weekDays)
+                var response = await _statisticsService.GetWeeklyStatsAsync();
+                if (response != null)
                 {
-                    labels.Add(day.ToString("yyyy-MM-dd"));
-                    values.Add(dayCounts.TryGetValue(day, out var count) ? count : 0);
-                }
+                    var dayCounts = response.Counts.ToDictionary(p => DateTime.Parse(p.Day), p => p.Count);
 
-                int max = values.Max();
+                    var firstDay = dayCounts.Keys.Min();
+                    var monday = firstDay.AddDays(-(int)firstDay.DayOfWeek + (firstDay.DayOfWeek == DayOfWeek.Sunday ? -6 : 1));
+                    var weekDays = Enumerable.Range(0, 7).Select(i => monday.AddDays(i)).ToList();
 
-                SeriesCollection = new SeriesCollection
+                    var labels = new List<string>();
+                    var values = new ChartValues<int>();
+
+                    foreach (var day in weekDays)
+                    {
+                        labels.Add(day.ToString("yyyy-MM-dd"));
+                        values.Add(dayCounts.TryGetValue(day, out var count) ? count : 0);
+                    }
+
+                    int max = values.Max();
+
+                    SeriesCollection = new SeriesCollection
                 {
                     new ColumnSeries
                     {
@@ -132,31 +135,41 @@ namespace FeigramClient.Views
                     }
                 };
 
-                WeeklyChart.AxisX.Clear();
-                WeeklyChart.AxisX.Add(new Axis
-                {
-                    Title = "Fecha",
-                    Labels = labels
-                });
-
-                WeeklyChart.AxisY.Clear();
-                WeeklyChart.AxisY.Add(new Axis
-                {
-                    Title = "Cantidad",
-                    MinValue = 0,
-                    MaxValue = max + 1,
-                    LabelFormatter = value => ((int)value).ToString(),
-                    Separator = new LiveCharts.Wpf.Separator
+                    WeeklyChart.AxisX.Clear();
+                    WeeklyChart.AxisX.Add(new Axis
                     {
-                        Step = 1
-                    }
-                });
+                        Title = "Fecha",
+                        Labels = labels
+                    });
 
-                WeekRangeText.Text = $"Del {labels.First()} al {labels.Last()} ✨";
+                    WeeklyChart.AxisY.Clear();
+                    WeeklyChart.AxisY.Add(new Axis
+                    {
+                        Title = "Cantidad",
+                        MinValue = 0,
+                        MaxValue = max + 1,
+                        LabelFormatter = value => ((int)value).ToString(),
+                        Separator = new LiveCharts.Wpf.Separator
+                        {
+                            Step = 1
+                        }
+                    });
+
+                    WeekRangeText.Text = $"Del {labels.First()} al {labels.Last()} ✨";
+                }
+                else
+                {
+                    WeekRangeText.Text = "No se pudieron cargar las estadísticas";
+                }
             }
-            else
+            catch (HttpRequestException httpEx)
             {
-                WeekRangeText.Text = "No se pudieron cargar las estadísticas";
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al generar grafico:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

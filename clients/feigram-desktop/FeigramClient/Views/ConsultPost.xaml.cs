@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Xml.Linq;
+using FeigramClient.Resources;
 
 namespace FeigramClient.Views
 {
@@ -32,11 +33,14 @@ namespace FeigramClient.Views
         private PostsService postService;
         private CommentsService commentsService;
         private LikesService likesService;
+        private RulesValidator _rulesValidator;
 
         public ConsultPost(Post post, Grid overlay, ProfileSingleton profile, Friend? friend = null)
         {
             InitializeComponent();
             _me = profile;
+            _rulesValidator = new RulesValidator();
+            _rulesValidator.AddLimitToTextBox(MessageInput,150);
             this._overlay = overlay;
             _post = post;
             likesService = App.Services.GetRequiredService<LikesService>();
@@ -53,129 +57,164 @@ namespace FeigramClient.Views
 
         private async Task LoadComments()
         {
-            ChatMessages.Items.Clear();
-            var comments = await postService.GetCommentsAsync(_post.Id);
-
-            commentsService = App.Services.GetRequiredService<CommentsService>();
-
-            foreach (var comment in comments)
+            try
             {
-                ProfileDto profile = await commentsService.GetProfileByIdAsync(comment.user_id);
-                var panel = new StackPanel();
-                panel.Margin = new Thickness(0, 0, 0, 10);
+                ChatMessages.Items.Clear();
+                var comments = await postService.GetCommentsAsync(_post.Id);
 
-                var user = new TextBlock
+                commentsService = App.Services.GetRequiredService<CommentsService>();
+
+                foreach (var comment in comments)
                 {
-                    Text = profile.Name,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = Brushes.DodgerBlue
-                };
+                    ProfileDto profile = await commentsService.GetProfileByIdAsync(comment.user_id);
+                    var panel = new StackPanel();
+                    panel.Margin = new Thickness(0, 0, 0, 10);
 
-                var message = new TextBlock
-                {
-                    Text = comment.text_comment,
-                    TextWrapping = TextWrapping.Wrap
-                };
+                    var user = new TextBlock
+                    {
+                        Text = profile.Name,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = Brushes.DodgerBlue
+                    };
 
-                var time = new TextBlock
-                {
-                    Text = comment.created_at.ToString("g"),
-                    FontSize = 10,
-                    Foreground = Brushes.Gray
-                };
+                    var message = new TextBlock
+                    {
+                        Text = comment.text_comment,
+                        TextWrapping = TextWrapping.Wrap
+                    };
 
-                panel.Children.Add(user);
-                panel.Children.Add(message);
-                panel.Children.Add(time);
+                    var time = new TextBlock
+                    {
+                        Text = comment.created_at.ToString("g"),
+                        FontSize = 10,
+                        Foreground = Brushes.Gray
+                    };
 
-                ChatMessages.Items.Add(panel);
+                    panel.Children.Add(user);
+                    panel.Children.Add(message);
+                    panel.Children.Add(time);
+
+                    ChatMessages.Items.Add(panel);
+                }
             }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al consultar post:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
 
         private async void LikeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_post.IsLiked)
+            try
             {
-                // Descomenta esto si deseas permitir quitar el like
-                /*
-                bool success = await likesService.UnlikePostAsync(_me.Id, _post.Id.ToString());
-                if (success)
+                if (_post.IsLiked)
                 {
-                    _post.Likes--;
-                    _post.IsLiked = false;
 
-                    ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megusta.png"));
-                }
-                */
-            }
-            else
-            {
-                Like like = new Like
-                {
-                    PostId = _post.Id.ToString(),
-                    UserId = _me.Id
-                };
+                    bool success = await likesService.DeleteLikeAsync(_me.Id, _post.Id.ToString());
+                    if (success)
+                    {
+                        _post.Likes--;
+                        _post.IsLiked = false;
 
-                var result = await likesService.CreateLikeAsync(like);
-
-                if (result != null)
-                {
-                    _post.Likes++;
-                    _post.IsLiked = true;
-
-                    ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                        ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megusta.png"));
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("No se pudo crear el like.");
-                }
-            }
+                    Like like = new Like
+                    {
+                        PostId = _post.Id.ToString(),
+                        UserId = _me.Id
+                    };
 
-            LikesCount.Text = _post.Likes.ToString();
+                    var result = await likesService.CreateLikeAsync(like);
+
+                    if (result != null)
+                    {
+                        _post.Likes++;
+                        _post.IsLiked = true;
+
+                        ImgLike.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/megustaActivo.png"));
+                    }
+                    else
+                    {
+                        Console.WriteLine("No se pudo crear el like.");
+                    }
+                }
+
+                LikesCount.Text = _post.Likes.ToString();
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al dar like:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
 
         private async void Send_Click(object sender, RoutedEventArgs e)
         {
-            var input = MessageInput.Text;
-            Comment comment = new Comment();
-            comment.TextComment = input;
-            comment.PostId = _post.Id.ToString();
-            comment.UserId = _me.Id;
-
-            commentsService = App.Services.GetRequiredService<CommentsService>();
-            await commentsService.AddCommentAsync(comment);
-            if (!string.IsNullOrWhiteSpace(input))
+            try
             {
-                var panel = new StackPanel();
-                panel.Margin = new Thickness(0, 0, 0, 10);
+                var input = MessageInput.Text;
+                Comment comment = new Comment();
+                comment.TextComment = input;
+                comment.PostId = _post.Id.ToString();
+                comment.UserId = _me.Id;
 
-                var user = new TextBlock
+                commentsService = App.Services.GetRequiredService<CommentsService>();
+                await commentsService.AddCommentAsync(comment);
+                if (!string.IsNullOrWhiteSpace(input))
                 {
-                    Text = _me.Name,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = Brushes.DodgerBlue
-                };
+                    var panel = new StackPanel();
+                    panel.Margin = new Thickness(0, 0, 0, 10);
 
-                var message = new TextBlock
-                {
-                    Text = input,
-                    TextWrapping = TextWrapping.Wrap
-                };
+                    var user = new TextBlock
+                    {
+                        Text = _me.Name,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = Brushes.DodgerBlue
+                    };
 
-                var time = new TextBlock
-                {
-                    Text = comment.CreatedAt.ToString("g"),
-                    FontSize = 10,
-                    Foreground = Brushes.Gray
-                };
+                    var message = new TextBlock
+                    {
+                        Text = input,
+                        TextWrapping = TextWrapping.Wrap
+                    };
 
-                panel.Children.Add(user);
-                panel.Children.Add(message);
-                panel.Children.Add(time);
+                    var time = new TextBlock
+                    {
+                        Text = comment.CreatedAt.ToString("g"),
+                        FontSize = 10,
+                        Foreground = Brushes.Gray
+                    };
 
-                ChatMessages.Items.Add(panel);
-                MessageInput.Clear();
+                    panel.Children.Add(user);
+                    panel.Children.Add(message);
+                    panel.Children.Add(time);
+
+                    ChatMessages.Items.Add(panel);
+                    MessageInput.Clear();
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al comentar:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -1,5 +1,9 @@
 fastapi
 uvicorn
-aio-pika
+pymongo
+python-dotenv
 pydantic
+python-multipart
+python-jose
 pika
+aio-pika

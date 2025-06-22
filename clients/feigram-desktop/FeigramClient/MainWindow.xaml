@@ -84,23 +84,31 @@
 
                             <!-- CONTRASEÑA -->
                             <Grid Margin="0,5">
-                                <Border CornerRadius="10" Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <Border CornerRadius="10"
+          Background="White"
+          BorderBrush="Gray"
+          BorderThickness="1">
                                     <Grid>
+                                        <!-- 1) PasswordBox con handler -->
                                         <PasswordBox x:Name="PasswordBox"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                FontSize="16"
-                                Padding="5"/>
-                                        <TextBlock Text="Contraseña"
-                                Foreground="Gray"
-                                FontSize="16"
-                                Padding="5,0,0,0"
-                                VerticalAlignment="Center"
-                                IsHitTestVisible="False"
-                                Visibility="{Binding (PasswordBox.Password).IsEmpty, ElementName=PasswordBox, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                   Background="Transparent"
+                   BorderThickness="0"
+                   FontSize="16"
+                   Padding="5"
+                   PasswordChanged="PasswordBox_PasswordChanged"/>
+
+                                        <!-- 2) TextBlock que hace de placeholder -->
+                                        <TextBlock x:Name="PasswordPlaceholder"
+                 Text="Contraseña"
+                 Foreground="Gray"
+                 FontSize="16"
+                 Padding="5,0,0,0"
+                 VerticalAlignment="Center"
+                 IsHitTestVisible="False"/>
                                     </Grid>
                                 </Border>
                             </Grid>
+
 
 
                             <Button Content="Iniciar Sesión"

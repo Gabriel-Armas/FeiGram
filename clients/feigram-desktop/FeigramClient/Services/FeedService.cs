@@ -12,15 +12,22 @@ namespace FeigramClient.Services
     class FeedService
     {
         private readonly HttpClient _httpClient;
+        private string _jwtToken = "";
 
         public FeedService(HttpClient http)
         {
             _httpClient = http;
         }
 
+        public void SetToken(string token)
+        {
+            _jwtToken = token;
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _jwtToken);
+        }
+
         public async Task<List<PostDto>> GetRecommendations(string userId)
         {
-            var response = await _httpClient.GetAsync($"/feed/posts/recommendations?user_id={userId}");
+            var response = await _httpClient.GetAsync($"/feed/posts/recommendations");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();

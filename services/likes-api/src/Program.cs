@@ -42,10 +42,25 @@ app.MapPost("/likes", async (Like like, MongoDbContext db) =>
     return Results.Created($"/likes/{like.Id}", like);
 });
 
-app.MapDelete("/likes/{id}", async (int id, MongoDbContext db) =>
+app.MapDelete("/likes", async (
+    HttpRequest request,
+    MongoDbContext db) =>
 {
-    var result = await db.Likes.DeleteOneAsync(l => l.Id == id);
-    return result.DeletedCount > 0 ? Results.NoContent() : Results.NotFound();
+    if (!request.Query.TryGetValue("userId", out var userIdValue) ||
+        !request.Query.TryGetValue("postId", out var postIdValue))
+    {
+        return Results.BadRequest("Faltan parámetros userId o postId.");
+    }
+
+    var userId = userIdValue.ToString();
+    var postId = postIdValue.ToString();
+
+    var result = await db.Likes.DeleteOneAsync(
+        l => l.UserId == userId && l.PostId == postId);
+
+    return result.DeletedCount > 0
+        ? Results.Ok("Like eliminado exitosamente.")
+        : Results.NotFound("No se encontró el like para eliminar.");
 });
 app.Urls.Add("http://0.0.0.0:8082");
 

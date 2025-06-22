@@ -46,6 +46,24 @@ namespace FeigramClient.Services
             return json?.Following ?? new List<string>();
         }
 
+        public async Task<string> UnfollowUserAsync(string followerId, string followedId)
+        {
+            var url = $"/follow/unfollow/{followerId}/{followedId}";
+
+            var response = await _httpClient.DeleteAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Error al dejar de seguir al usuario: {error}");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var json = JsonSerializer.Deserialize<Dictionary<string, string>>(content);
+
+            return json?["message"] ?? "Unfollow successful";
+        }
+
+
         private class FollowingResponse
         {
             [JsonPropertyName("following")]
