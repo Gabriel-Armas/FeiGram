@@ -27,6 +27,7 @@ namespace FeigramClient.Views
         private Frame _ModalFrame;
         private Grid _ModalOverlay;
         private MainWindow _mainWindow;
+        public string CurrentUserId => _me.Id;
 
         private readonly Dictionary<string, List<MessageDto>> _messageHistory = new();
 
@@ -41,7 +42,6 @@ namespace FeigramClient.Views
             _ModalOverlay = modalOverlay;
             _chatService = App.Services.GetRequiredService<ChatWebSocketService>();
 
-            ((MessageAlignmentConverter)Resources["MessageAlignmentConverter"]).CurrentUserId = _me.Id;
             ((MessageBubbleColorConverter)Resources["MessageBubbleColorConverter"]).CurrentUserId = _me.Id;
 
             _chatService.OnMessageReceived += OnIncomingMessage;

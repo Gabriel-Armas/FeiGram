@@ -8,10 +8,11 @@
       xmlns:converters="clr-namespace:FeigramClient.Resources"
       mc:Ignorable="d" 
       d:DesignHeight="600" d:DesignWidth="1000"
-      Title="Messages">
+      Title="Messages"
+      Background="#F0F2F5">
 
     <Page.Resources>
-        <!-- Estilo de botón redondeado con efecto hover -->
+        <!-- Estilos -->
         <Style x:Key="RoundedHoverButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -19,13 +20,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="10"
-                            Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Left"
-                                          VerticalAlignment="Center"
-                                          Margin="{TemplateBinding Padding}" />
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -40,16 +36,29 @@
             </Setter>
         </Style>
 
-        <!-- Conversores para el chat -->
         <converters:MessageAlignmentConverter x:Key="MessageAlignmentConverter" />
         <converters:MessageBubbleColorConverter x:Key="MessageBubbleColorConverter" />
 
-        <!-- Plantilla para los mensajes del chat -->
         <DataTemplate x:Key="ChatMessageTemplate" DataType="{x:Type models:MessageDto}">
-            <StackPanel Margin="5"
-            HorizontalAlignment="{Binding FromUserId, Converter={StaticResource MessageAlignmentConverter}}">
-                <Border Background="{Binding FromUserId, Converter={StaticResource MessageBubbleColorConverter}}"
-            CornerRadius="12" Padding="10" MaxWidth="300">
+            <StackPanel Margin="5">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                        <Style.Triggers>
+                            <DataTrigger Value="True">
+                                <DataTrigger.Binding>
+                                    <MultiBinding Converter="{StaticResource MessageAlignmentConverter}">
+                                        <Binding Path="FromUserId"/>
+                                        <Binding RelativeSource="{RelativeSource AncestorType=Page}" Path="CurrentUserId"/>
+                                    </MultiBinding>
+                                </DataTrigger.Binding>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <Border Background="{Binding FromUserId, Converter={StaticResource MessageBubbleColorConverter}}" CornerRadius="12" Padding="10" MaxWidth="300">
                     <StackPanel>
                         <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding SentAt, StringFormat='HH:mm'}" FontSize="10" Foreground="Gray" HorizontalAlignment="Right"/>
@@ -59,176 +68,123 @@
         </DataTemplate>
     </Page.Resources>
 
+    <Grid x:Name="GridMenu" Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-    <Grid Background="#F0F2F5" Name="GridMenu">
-        <!-- Aquí podrías agregar Overlay o Modal si lo deseas -->
+        <Border Grid.Column="0" HorizontalAlignment="Right" Width="1" Background="LightGray"/>
 
-        <DockPanel>
-            <!-- Barra lateral -->
-            <StackPanel DockPanel.Dock="Left" Width="280" Background="#FFF">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10">
-                    <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
-                    <TextBlock Text="Feigram" FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="0" Margin="0">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,30">
+                <Image Source="/Resources/feigramlogo.png" Height="40" Width="40" Margin="0,0,10,0"/>
+                <TextBlock Text="Feigram" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" Foreground="Black"/>
+            </StackPanel>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+        HorizontalContentAlignment="Left" Click="Home_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Resources/hogar.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Inicio" FontSize="14" VerticalAlignment="Center"/>
                 </StackPanel>
+            </Button>
 
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="10,5" Height="40" Padding="5,0"
-                        HorizontalContentAlignment="Left" Click="Home_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Resources/hogar.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Inicio" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+        HorizontalContentAlignment="Left" Click="Profile_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Resources/usuario.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Perfil" FontSize="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="10,5" Height="40" Padding="5,0"
-                        HorizontalContentAlignment="Left" Click="Profile_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Resources/usuario.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Perfil" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+        HorizontalContentAlignment="Left" Click="Messages_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Resources/mensajes.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Mensajes" FontSize="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="10,5" Height="40" Padding="5,0"
-                        HorizontalContentAlignment="Left" Click="Messages_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Resources/mensajes.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Mensajes" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+        HorizontalContentAlignment="Left" Click="Accounts_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Cuentas" FontSize="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="10,5" Height="40" Padding="5,0"
-                        HorizontalContentAlignment="Left" Click="Accounts_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Cuentas" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+        HorizontalContentAlignment="Left" Click="Stadistic_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Estadísticas" FontSize="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
 
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="10,5" Height="40" Padding="5,0"
-                        HorizontalContentAlignment="Left" Click="Stadistic_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Estadísticas" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="10,5" Height="40" Padding="5,0"
-                        HorizontalContentAlignment="Left" Click="CloseSession_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Resources/salida.png" Width="20" Height="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="Cerrar Sesión" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-        <StackPanel Grid.Column="0" Background="#FFEDF4FF">
-            <TextBlock Text="Seguidos" FontWeight="Bold" FontSize="20" 
-                       Margin="10" Foreground="#FF4A90E2" />
-            <ListBox x:Name="FriendsList"
-                     ItemsSource="{Binding Friends}"
-                     DisplayMemberPath="Name"
-                     SelectionChanged="FriendsList_SelectionChanged"
-                     Margin="10" />
+            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+        HorizontalContentAlignment="Left" Click="CloseSession_Click">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Resources/salida.png" Width="20" Height="20" Margin="0,0,10,0"/>
+                    <TextBlock Text="Cerrar Sesión" FontSize="14" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
 
-        <Border Grid.Column="1" Background="#FFE3E3E3" Width="1"/>
+        <Border Grid.Column="1" Background="#D3D3D3" Width="1"/>
 
         <Grid Grid.Column="2" Margin="10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="1"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <TextBlock x:Name="ChatTitle" 
-                       Text="Chat" 
-                       FontSize="22" FontWeight="Bold"
-                       Foreground="#FF4A90E2" Margin="0 0 0 10"/>
-
-            <ListBox x:Name="ChatMessagesList"
-                     ItemsSource="{Binding ChatMessages}"
-                     Grid.Row="1"
-                     Margin="0 0 0 10"
-                     Background="#FFFFFFFF"
-                     BorderBrush="#FFD6E1F5"
-                     BorderThickness="1"
-                     ItemTemplate="{StaticResource ChatMessageTemplate}" />
-
-            <StackPanel Orientation="Horizontal" Grid.Row="2">
-                <TextBox x:Name="ChatInput"
-                         Width="700"
-                         Height="40"
-                         Margin="0 0 10 0"
-                         FontSize="14"
-                         VerticalContentAlignment="Center"
-                         Padding="10"/>
-                <Button Content="Enviar 🚀"
-                        Width="100"
-                        Height="40"
-                        Click="SendMessage_Click"
-                        Background="#FF4A90E2"
-                        Foreground="White"
-                        FontWeight="Bold"
-                        Cursor="Hand"/>
+            <StackPanel Grid.Column="0" Background="#FFEDF4FF">
+                <TextBlock Text="Seguidos" FontWeight="Bold" FontSize="20" Margin="10" Foreground="#FF4A90E2" />
+                <ListBox x:Name="FriendsList" ItemsSource="{Binding Friends}" SelectionChanged="FriendsList_SelectionChanged" Margin="10" BorderThickness="0" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#FFF5F9FF" CornerRadius="10" Margin="5" Padding="10" BorderBrush="#FFCCE4FF" BorderThickness="1">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#FF4A90E2"/>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </StackPanel>
 
-            <!-- Contenido principal del chat -->
-            <Grid Margin="20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <Border Grid.Column="1" Background="#E3E3E3" Width="1"/>
 
-                <StackPanel Grid.Column="0" Background="#FFEDF4FF">
-                    <TextBlock Text="Seguidos" FontWeight="Bold" FontSize="20" 
-                               Margin="10" Foreground="#FF4A90E2" />
-                    <ListBox x:Name="FriendsList"
-                             ItemsSource="{Binding Friends}"
-                             DisplayMemberPath="Name"
-                             SelectionChanged="FriendsList_SelectionChanged"
-                             Margin="10" />
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="ChatTitle" Text="Chat" FontSize="22" FontWeight="Bold" Foreground="#FF4A90E2" Margin="0 0 0 10"/>
+
+                <ListBox x:Name="ChatMessagesList" ItemsSource="{Binding ChatMessages}" Grid.Row="1" Margin="0 0 0 10" Background="White" BorderBrush="#FFD6E1F5" BorderThickness="1" ItemTemplate="{StaticResource ChatMessageTemplate}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Focusable" Value="False"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="2">
+                    <TextBox x:Name="ChatInput" Width="700" Height="40" Margin="0 0 10 0" FontSize="14" VerticalContentAlignment="Center" Padding="10" Background="#FFF" BorderBrush="#FF4A90E2" BorderThickness="1"/>
+                    <Button Content="Enviar 🚀" Width="100" Height="40" Click="SendMessage_Click" Background="#FF4A90E2" Foreground="White" FontWeight="Bold" Cursor="Hand" BorderBrush="#FF4A90E2" BorderThickness="1"/>
                 </StackPanel>
-
-                <Border Grid.Column="1" Background="#FFE3E3E3" Width="1"/>
-
-                <Grid Grid.Column="2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock x:Name="ChatTitle" 
-                               Text="Chat" 
-                               FontSize="22" FontWeight="Bold"
-                               Foreground="#FF4A90E2" Margin="0 0 0 10"/>
-
-                    <ListBox x:Name="ChatMessagesList"
-                             ItemsSource="{Binding ChatMessages}"
-                             Grid.Row="1"
-                             Margin="0 0 0 10"
-                             Background="#FFFFFFFF"
-                             BorderBrush="#FFD6E1F5"
-                             BorderThickness="1"
-                             ItemTemplate="{StaticResource ChatMessageTemplate}" />
-
-                    <StackPanel Orientation="Horizontal" Grid.Row="2">
-                        <TextBox x:Name="ChatInput"
-                                 Width="700"
-                                 Height="40"
-                                 Margin="0 0 10 0"
-                                 FontSize="14"
-                                 VerticalContentAlignment="Center"
-                                 Padding="10"/>
-                        <Button Content="Enviar 🚀"
-                                Width="100"
-                                Height="40"
-                                Click="SendMessage_Click"
-                                Background="#FF4A90E2"
-                                Foreground="White"
-                                FontWeight="Bold"
-                                Cursor="Hand"/>
-                    </StackPanel>
-                </Grid>
             </Grid>
-        </DockPanel>
+        </Grid>
     </Grid>
 </Page>

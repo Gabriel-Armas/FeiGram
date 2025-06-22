@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.Json;
+using System.Reflection.Metadata;
+using System.Windows;
 
 namespace FeigramClient.Services
 {
@@ -53,7 +55,7 @@ namespace FeigramClient.Services
 
         public async Task<bool> EditAsync(string id, MultipartFormDataContent form)
         {
-            var response = await _httpClient.PutAsync($"/profiles/{id}", form);
+            var response = await _httpClient.PutAsync($"/profiles/profiles/{id}", form);
 
             return response.IsSuccessStatusCode;
         }

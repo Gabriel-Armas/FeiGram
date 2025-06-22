@@ -5,16 +5,19 @@ using System.Windows.Data;
 
 namespace FeigramClient.Resources
 {
-    public class MessageAlignmentConverter : IValueConverter
+    public class MessageAlignmentConverter : IMultiValueConverter
     {
-        public string CurrentUserId { get; set; } = "";
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            var fromId = value as string;
-            return fromId == CurrentUserId ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+            if (values.Length < 2) return false;
+
+            string fromId = values[0]?.ToString();
+            string currentUserId = values[1]?.ToString();
+
+            return fromId == currentUserId;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
     }
 }

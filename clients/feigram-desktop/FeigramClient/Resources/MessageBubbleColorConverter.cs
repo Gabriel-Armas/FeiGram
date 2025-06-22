@@ -13,8 +13,8 @@ namespace FeigramClient.Resources
         {
             var fromId = value as string;
             return fromId == CurrentUserId
-                ? new SolidColorBrush(Color.FromRgb(202, 235, 255))
-                : new SolidColorBrush(Color.FromRgb(255, 230, 230));
+                ? new SolidColorBrush(Color.FromRgb(200, 255, 200))
+                : new SolidColorBrush(Color.FromRgb(200, 220, 255));
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
