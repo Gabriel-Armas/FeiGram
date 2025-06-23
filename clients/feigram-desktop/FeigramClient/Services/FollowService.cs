@@ -8,10 +8,17 @@ namespace FeigramClient.Services
     public class FollowService
     {
         private readonly HttpClient _httpClient;
+        private string _jwtToken = "";
 
         public FollowService(HttpClient httpClient)
         {
             _httpClient = httpClient;
+        }
+
+        public void SetToken(string token)
+        {
+            _jwtToken = token;
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _jwtToken);
         }
 
         public async Task<string> FollowUserAsync(string followerId, string followedId)

@@ -204,6 +204,7 @@ namespace FeigramClient.Views
                 if (!this.isOwnProfile)
                 {
                     var followService = App.Services.GetRequiredService<FollowService>();
+                    followService.SetToken(_viewModel.Me.Token);
                     await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
                     btnFollow.Content = "Siguiendo";
                     btnFollow.Visibility = Visibility.Collapsed;

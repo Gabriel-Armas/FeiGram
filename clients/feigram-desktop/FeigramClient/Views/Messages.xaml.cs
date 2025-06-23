@@ -157,6 +157,7 @@ namespace FeigramClient.Views
             try
             {
                 var followService = App.Services.GetRequiredService<FollowService>();
+                followService.SetToken(_me.Token);
                 var profileService = App.Services.GetRequiredService<ProfileService>();
                 profileService.SetToken(_me.Token);
 
