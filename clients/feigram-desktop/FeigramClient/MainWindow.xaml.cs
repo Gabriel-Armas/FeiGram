@@ -31,7 +31,6 @@ namespace FeigramClient
             _rulesValidator.AddLimitToTextBox(EmailTextBox, 50);
             _rulesValidator.AddLimitToPasswordBox(PasswordBox, 50);
             _rulesValidator.EviteDangerLettersInTextbox(EmailTextBox);
-            _rulesValidator.EviteDangerLettersInPasswordBox(PasswordBox);
             UpdatePasswordPlaceholder();
             _profileSingleton = new ProfileSingleton();
         }

@@ -253,6 +253,19 @@ var builder = WebApplication.CreateBuilder(args);
     .Produces(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status404NotFound);
 
+    app.MapPost("/unban-user", async (BanUserRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+
+        if (user is null)
+            return Results.NotFound("User not found");
+
+        var update = Builders<User>.Update.Set(u => u.Role, "User");
+        await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
+
+        return Results.Ok($"User {user.Username} has been unbanned");
+    });
+
 app.Urls.Add("http://0.0.0.0:8084");
 app.Run();
 

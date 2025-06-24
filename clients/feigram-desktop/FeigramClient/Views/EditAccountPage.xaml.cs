@@ -29,10 +29,13 @@ namespace FeigramClient.Views
         private FullUser _cuenta;
         private readonly Action cerrarModalCallback;
         private string? selectedPhotoPath = null;
+        private ProfileService _profileService;
+        private ProfileSingleton _me;
 
-        public EditAccountPage(FullUser cuenta, Action cerrarModal)
+        public EditAccountPage(ProfileSingleton me, FullUser cuenta, Action cerrarModal)
         {
             InitializeComponent();
+            _me = me;
             _cuenta = cuenta;
             DataContext = cuenta;
             LoadData();
@@ -87,7 +90,8 @@ namespace FeigramClient.Views
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
-            var profileService = App.Services.GetRequiredService<ProfileService>();
+            var _profileService = App.Services.GetRequiredService<ProfileService>();
+            _profileService.SetToken(_me.Token);
 
             string userId = _cuenta.Id ?? "";
 
@@ -115,7 +119,7 @@ namespace FeigramClient.Views
             bool success = false;
             try
             {
-                var response = await profileService.EditAsync(userId, form);
+                var response = await _profileService.EditAsync(userId, form);
 
                 success = response;
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace FeigramClient.Models
@@ -13,7 +14,7 @@ namespace FeigramClient.Models
         public string? Photo { get; set; }
         public string? Name { get; set; }
         public string? Sex { get; set; }
-        [Column("Enrollment")]
+        [JsonPropertyName("enrollment")]
         public string? Tuition { get; set; }
         public int? FollowerCount { get; set; }
     }

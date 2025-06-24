@@ -80,7 +80,6 @@ namespace FeigramClient.Views
                 {
                     var response = await authService.GetAccountAsync(p.Id ?? "");
 
-                    MessageBox.Show(p.Tuition);
                     return new FullUser
                     {
                         Id = p.Id,
@@ -161,7 +160,7 @@ namespace FeigramClient.Views
 
         private void AddAccount_Click(object sender, RoutedEventArgs e)
         {
-            ModalFrame.Navigate(new RegisterAccount(Overlay));
+            ModalFrame.Navigate(new RegisterAccount(Overlay, _me));
             Overlay.Visibility = Visibility.Visible;
         }
 
@@ -176,7 +175,7 @@ namespace FeigramClient.Views
 
             Action cerrarModal = () => Overlay.Visibility = Visibility.Collapsed;
 
-            var editarPage = new EditAccountPage(cuenta, cerrarModal);
+            var editarPage = new EditAccountPage(_me, cuenta, cerrarModal);
 
             ModalFrame.Navigate(editarPage);
             Overlay.Visibility = Visibility.Visible;
@@ -195,6 +194,21 @@ namespace FeigramClient.Views
             var banearPage = new BanAccountPage(cuenta, cerrarModal);
 
             ModalFrame.Navigate(banearPage);
+            Overlay.Visibility = Visibility.Visible;
+        }
+
+        private void Unban_Click(object sender, RoutedEventArgs e)
+        {
+            var boton = sender as Button;
+            var cuenta = boton?.Tag as FullUser;
+
+            if (cuenta == null)
+                return;
+
+            Action cerrarModal = () => Overlay.Visibility = Visibility.Collapsed;
+
+            var desbanPage = new UnbanAccountPage(cuenta, cerrarModal);
+            ModalFrame.Navigate(desbanPage);
             Overlay.Visibility = Visibility.Visible;
         }
     }

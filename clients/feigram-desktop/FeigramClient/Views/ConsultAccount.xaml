@@ -158,8 +158,35 @@ Foreground="Black"/>
                                         <Button Content="Banear" Padding="6 3" Margin="5 0"
                                                 Background="#F44336" Foreground="White"
                                                 BorderBrush="Transparent" Cursor="Hand"
-                                                Click="Ban_Click" Tag="{Binding}"
-                                                 IsEnabled="{Binding Role, Converter={StaticResource RoleToBackgroundBrushConverter}}"/>
+                                                Click="Ban_Click" Tag="{Binding}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Role}" Value="Banned">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <Button Content="Desbanear" Padding="6 3" Margin="5 0"
+                                                Background="#4CAF50" Foreground="White"
+                                                BorderBrush="Transparent" Cursor="Hand"
+                                                Click="Unban_Click" Tag="{Binding}">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Role}" Value="Banned">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

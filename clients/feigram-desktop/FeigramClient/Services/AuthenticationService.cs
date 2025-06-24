@@ -33,10 +33,15 @@ namespace FeigramClient.Services
             return null;
         }
 
-        public async Task<bool> RegisterAsync(MultipartFormDataContent form)
+        public async Task<(bool Success, string? ErrorMessage)> RegisterAsync(MultipartFormDataContent form)
         {
             var response = await _httpClient.PostAsync("/auth/register", form);
-            return response.IsSuccessStatusCode;
+
+            if (response.IsSuccessStatusCode)
+                return (true, null);
+
+            var error = await response.Content.ReadAsStringAsync();
+            return (false, error);
         }
 
 
@@ -57,6 +62,13 @@ namespace FeigramClient.Services
         {
             var content = JsonContent.Create(new { Email = email });
             var response = await _httpClient.PostAsync("/auth/ban-user", content);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UnbanUserAsync(string email)
+        {
+            var content = JsonContent.Create(new { Email = email });
+            var response = await _httpClient.PostAsync($"/auth/unban-user", content);
             return response.IsSuccessStatusCode;
         }
     }

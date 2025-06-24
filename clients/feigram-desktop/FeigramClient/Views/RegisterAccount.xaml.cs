@@ -28,10 +28,12 @@ namespace FeigramClient.Views
     {
         private Border _overlay;
         private AuthenticationService _authenticationService;
+        private ProfileService _profileService;
         private string? selectedPhotoPath = null;
         private RulesValidator _rulesValidator;
+        private ProfileSingleton _me;
 
-        public RegisterAccount(Border Overlay)
+        public RegisterAccount(Border Overlay, ProfileSingleton me)
         {
             InitializeComponent();
             _rulesValidator = new RulesValidator();
@@ -42,21 +44,25 @@ namespace FeigramClient.Views
             _rulesValidator.EviteDangerLettersInTextbox(FullNameBox);
             _rulesValidator.EviteDangerLettersInTextbox(EmailBox);
             _rulesValidator.EviteDangerLettersInTextbox(TuitionBox);
-            _rulesValidator.EviteDangerLettersInPasswordBox(PasswordBox);
 
             FullNameBox.TextChanged += (_, __) => UpdateRegisterButtonState();
             EmailBox.TextChanged += (_, __) => UpdateRegisterButtonState();
             TuitionBox.TextChanged += (_, __) => UpdateRegisterButtonState();
             PasswordBox.PasswordChanged += (_, __) => UpdateRegisterButtonState();
 
+            _me = me;
+            
             RegisterButton.IsEnabled = false;
+            
             _authenticationService = App.Services.GetRequiredService<AuthenticationService>();
+            _profileService = App.Services.GetRequiredService<ProfileService>();
+            _profileService.SetToken(_me.Token);
+
             _overlay = Overlay;
         }
 
         private async void Register_Click(object sender, RoutedEventArgs e)
         {
-            // Validar formatos con RulesValidator
             if (!_rulesValidator.EmailValidator(EmailBox.Text))
             {
                 MessageBox.Show("El correo electrónico no es válido. Debe tener formato usuario@dominio.ext, por ejemplo usuario@example.com.",
@@ -93,10 +99,34 @@ namespace FeigramClient.Views
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
             form.Add(fileContent, "Photo", Path.GetFileName(selectedPhotoPath));
 
-            bool success = false;
             try
             {
-                success = await _authenticationService.RegisterAsync(form);
+                var enrollmentSuccess = await _profileService.GetByEnrollmentAsync(TuitionBox.Text);
+
+                if (enrollmentSuccess != null)
+                {
+                    MessageBox.Show("¡Esa matrícula ya está registrada!", "Matrícula duplicada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var (success, errorMessage) = await _authenticationService.RegisterAsync(form);
+                
+                if (success)
+                {
+                    MessageBox.Show("¡Cuenta registrada exitosamente!", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _overlay.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    if (errorMessage?.Contains("Email already exists") == true)
+                    {
+                        MessageBox.Show("¡Ese correo ya está registrado!", "Correo duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ocurrió un error al registrar la cuenta.\n" + errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
             }
             catch (HttpRequestException httpEx)
             {
@@ -109,18 +139,8 @@ namespace FeigramClient.Views
                 MessageBox.Show("¡Oh no! Ocurrió un error al registrar la cuenta: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-
-            if (success)
-            {
-                MessageBox.Show("¡Cuenta registrada exitosamente!", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                _overlay.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                MessageBox.Show("¡Oh no! Ocurrió un error al registrar la cuenta. Por favor, inténtalo de nuevo.");
-            }
         }
-
+         
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             _overlay.Visibility = Visibility.Collapsed;

@@ -119,6 +119,7 @@ namespace FeigramClient.Views
                         FromUserId = item["from"]?.ToString(),
                         ToUserId = item["to"]?.ToString(),
                         Content = item["content"]?.ToString(),
+                        SentAt = DateTime.Parse(item["timestamp"]?.ToString() ?? "").ToLocalTime()
                     };
 
                     _messageHistory[friendId].Add(msg);
@@ -145,6 +146,7 @@ namespace FeigramClient.Views
             {
                 await _chatService.ConnectWithTokenAsync(_me.Token);
                 await LoadFriends();
+                await LoadMessageContacts();
             }
             catch (Exception ex)
             {
@@ -183,6 +185,41 @@ namespace FeigramClient.Views
                 MessageBox.Show("Error cargando amigos: " + ex.Message);
             }
         }
+
+        private async Task LoadMessageContacts()
+        {
+            try
+            {
+                var contactsJson = await _chatService.GetContactsAsync();
+                var contactIds = JArray.Parse(contactsJson);
+
+                var profileService = App.Services.GetRequiredService<ProfileService>();
+                profileService.SetToken(_me.Token);
+
+                foreach (var idToken in contactIds)
+                {
+                    var id = idToken.ToString();
+
+                    if (Friends.Any(f => f.Id == id)) continue;
+
+                    var profile = await profileService.GetProfileAsync(id);
+                    Friends.Add(new Friend
+                    {
+                        Name = profile.Name,
+                        Id = profile.Id,
+                        Photo = profile.Photo,
+                        Sex = profile.Sex,
+                        Tuition = profile.Tuition,
+                        FollowerCount = profile.FollowerCount
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("No pude cargar los contactos uwu: " + ex.Message);
+            }
+        }
+
 
         private void OnIncomingMessage(string rawJson)
         {
@@ -239,7 +276,6 @@ namespace FeigramClient.Views
                 content,
             });
 
-            MessageBox.Show($"Enviando: {json}");
             await _chatService.SendMessageAsync(json);
 
             if (!_messageHistory.ContainsKey(_selectedFriendId))

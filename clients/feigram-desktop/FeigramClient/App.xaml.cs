@@ -24,7 +24,7 @@ namespace FeigramClient
 
             services.AddHttpClient<AuthenticationService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -36,7 +36,7 @@ namespace FeigramClient
 
             services.AddHttpClient<FeedService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -48,7 +48,7 @@ namespace FeigramClient
 
             services.AddHttpClient<ProfileService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -60,7 +60,7 @@ namespace FeigramClient
 
             services.AddHttpClient<CommentsService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -72,7 +72,7 @@ namespace FeigramClient
 
             services.AddHttpClient<PostsService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -84,7 +84,7 @@ namespace FeigramClient
 
             services.AddHttpClient<LikesService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -96,7 +96,7 @@ namespace FeigramClient
 
             services.AddHttpClient<FollowService>(client =>
             {
-                client.BaseAddress = new Uri("https://localhost");
+                client.BaseAddress = new Uri("https://192.168.1.237");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -109,7 +109,7 @@ namespace FeigramClient
             var httpHandler = new HttpClientHandler();
             httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
-            var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://localhost", new Grpc.Net.Client.GrpcChannelOptions
+            var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://192.168.1.237", new Grpc.Net.Client.GrpcChannelOptions
             {
                 HttpHandler = httpHandler
             });

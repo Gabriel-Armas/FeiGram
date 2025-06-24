@@ -140,7 +140,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Background="#FFEDF4FF">
-                <TextBlock Text="Seguidos" FontWeight="Bold" FontSize="20" Margin="10" Foreground="#FF4A90E2" />
+                <TextBlock Text="Chats" FontWeight="Bold" FontSize="20" Margin="10" Foreground="#FF4A90E2" />
                 <ListBox x:Name="FriendsList" ItemsSource="{Binding Friends}" SelectionChanged="FriendsList_SelectionChanged" Margin="10" BorderThickness="0" Background="Transparent">
                     <ListBox.ItemTemplate>
                         <DataTemplate>

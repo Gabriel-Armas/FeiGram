@@ -31,7 +31,7 @@ namespace FeigramClient.Services
             try
             {
                 MessageBox.Show(token);
-                Uri uri = new Uri($"wss://localhost/messages/ws/?token={token}");
+                Uri uri = new Uri($"wss://192.168.1.237/messages/ws/?token={token}");
                 Console.WriteLine($"Connecting to {uri}");
                 await _socket.ConnectAsync(uri, _cts.Token);
                 OnConnected?.Invoke();
@@ -92,6 +92,13 @@ namespace FeigramClient.Services
                         continue;
                     }
 
+                    if (json["type"]?.ToString() == "contacts")
+                    {
+                        var contactsArray = json["contacts"]?.ToString() ?? "[]";
+                        _contactsResponseTcs?.TrySetResult(contactsArray);
+                        continue;
+                    }
+
                     OnMessageReceived?.Invoke(message);
                 }
             }
@@ -130,6 +137,29 @@ namespace FeigramClient.Services
 
             throw new Exception("WebSocket no está conectado :c");
         }
+
+        private TaskCompletionSource<string>? _contactsResponseTcs;
+
+        public async Task<string> GetContactsAsync()
+        {
+            if (_socket.State == WebSocketState.Open)
+            {
+                _contactsResponseTcs = new TaskCompletionSource<string>();
+
+                var request = new
+                {
+                    type = "get_contacts"
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(request);
+                await SendMessageAsync(json);
+
+                return await _contactsResponseTcs.Task;
+            }
+
+            throw new Exception("WebSocket no está conectado owo");
+        }
+
 
     }
 }
