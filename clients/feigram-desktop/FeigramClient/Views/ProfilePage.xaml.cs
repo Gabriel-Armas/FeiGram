@@ -53,7 +53,6 @@ namespace FeigramClient.Views
             if (_friend != null && following == true)
             {
                 btnFollow.Content = "Siguiendo";
-                btnFollow.IsEnabled = false;
             }
             else if (_friend != null)
             {
@@ -95,6 +94,16 @@ namespace FeigramClient.Views
             {
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {
@@ -199,25 +208,70 @@ namespace FeigramClient.Views
 
         private async void Follow_Click(object sender, RoutedEventArgs e)
         {
-            try
+            var btnFollowContent = btnFollow.Content;
+            if (btnFollowContent.Equals("Siguiendo"))
             {
-                if (!this.isOwnProfile)
+                try
                 {
-                    var followService = App.Services.GetRequiredService<FollowService>();
-                    followService.SetToken(_viewModel.Me.Token);
-                    await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
-                    btnFollow.Content = "Siguiendo";
-                    btnFollow.Visibility = Visibility.Collapsed;
+                    if (!this.isOwnProfile)
+                    {
+                        var followService = App.Services.GetRequiredService<FollowService>();
+                        followService.SetToken(_viewModel.Me.Token);
+                        await followService.UnfollowUserAsync(_viewModel.Me.Id, _friend.Id);
+                        btnFollow.Content = "Seguir";
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                    "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (UnauthorizedAccessException unauthEx)
+                {
+                    MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var login = new MainWindow();
+                        login.Show();
+                        Window.GetWindow(this)?.Close();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            catch (HttpRequestException httpEx)
+            else
             {
-                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
-                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    if (!this.isOwnProfile)
+                    {
+                        var followService = App.Services.GetRequiredService<FollowService>();
+                        followService.SetToken(_viewModel.Me.Token);
+                        await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
+                        btnFollow.Content = "Siguiendo";
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                    "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (UnauthorizedAccessException unauthEx)
+                {
+                    MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var login = new MainWindow();
+                        login.Show();
+                        Window.GetWindow(this)?.Close();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
     }

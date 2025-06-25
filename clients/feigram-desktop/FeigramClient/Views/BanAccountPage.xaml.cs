@@ -12,11 +12,13 @@ namespace FeigramClient.Views
     {
         private FullUser _cuenta;
         private readonly Action cerrarModalCallback;
+        private ProfileSingleton _me;
 
-        public BanAccountPage(FullUser cuenta, Action cerrarModal)
+        public BanAccountPage(FullUser cuenta, Action cerrarModal, ProfileSingleton me)
         {
             InitializeComponent();
             _cuenta = cuenta;
+            _me = me;
             DataContext = cuenta;
             cerrarModalCallback = cerrarModal;
         }
@@ -34,6 +36,7 @@ namespace FeigramClient.Views
                 }
 
                 var authService = App.Services.GetRequiredService<AuthenticationService>();
+                authService.SetToken(_me.Token);
                 bool success = await authService.BanAsync(user.Email);
 
                 if (success)
@@ -49,6 +52,16 @@ namespace FeigramClient.Views
             {
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                MessageBox.Show(uaEx.Message, "Acceso no autorizado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {

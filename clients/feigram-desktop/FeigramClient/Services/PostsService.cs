@@ -2,14 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FeigramClient.Services
 {
@@ -26,7 +23,20 @@ namespace FeigramClient.Services
         public void SetToken(string token)
         {
             _jwtToken = token;
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _jwtToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
+        }
+
+        private static void HandleErrorResponse(HttpResponseMessage response, string context)
+        {
+            var error = response.Content.ReadAsStringAsync().Result;
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && error.Contains("Token expirado"))
+                throw new UnauthorizedAccessException("Tu sesión ha expirado. Inicia sesión nuevamente.");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && error.Contains("baneado"))
+                throw new UnauthorizedAccessException("Tu cuenta está baneada.");
+
+            throw new Exception($"{context}: {response.StatusCode} - {error}");
         }
 
         public async Task<List<CommentDto>> GetCommentsAsync(int postId)
@@ -34,14 +44,16 @@ namespace FeigramClient.Services
             try
             {
                 var response = await _httpClient.GetAsync($"/posts/posts/{postId}/comments");
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new Exception($"Error al obtener comentarios: {response.StatusCode}");
+                    HandleErrorResponse(response, "Error al obtener comentarios");
                 }
 
                 var content = await response.Content.ReadFromJsonAsync<CommentListResult>();
                 return content?.comments ?? new List<CommentDto>();
             }
+            catch (UnauthorizedAccessException) { throw; }
             catch (Exception ex)
             {
                 throw new Exception("Error al obtener comentarios del servidor", ex);
@@ -56,29 +68,25 @@ namespace FeigramClient.Services
                 {
                     descripcion = descripcion,
                     url_media = mediaUrl,
-                    fechaPublicacion = DateTime.UtcNow.ToLocalTime()
+                    fechaPublicacion = DateTime.UtcNow
                 };
 
                 var response = await _httpClient.PostAsJsonAsync("/posts/posts", post);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Error al crear post: {response.StatusCode} - {error}");
+                    HandleErrorResponse(response, "Error al crear post");
                 }
 
-                //var content = await response.Content.ReadFromJsonAsync<CreatePostResult>();
-                //return content?.post_id ?? throw new Exception("Respuesta inválida del servidor");
                 return true;
             }
+            catch (UnauthorizedAccessException) { throw; }
             catch (Exception ex)
             {
                 throw new Exception("Error al crear el post", ex);
             }
         }
 
-
-        // 🔵 POST /upload-image - Subir imagen
         public async Task<ImageUploadResult> UploadImageAsync(string imagePath)
         {
             try
@@ -94,13 +102,13 @@ namespace FeigramClient.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Error al subir imagen: {response.StatusCode} - {error}");
+                    HandleErrorResponse(response, "Error al subir imagen");
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<ImageUploadResult>();
                 return result ?? throw new Exception("Respuesta inválida del servidor");
             }
+            catch (UnauthorizedAccessException) { throw; }
             catch (Exception ex)
             {
                 throw new Exception("Error al subir la imagen", ex);
@@ -115,13 +123,13 @@ namespace FeigramClient.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Error al obtener los posts del usuario: {response.StatusCode} - {error}");
+                    HandleErrorResponse(response, "Error al obtener los posts del usuario");
                 }
 
                 var posts = await response.Content.ReadFromJsonAsync<List<UserPostDto>>();
                 return posts ?? new List<UserPostDto>();
             }
+            catch (UnauthorizedAccessException) { throw; }
             catch (Exception ex)
             {
                 throw new Exception("Error al obtener los posts del usuario", ex);

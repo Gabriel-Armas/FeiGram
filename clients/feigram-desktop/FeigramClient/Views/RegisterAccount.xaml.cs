@@ -36,6 +36,7 @@ namespace FeigramClient.Views
         public RegisterAccount(Border Overlay, ProfileSingleton me)
         {
             InitializeComponent();
+            _me = me;
             _rulesValidator = new RulesValidator();
             _rulesValidator.AddLimitToTextBox(FullNameBox, 80);
             _rulesValidator.AddLimitToTextBox(EmailBox, 80);
@@ -58,6 +59,7 @@ namespace FeigramClient.Views
             _profileService = App.Services.GetRequiredService<ProfileService>();
             _profileService.SetToken(_me.Token);
 
+            _authenticationService.SetToken(_me.Token);
             _overlay = Overlay;
         }
 
@@ -133,6 +135,16 @@ namespace FeigramClient.Views
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                MessageBox.Show(uaEx.Message, "Acceso no autorizado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {

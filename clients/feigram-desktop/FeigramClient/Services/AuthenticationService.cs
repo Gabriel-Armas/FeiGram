@@ -1,22 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 using FeigramClient.Models;
-using System.IO;
 
 namespace FeigramClient.Services
 {
     internal class AuthenticationService
     {
         private readonly HttpClient _httpClient;
+        private string _jwtToken = "";
 
         public AuthenticationService(HttpClient http)
         {
             _httpClient = http;
+        }
+
+        public void SetToken(string token)
+        {
+            _jwtToken = token;
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _jwtToken);
         }
 
         public async Task<LoginResponse?> LoginAsync(string email, string password)
@@ -38,12 +41,17 @@ namespace FeigramClient.Services
             var response = await _httpClient.PostAsync("/auth/register", form);
 
             if (response.IsSuccessStatusCode)
+            {
                 return (true, null);
+            }
+            else
+            {
+                await HandleErrorResponse(response);
+                var error = await response.Content.ReadAsStringAsync();
 
-            var error = await response.Content.ReadAsStringAsync();
-            return (false, error);
+                return (false, error);
+            }
         }
-
 
         public async Task<AuthResponse> GetAccountAsync(string id)
         {
@@ -54,15 +62,62 @@ namespace FeigramClient.Services
                 var account = await response.Content.ReadFromJsonAsync<AuthResponse>();
                 return account ?? new AuthResponse { Email = string.Empty, Role = string.Empty };
             }
-            return new AuthResponse { Email = string.Empty, Role = string.Empty };
+            else
+            {
+                await HandleErrorResponse(response);
+                return new AuthResponse { Email = string.Empty, Role = string.Empty }; 
+            }
         }
-
 
         public async Task<bool> BanAsync(string email)
         {
             var content = JsonContent.Create(new { Email = email });
             var response = await _httpClient.PostAsync("/auth/ban-user", content);
-            return response.IsSuccessStatusCode;
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                await HandleErrorResponse(response);
+                return false;
+            }
+        }
+
+        private async Task HandleErrorResponse(HttpResponseMessage response)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            string errorMessage;
+
+            try
+            {
+                var errorJson = System.Text.Json.JsonDocument.Parse(errorContent);
+                if (errorJson.RootElement.TryGetProperty("message", out var messageElement))
+                {
+                    errorMessage = messageElement.GetString() ?? "Error desconocido";
+                }
+                else
+                {
+                    errorMessage = errorContent;
+                }
+            }
+            catch
+            {
+                errorMessage = errorContent;
+            }
+
+            if (errorMessage.Contains("Token expirado", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Sesión expirada. Por favor, inicia sesión de nuevo.");
+            }
+            else if (errorMessage.Contains("baneado", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Usuario baneado. No tienes acceso.");
+            }
+            else
+            {
+                throw new Exception($"Error en la respuesta del servidor: {errorMessage}");
+            }
         }
 
         public async Task<bool> UnbanUserAsync(string email)

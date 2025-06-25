@@ -30,24 +30,76 @@ builder.Services.AddSingleton(provider =>
 builder.Services.AddHostedService<UserProfileRpcConsumer>();
 
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        var jwtConfig = builder.Configuration.GetSection("Jwt");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig["Issuer"],
-            ValidAudience = jwtConfig["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["SecretKey"]))
-        };
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-    });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtConfig = builder.Configuration.GetSection("Jwt");
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtConfig["Issuer"],
+        ValidAudience = jwtConfig["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["SecretKey"])),
+        ClockSkew = TimeSpan.Zero // opción más estricta (sin desfase)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"[PROFILE API] Hora del servidor UTC: {DateTime.UtcNow}");
+
+            var roleClaim = context.Principal.FindFirst("role");
+            if (roleClaim?.Value == "Banned")
+            {
+                context.Fail("Usuario baneado");
+            }
+
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = async context =>
+        {
+            context.NoResult();
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            string message = context.Exception is SecurityTokenExpiredException
+                ? "Token expirado"
+                : "Token inválido";
+
+            var result = System.Text.Json.JsonSerializer.Serialize(new { message });
+            await context.Response.WriteAsync(result);
+        },
+        OnChallenge = async context =>
+        {
+            if (!context.Response.HasStarted)
+            {
+                context.HandleResponse(); // evita HTML por defecto
+
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    message = "Token no proporcionado o inválido"
+                });
+
+                await context.Response.WriteAsync(result);
+            }
+        }
+    };
+});
+
 
 builder.Services.AddAuthorization();
 

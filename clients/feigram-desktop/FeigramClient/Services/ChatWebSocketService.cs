@@ -26,12 +26,12 @@ namespace FeigramClient.Services
             _socket = new ClientWebSocket();
             _cts = new CancellationTokenSource();
 
+            // Ignorar validación del certificado para desarrollo
             _socket.Options.RemoteCertificateValidationCallback = (sender, cert, chain, errors) => true;
 
             try
             {
-                MessageBox.Show(token);
-                Uri uri = new Uri($"wss://192.168.1.237/messages/ws/?token={token}");
+                Uri uri = new Uri($"wss://localhost/messages/ws/?token={token}");
                 Console.WriteLine($"Connecting to {uri}");
                 await _socket.ConnectAsync(uri, _cts.Token);
                 OnConnected?.Invoke();
@@ -40,10 +40,9 @@ namespace FeigramClient.Services
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(ex.Message);
+                OnError?.Invoke($"Error al conectar: {ex.Message}");
             }
         }
-
 
         public async Task SendMessageAsync(string json)
         {
@@ -64,21 +63,32 @@ namespace FeigramClient.Services
                 while (_socket.State == WebSocketState.Open)
                 {
                     var ms = new MemoryStream();
-
                     WebSocketReceiveResult result;
 
                     do
                     {
                         result = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
+
                         if (result.MessageType == WebSocketMessageType.Close)
                         {
-                            OnDisconnected?.Invoke();
                             await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by server", CancellationToken.None);
+
+                            if (result.CloseStatus == WebSocketCloseStatus.PolicyViolation)
+                            {
+                                OnError?.Invoke("Conexión denegada: token expirado o usuario baneado.");
+                            }
+                            else
+                            {
+                                OnError?.Invoke("Conexión cerrada por el servidor.");
+                            }
+
+                            OnDisconnected?.Invoke();
                             return;
                         }
-                        ms.Write(buffer, 0, result.Count);
 
-                    } while (!result.EndOfMessage);
+                        ms.Write(buffer, 0, result.Count);
+                    }
+                    while (!result.EndOfMessage);
 
                     ms.Seek(0, SeekOrigin.Begin);
                     using var reader = new StreamReader(ms, Encoding.UTF8);
@@ -104,16 +114,20 @@ namespace FeigramClient.Services
             }
             catch (Exception ex)
             {
-                OnError?.Invoke(ex.Message);
+                OnError?.Invoke($"Error inesperado: {ex.Message}");
             }
         }
-
 
         public async Task DisconnectAsync()
         {
             _cts.Cancel();
+
             if (_socket.State == WebSocketState.Open)
+            {
                 await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+            }
+
+            OnDisconnected?.Invoke();
         }
 
         public async Task<string> GetChatHistoryAsync(string id, string friendId)

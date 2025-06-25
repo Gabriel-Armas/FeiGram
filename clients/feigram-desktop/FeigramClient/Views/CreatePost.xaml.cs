@@ -30,6 +30,7 @@ namespace FeigramClient.Views
         private ProfileSingleton _me;
         private PostsService postService;
         private RulesValidator _rulesValidator;
+        private MainWindow _mainWindow;
 
         public CreatePost(Grid overlay, ProfileSingleton profile)
         {
@@ -98,6 +99,16 @@ namespace FeigramClient.Views
             {
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {

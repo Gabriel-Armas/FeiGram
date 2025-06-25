@@ -45,11 +45,53 @@ namespace FeigramClient.Views
             ((MessageBubbleColorConverter)Resources["MessageBubbleColorConverter"]).CurrentUserId = _me.Id;
 
             _chatService.OnMessageReceived += OnIncomingMessage;
+            _chatService.OnError += ChatService_OnError;  // Aquí te suscribes al evento de error
 
             this.Loaded += Messages_Loaded;
 
             ChatMessagesList.ItemsSource = ChatMessages;
         }
+
+        private void ChatService_OnError(string errorMessage)
+        {
+            // Ejecutar en el hilo UI porque es un callback desde otro hilo
+            Dispatcher.Invoke(() =>
+            {
+                if (errorMessage.Contains("token expirado", StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Tu sesión ha expirado. Por favor inicia sesión de nuevo.", "Sesión expirada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    RedirectToLogin();
+                }
+                else if (errorMessage.Contains("usuario baneado", StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Tu cuenta ha sido baneada. Contacta con soporte.", "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Error);
+                    RedirectToLogin();
+                }
+                else
+                {
+                    // Otros errores
+                    MessageBox.Show($"Error: {errorMessage}", "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
+        }
+
+        private void RedirectToLogin()
+        {
+            // Cierra esta ventana / página y vuelve a mostrar la ventana login principal
+
+            // Limpias datos si es necesario
+            _mainWindow.MainFrame.Content = null;
+            _mainWindow.GridLogin.Visibility = Visibility.Visible;
+            _mainWindow.GridMainMenu.Visibility = Visibility.Hidden;
+            _mainWindow.EmailTextBox.Text = "";
+            _mainWindow.PasswordBox.Password = "";
+
+            // Opcional: cerrar la ventana actual si es independiente
+            Window.GetWindow(this)?.Close();
+        }
+
+
+
         private void Home_Click(object sender, RoutedEventArgs e)
         {
             GridMenu.Visibility = Visibility.Collapsed;
@@ -179,6 +221,16 @@ namespace FeigramClient.Views
                         FollowerCount = profile.FollowerCount
                     });
                 }
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {
