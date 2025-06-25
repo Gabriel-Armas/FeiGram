@@ -46,6 +46,8 @@ namespace FeigramClient.Views
             _rulesValidator.EviteDangerLettersInTextbox(SearchBox);
             _rulesValidator.AddLimitToTextBox(SearchBox, 80);
             likesService = App.Services.GetRequiredService<LikesService>();
+
+            _isLoadingRecommendations = true;
             LoadRecommendations();
             LoadFriends();
             DataContext = this;
@@ -105,6 +107,12 @@ namespace FeigramClient.Views
 
         private async void LoadRecommendations()
         {
+            if (PostsCompletos.Count > 0)
+            {
+                _isLoadingRecommendations = false;
+                return;
+            }
+
             try
             {
                 var feedService = App.Services.GetRequiredService<FeedService>();
@@ -152,7 +160,7 @@ namespace FeigramClient.Views
                 scrollViewer.VerticalOffset + scrollViewer.ViewportHeight >= scrollViewer.ExtentHeight &&
                 !_isLoadingRecommendations)
             {
-                _isLoadingRecommendations = true; // evitar múltiples llamadas
+                _isLoadingRecommendations = true;
                 LoadRecommendations();
             }
         }
