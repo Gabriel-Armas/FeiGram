@@ -1,0 +1,10 @@
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet add package Microsoft.AspNetCore.OpenApi
+dotnet add package Swashbuckle.AspNetCore
+dotnet build
+
+http://localhost:8088/swagger
+
+Migracion
+dotnet ef database update --connection "Host=localhost;Port=5432;Database=profiledb;Username=postgres;Password=yourpassword"

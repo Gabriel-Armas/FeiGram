@@ -1,0 +1,2 @@
+obj/Debug/net9.0/Protos/Chart.cs \
+obj/Debug/net9.0/Protos/ChartGrpc.cs: Protos/chart.proto

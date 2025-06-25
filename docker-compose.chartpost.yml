@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   
+      - "15672:15672" 
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  chart-api:
+    build:
+      context: ./services/chart-api 
+      dockerfile: Dockerfile
+    container_name: chart-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+
+  post-api:
+    build:
+      context: ./services/post-api
+    ports:
+      - "8088:8000"
+    env_file:
+      - ./services/post-api/.env
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DBNAME=feigram
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
