@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace profileapi.Migrations
 {
     [DbContext(typeof(ProfileDbContext))]
-    [Migration("20250611165951_InitialCreate")]
+    [Migration("20250615071726_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -26,6 +26,9 @@ namespace profileapi.Migrations
             modelBuilder.Entity("Profile", b =>
                 {
                     b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Enrollment")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")

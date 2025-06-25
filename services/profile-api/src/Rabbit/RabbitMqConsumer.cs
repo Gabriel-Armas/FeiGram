@@ -59,6 +59,7 @@ public class RabbitMqConsumer : BackgroundService
                             Id = message.UserId,
                             Name = message.Name,
                             Photo = message.Photo,
+                            Enrollment = message.Enrollment,
                             Sex = message.Sex
                         };
 

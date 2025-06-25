@@ -8,16 +8,24 @@ from src.CommentCountRpcClient import CommentCountRpcClient
 from src.CommentListRpcClient import CommentListRpcClient
 from src.LikesCountRpcClient import LikesCountRpcClient
 import cloudinary.uploader
+import pytz
 
 router = APIRouter()
 
+def convert_to_local(utc_dt):
+    local_tz = pytz.timezone("America/Mexico_City")
+    return utc_dt.astimezone(local_tz)
+
 @router.post("/posts")
 def create_post(post: PostCreate, user_id: str = Depends(get_current_user)):
+    print(post.fechaPublicacion)
+    local_dt = post.fechaPublicacion.astimezone(pytz.timezone("America/Mexico_City"))
+    print(local_dt)
     data = post.model_dump()
     data["post_id"] = get_next_post_id()
     data["id_usuario"] = user_id
-    data["fechaPublicacion"] = datetime.now(timezone.utc)
-    result = posts_collection.insert_one(data)
+    data["fechaPublicacion"] = local_dt
+    posts_collection.insert_one(data)
     return {"message": "Post created", "post_id": data["post_id"]}
 
 @router.post("/upload-image")
@@ -41,14 +49,14 @@ def get_all_posts(user_id: str = Depends(get_current_user)):  # protegida tambi�
             "id_usuario": p["id_usuario"],
             "descripcion": p["descripcion"],
             "url_media": p["url_media"],
-            "fechaPublicacion": p["fechaPublicacion"],
+            "fechaPublicacion": convert_to_local(p["fechaPublicacion"]),
         }
         for p in posts
     ]
 
 
 @router.get("/posts/user/{id_usuario}")
-def get_user_posts(id_usuario: int, _: str = Depends(get_current_user)):  # Solo valida token
+def get_user_posts(id_usuario: str, _: str = Depends(get_current_user)):
     posts = list(posts_collection.find({"id_usuario": id_usuario}))
     return [
         {
@@ -56,14 +64,14 @@ def get_user_posts(id_usuario: int, _: str = Depends(get_current_user)):  # Solo
             "id_usuario": p["id_usuario"],
             "descripcion": p["descripcion"],
             "url_media": p["url_media"],
-            "fechaPublicacion": p["fechaPublicacion"],
+            "fechaPublicacion": convert_to_local(p["fechaPublicacion"]),
         }
         for p in posts
     ]
 
 
 @router.delete("/posts/{post_id}")
-def delete_post(post_id: int, user_id: str = Depends(get_current_user)):
+def delete_post(post_id: str, user_id: str = Depends(get_current_user)):
     post = posts_collection.find_one({"post_id": post_id})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -100,15 +108,15 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
             "id_usuario": post["id_usuario"],
             "descripcion": post["descripcion"],
             "url_media": post["url_media"],
-            "fechaPublicacion": post["fechaPublicacion"],
-            "comentarios": count,  # 👍 número de comentarios
+            "fechaPublicacion": convert_to_local(post["fechaPublicacion"]),
+            "comentarios": count,  
             "likes": count2
         })
 
     return result
 
 @router.get("/posts/{post_id}/comments")
-def get_post_comments(post_id: int, user_id: str = Depends(get_current_user)):
+def get_post_comments(post_id: str, user_id: str = Depends(get_current_user)):
     rpc = CommentListRpcClient()
     response = rpc.get_comments(str(post_id))
 
@@ -116,7 +124,7 @@ def get_post_comments(post_id: int, user_id: str = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="No comments found or RPC failed")
 
     return {
-        "post_id": post_id,
+        "post_id": str(post_id),
         "comments": response["comments"]
     }
 

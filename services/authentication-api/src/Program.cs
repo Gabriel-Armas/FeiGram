@@ -30,23 +30,76 @@ var builder = WebApplication.CreateBuilder(args);
     });
 
     builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = configuration["Jwt:Issuer"],
+        ValidAudience = configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"])),
+        ClockSkew = TimeSpan.Zero
+    };
+
+    options.Events = new JwtBearerEvents
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        OnTokenValidated = context =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = configuration["Jwt:Issuer"],
-            ValidAudience = configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]))
-        };
-    });
+            Console.WriteLine($"Hora local cliente (UTC): {DateTime.UtcNow}");
+
+            var roleClaim = context.Principal.FindFirst("role");
+            if (roleClaim != null && roleClaim.Value == "Banned")
+            {
+                context.Fail("Usuario baneado");
+            }
+
+            return Task.CompletedTask;
+        },
+
+        OnAuthenticationFailed = async context =>
+        {
+            context.NoResult(); // Detiene la cadena de middleware
+
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            string message = context.Exception is SecurityTokenExpiredException
+                ? "Token expirado"
+                : "Token inválido";
+
+            var result = System.Text.Json.JsonSerializer.Serialize(new { message });
+
+            await context.Response.WriteAsync(result);
+        },
+
+        OnChallenge = async context =>
+        {
+            if (!context.Response.HasStarted)
+            {
+                context.HandleResponse(); 
+
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    message = "Token no proporcionado o inválido"
+                });
+
+                await context.Response.WriteAsync(result);
+            }
+        }
+    };
+});
+
+
 
     builder.Services.AddAuthorization();
 
@@ -54,101 +107,105 @@ var builder = WebApplication.CreateBuilder(args);
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapPost("/login", async (LoginRequest request, AuthService authService, AuthenticationDbContext dbContext) =>
+    app.MapPost("/login", async (LoginRequest request, AuthService authService, AuthenticationDbContext dbContext) => 
     {
-        var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+        var filter = Builders<User>.Filter.Eq(u => u.Email, request.Email);
+        var user = await dbContext.Users.Find(filter).FirstOrDefaultAsync();
 
         if (user is null || !PasswordService.VerifyPassword(request.Password, user.Password))
         {
             return Results.Unauthorized();
         }
-            
-        var token = await authService.AuthenticateUserAsync(request.Email, request.Password);
-        return Results.Ok(new { token });
+
+        var token = authService.GenerateTokenForUser(user);
+
+        return Results.Ok(new { token, userId = user.Id, rol = user.Role });
     })
     .Produces<LoginRequest>()
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status401Unauthorized);
 
-    app.MapPost("/register", async (
-    HttpContext context,
-    IConfiguration config,
-    AuthenticationDbContext dbContext,
-    RabbitMqPublisher publisher,
-    CloudinaryDotNet.Cloudinary cloudinary) =>
+app.MapPost("/register", async (
+HttpContext context,
+IConfiguration config,
+AuthenticationDbContext dbContext,
+RabbitMqPublisher publisher,
+CloudinaryDotNet.Cloudinary cloudinary) =>
 {
-    var form = await context.Request.ReadFormAsync();
+var form = await context.Request.ReadFormAsync();
 
-    var username = form["Username"].ToString();
-    var password = form["Password"].ToString();
-    var email = form["Email"].ToString();
-    var sex = form["Sex"].ToString();
-    var photoFile = form.Files.GetFile("Photo");
+var username = form["Username"].ToString();
+var password = form["Password"].ToString();
+var email = form["Email"].ToString();
+var sex = form["Sex"].ToString();
+var enrollment = form["Enrollment"].ToString();
+var photoFile = form.Files.GetFile("Photo");
 
-    if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
+if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
+{
+    return Results.BadRequest("Missing required fields");
+}
+
+var existingUser = await dbContext.Users.Find(u => u.Email == email).FirstOrDefaultAsync();
+if (existingUser != null)
+{
+    return Results.BadRequest("Email already exists");
+}
+
+string photoUrl = null;
+
+if (photoFile != null)
+{
+    using var stream = photoFile.OpenReadStream();
+    var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams()
     {
-        return Results.BadRequest("Missing required fields");
+        File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+    };
+    var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+    {
+        photoUrl = uploadResult.SecureUrl.ToString();
     }
-
-    var existingUser = await dbContext.Users.Find(u => u.Email == email).FirstOrDefaultAsync();
-    if (existingUser != null)
+    else
     {
-        return Results.BadRequest("Email already exists");
+        return Results.Problem(detail: "Error uploading image", statusCode: 500);
     }
+}
 
-    string photoUrl = null;
+var hashedPassword = PasswordService.HashPassword(password);
 
-    if (photoFile != null)
+var user = new User
+{
+    Username = username,
+    Password = hashedPassword,
+    Email = email,
+    Role = "User",
+    CreationDate = DateTime.UtcNow
+};
+
+try
+{
+    dbContext.Users.InsertOne(user);
+
+    var message = new CreateProfileMessage
     {
-        using var stream = photoFile.OpenReadStream();
-        var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams()
-        {
-            File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
-        };
-        var uploadResult = await cloudinary.UploadAsync(uploadParams);
-
-        if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
-        {
-            photoUrl = uploadResult.SecureUrl.ToString();
-        }
-        else
-        {
-            return Results.Problem(detail: "Error uploading image", statusCode: 500);
-        }
-    }
-
-    var hashedPassword = PasswordService.HashPassword(password);
-
-    var user = new User
-    {
-        Username = username,
-        Password = hashedPassword,
-        Email = email,
-        Role = "User",
-        CreationDate = DateTime.UtcNow
+        UserId = user.Id,
+        Name = user.Username,
+        Photo = photoUrl,
+        Enrollment = enrollment,
+        Sex = sex
     };
 
-    try
-    {
-        dbContext.Users.InsertOne(user);
+    publisher.Publish(message);
 
-        var message = new CreateProfileMessage
-        {
-            UserId = user.Id,
-            Name = user.Username,
-            Photo = photoUrl,
-            Sex = sex
-        };
-
-        publisher.Publish(message);
-
-        return Results.Ok(new { message = "User registered successfully" });
-    }
-    catch (Exception)
-    {
-        return Results.StatusCode(500);
-    }
-    });
+    return Results.Ok(new { message = "User registered successfully" });
+}
+catch (Exception)
+{
+    return Results.StatusCode(500);
+}
+}).RequireAuthorization();
 
 
     app.MapPost("/forgot-password", async (ForgotPasswordRequest request, AuthenticationDbContext dbContext, EmailService emailService) =>
@@ -199,17 +256,67 @@ var builder = WebApplication.CreateBuilder(args);
         return Results.Ok("Password reset successfully");
     });
 
-    app.MapPost("/ban-user", async (BanUserRequest request, AuthenticationDbContext dbContext) =>
+app.MapPost("/ban-user", async (BanUserRequest request, AuthenticationDbContext dbContext) =>
+{
+    var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+
+    if (user is null)
+        return Results.NotFound("User not found");
+
+    var update = Builders<User>.Update.Set(u => u.Role, "Banned");
+    await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
+
+    return Results.Ok($"User {user.Username} has been banned");
+}).RequireAuthorization();
+
+app.MapGet("/users/{id}", async (string id, AuthenticationDbContext dbContext) =>
+{
+    var user = await dbContext.Users.Find(u => u.Id == id).FirstOrDefaultAsync();
+
+    if (user == null)
+        return Results.NotFound();
+
+    return Results.Ok(new
+    {
+        email = user.Email,
+        role = user.Role
+    });
+}).RequireAuthorization();
+    app.MapPut("/users/{id}/email", async (string id, UpdateEmailRequest request, AuthenticationDbContext dbContext) =>
+    {
+        var user = await dbContext.Users.Find(u => u.Id == id).FirstOrDefaultAsync();
+        if (user == null)
+        {
+            return Results.NotFound("User not found");
+        }
+
+        var existingUser = await dbContext.Users.Find(u => u.Email == request.NewEmail).FirstOrDefaultAsync();
+        if (existingUser != null)
+        {
+            return Results.BadRequest("Email already in use");
+        }
+
+        var update = Builders<User>.Update.Set(u => u.Email, request.NewEmail);
+        await dbContext.Users.UpdateOneAsync(u => u.Id == id, update);
+
+        return Results.Ok("Email updated successfully");
+    })
+    .RequireAuthorization()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status404NotFound);
+
+    app.MapPost("/unban-user", async (BanUserRequest request, AuthenticationDbContext dbContext) =>
     {
         var user = await dbContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
 
         if (user is null)
             return Results.NotFound("User not found");
 
-        var update = Builders<User>.Update.Set(u => u.Role, "Banned");
+        var update = Builders<User>.Update.Set(u => u.Role, "User");
         await dbContext.Users.UpdateOneAsync(u => u.Id == user.Id, update);
 
-        return Results.Ok($"User {user.Username} has been banned");
+        return Results.Ok($"User {user.Username} has been unbanned");
     });
 
 app.Urls.Add("http://0.0.0.0:8084");

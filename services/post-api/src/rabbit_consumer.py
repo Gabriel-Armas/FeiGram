@@ -4,6 +4,8 @@ import time
 import pika
 from datetime import datetime, timedelta, timezone
 from src.db import posts_collection
+from src.CommentCountRpcClient import CommentCountRpcClient
+from src.LikesCountRpcClient import LikesCountRpcClient
 
 def handle_request(ch, method, props, body):
     week = body.decode()
@@ -60,21 +62,37 @@ def start_feed_consumer_thread():
 def handle_feed_posts_request(ch, method, props, body):
     print("Recibí solicitud para los 30 posts del feed 💫")
 
+    # Obtener los 30 posts más recientes
     posts = list(posts_collection.find().sort("fechaPublicacion", -1).limit(30))
 
-    result = [
-        {
+    # Instanciar clientes RPC
+    comment_rpc = CommentCountRpcClient()
+    likes_rpc = LikesCountRpcClient()
+
+    result = []
+    for p in posts:
+        post_id = str(p["post_id"])
+
+        # Llamadas RPC para contar comentarios y likes
+        comment_response = comment_rpc.get_comment_count(post_id)
+        like_response = likes_rpc.get_likes_count(post_id)
+
+        comment_count = comment_response.get("count", 0)
+        like_count = like_response.get("like_count", 0)
+
+        result.append({
             "post_id": p["post_id"],
             "id_usuario": p["id_usuario"],
             "descripcion": p["descripcion"],
             "url_media": p.get("url_media", ""),
-            "fechaPublicacion": p["fechaPublicacion"].isoformat()
-        }
-        for p in posts
-    ]
+            "fechaPublicacion": p["fechaPublicacion"].isoformat(),
+            "comentarios": comment_count,
+            "likes": like_count
+        })
 
     response = json.dumps(result)
 
+    # Responder vía RabbitMQ
     ch.basic_publish(
         exchange='',
         routing_key=props.reply_to,
@@ -82,6 +100,7 @@ def handle_feed_posts_request(ch, method, props, body):
         body=response
     )
     ch.basic_ack(delivery_tag=method.delivery_tag)
+
 
 
 def consume_feed_posts():

@@ -6,7 +6,7 @@ namespace AuthenticationApi.Services
     {
         public static string HashPassword(string password)
         {
-            return BCrypt.Net.BCrypt.HashPassword(password);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 10);
         }
 
         public static bool VerifyPassword(string password, string hashedPassword)

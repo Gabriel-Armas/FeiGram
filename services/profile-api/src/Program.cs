@@ -17,6 +17,7 @@ builder.Services.AddDbContext<ProfileDbContext>(options =>
 builder.Services.AddHostedService<RabbitMqConsumer>();
 builder.Services.AddSingleton<RabbitMqPublisher>();
 builder.Services.AddSingleton<FollowService>();
+builder.Services.AddSingleton<RabbitMqClient>();
 builder.Services.AddSingleton(provider =>
 {
     var config = builder.Configuration;
@@ -29,24 +30,76 @@ builder.Services.AddSingleton(provider =>
 builder.Services.AddHostedService<UserProfileRpcConsumer>();
 
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        var jwtConfig = builder.Configuration.GetSection("Jwt");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig["Issuer"],
-            ValidAudience = jwtConfig["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["SecretKey"]))
-        };
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-    });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtConfig = builder.Configuration.GetSection("Jwt");
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtConfig["Issuer"],
+        ValidAudience = jwtConfig["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["SecretKey"])),
+        ClockSkew = TimeSpan.Zero // opción más estricta (sin desfase)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"[PROFILE API] Hora del servidor UTC: {DateTime.UtcNow}");
+
+            var roleClaim = context.Principal.FindFirst("role");
+            if (roleClaim?.Value == "Banned")
+            {
+                context.Fail("Usuario baneado");
+            }
+
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = async context =>
+        {
+            context.NoResult();
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            string message = context.Exception is SecurityTokenExpiredException
+                ? "Token expirado"
+                : "Token inválido";
+
+            var result = System.Text.Json.JsonSerializer.Serialize(new { message });
+            await context.Response.WriteAsync(result);
+        },
+        OnChallenge = async context =>
+        {
+            if (!context.Response.HasStarted)
+            {
+                context.HandleResponse(); // evita HTML por defecto
+
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    message = "Token no proporcionado o inválido"
+                });
+
+                await context.Response.WriteAsync(result);
+            }
+        }
+    };
+});
+
 
 builder.Services.AddAuthorization();
 
@@ -104,6 +157,7 @@ app.MapGet("/profiles", [Authorize] async (
                 profile.Name,
                 profile.Photo,
                 profile.Sex,
+                profile.Enrollment,
                 FollowerCount = count
             });
         }
@@ -139,6 +193,7 @@ app.MapGet("/profiles/{id}", [Authorize] async (
             profile.Name,
             profile.Photo,
             profile.Sex,
+            profile.Enrollment,
             FollowerCount = count
         };
 
@@ -181,6 +236,7 @@ app.MapPut("/profiles/{id}", [Authorize] async (
 
     var name = form["Name"].ToString();
     var sex = form["Sex"].ToString();
+    var enrollment = form["Enrollment"].ToString();
     var photoFile = form.Files.GetFile("Photo");
 
     try
@@ -196,24 +252,27 @@ app.MapPut("/profiles/{id}", [Authorize] async (
             if (!string.IsNullOrEmpty(sex))
                 profile.Sex = sex;
 
-            if (photoFile != null)
-            {
-                using var stream = photoFile.OpenReadStream();
-                var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
-                {
-                    File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
-                };
-                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+            if (!string.IsNullOrEmpty(enrollment))
+                profile.Enrollment = enrollment;
 
-                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+            if (photoFile != null)
                 {
-                    profile.Photo = uploadResult.SecureUrl.ToString();
+                    using var stream = photoFile.OpenReadStream();
+                    var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
+                    {
+                        File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+                    };
+                    var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+                    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        profile.Photo = uploadResult.SecureUrl.ToString();
+                    }
+                    else
+                    {
+                        return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
+                    }
                 }
-                else
-                {
-                    return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
-                }
-            }
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -277,7 +336,8 @@ app.MapGet("/profiles/{id}/following", [Authorize] async (
             {
                 p.Id,
                 p.Name,
-                p.Photo
+                p.Photo,
+                p.Enrollment
             })
             .ToListAsync();
 
@@ -288,6 +348,83 @@ app.MapGet("/profiles/{id}/following", [Authorize] async (
         return Results.Problem("Error al obtener los seguidos: " + ex.Message);
     }
 });
+
+app.MapGet("/profiles/enrollment/{enrollment}", [Authorize] async (
+    HttpContext httpContext,
+    string enrollment,
+    ProfileDbContext db,
+    FollowService followService) =>
+{
+    var role = httpContext.User.FindFirst(roleClaimType)?.Value;
+    if (role == "Banned") return Results.Forbid();
+
+    try
+    {
+        var profile = await db.Profiles.FirstOrDefaultAsync(p => p.Enrollment == enrollment);
+        if (profile is null) return Results.NotFound();
+
+        var followerData = await followService.GetFollowerCountAsync(profile.Id);
+        var count = followerData?.FollowerCount ?? 0;
+
+        var result = new
+        {
+            profile.Id,
+            profile.Name,
+            profile.Photo,
+            profile.Sex,
+            profile.Enrollment,
+            FollowerCount = count
+        };
+
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem("Error al buscar el perfil por matrícula: " + ex.Message);
+    }
+});
+
+app.MapGet("/profiles/search/{name}", [Authorize] async (
+    HttpContext httpContext,
+    string name,
+    ProfileDbContext db,
+    FollowService followService) =>
+{
+    var role = httpContext.User.FindFirst(roleClaimType)?.Value;
+    if (role == "Banned") return Results.Forbid();
+
+    try
+    {
+        var matchingProfiles = await db.Profiles
+            .Where(p => p.Name.ToLower().Contains(name.ToLower()))
+            .ToListAsync();
+
+        var results = new List<object>();
+
+        foreach (var profile in matchingProfiles)
+        {
+            var followerData = await followService.GetFollowerCountAsync(profile.Id);
+            var count = followerData?.FollowerCount ?? 0;
+
+            results.Add(new
+            {
+                profile.Id,
+                profile.Name,
+                profile.Photo,
+                profile.Sex,
+                profile.Enrollment,
+                FollowerCount = count
+            });
+        }
+
+        return Results.Ok(results);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem("Error al buscar perfiles por nombre: " + ex.Message);
+    }
+});
+
 
 app.Urls.Add("http://0.0.0.0:8081");
 

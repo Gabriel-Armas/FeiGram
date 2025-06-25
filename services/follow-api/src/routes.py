@@ -1,11 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Depends
 from db import driver
+from neo4j.exceptions import Neo4jError
 from schemas import UserCreate
+from auth import get_current_user
 
 router = APIRouter()
 
 @router.post("/user")
-def create_user(user: UserCreate):
+def create_user(user: UserCreate, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
@@ -18,7 +20,7 @@ def create_user(user: UserCreate):
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 @router.post("/follow/{follower}/{followed}")
-def follow_user(follower: str, followed: str):
+def follow_user(follower: str, followed: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
@@ -31,7 +33,7 @@ def follow_user(follower: str, followed: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/followers/{user_id}")
-def get_followers(user_id: str):
+def get_followers(user_id: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             result = session.run("""
@@ -43,7 +45,7 @@ def get_followers(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.get("/following/{user_id}")
-def get_following(user_id: str):
+def get_following(user_id: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             result = session.run("""
@@ -54,8 +56,26 @@ def get_following(user_id: str):
     except Neo4jError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@router.get("/is_following/{follower}/{followed}")
+def is_following(follower: str, followed: str, current_user: str = Depends(get_current_user)):
+    try:
+        with driver.session() as session:
+            result = session.run("""
+                MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
+                RETURN COUNT(r) > 0 AS is_following
+            """, from_user=follower, to_user=followed)
+
+            record = result.single()
+            is_following = record["is_following"] if record else False
+
+        return {"is_following": is_following}
+    except Neo4jError as e:
+        raise HTTPException(status_code=500, detail=f"Neo4j error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
 @router.delete("/delete/{user_id}")
-def delete_user(user_id: str):
+def delete_user(user_id: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
             session.run("""
@@ -68,14 +88,36 @@ def delete_user(user_id: str):
     except Neo4jError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+from fastapi import HTTPException
+
 @router.delete("/unfollow/{follower}/{followed}")
-def unfollow_user(follower: str, followed: str):
+def unfollow_user(follower: str, followed: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
+            # Verificar que ambos usuarios existen
+            result = session.run("""
+                MATCH (a:User {id: $from_user}), (b:User {id: $to_user})
+                RETURN a, b
+            """, from_user=follower, to_user=followed)
+
+            if not result.single():
+                raise HTTPException(status_code=404, detail="Uno o ambos usuarios no existen")
+
+            # Verificar que la relación FOLLOWS existe
+            rel_result = session.run("""
+                MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
+                RETURN r
+            """, from_user=follower, to_user=followed)
+
+            if not rel_result.single():
+                raise HTTPException(status_code=404, detail=f"No existe relación de seguimiento entre {follower} y {followed}")
+
+            # Borrar la relación
             session.run("""
                 MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
                 DELETE r
             """, from_user=follower, to_user=followed)
+
         return {"message": f"{follower} has unfollowed {followed}"}
     except Neo4jError as e:
         raise HTTPException(status_code=500, detail=str(e))

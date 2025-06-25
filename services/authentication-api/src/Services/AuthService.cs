@@ -21,16 +21,8 @@ namespace AuthenticationApi.Services
             _configuration = configuration;
         }
 
-        public async Task<string?> AuthenticateUserAsync(string email, string password)
+        public string GenerateTokenForUser(User user)
         {
-            var user = await _repo.GetUserByEmailAsync(email);
-
-            if (user == null)
-                return null;
-
-            if (!PasswordService.VerifyPassword(password, user.Password))
-                return null;
-
             return GenerateToken(user);
         }
 
@@ -55,7 +47,7 @@ namespace AuthenticationApi.Services
                 issuer: _jwt.Issuer,
                 audience: _jwt.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddMinutes(1),
                 signingCredentials: creds
             );
 

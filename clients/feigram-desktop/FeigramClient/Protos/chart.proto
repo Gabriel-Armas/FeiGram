@@ -1,0 +1,22 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ChartApi.Grpc";
+
+package chart;
+
+service ChartService {
+  rpc GetWeeklyPostCounts (ChartRequest) returns (ChartResponse);
+}
+
+message ChartRequest {
+  string week = 1;
+}
+
+message ChartResponse {
+  repeated DailyCount counts = 1;
+}
+
+message DailyCount {
+  string day = 1;
+  int32 count = 2;
+}
