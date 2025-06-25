@@ -1,14 +1,10 @@
 package com.example.feigram.screens
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
@@ -20,6 +16,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.feigram.network.model.Profile
+import com.example.feigram.network.model.feed.FeedPost
+import com.example.feigram.network.service.RetrofitInstance
 import com.example.feigram.screens.components.PostItem
 import com.example.feigram.viewmodels.SessionViewModel
 import kotlinx.coroutines.launch
@@ -35,15 +34,34 @@ data class Comment(
 fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     var showComments by remember { mutableStateOf(false) }
     var currentComments by remember { mutableStateOf<List<Comment>>(emptyList()) }
     var newComment by remember { mutableStateOf("") }
-
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val userSession by sessionViewModel.userSession.collectAsState()
+
+    var feedPosts by remember { mutableStateOf<List<FeedPost>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(userSession) {
+        if (userSession != null) {
+            isLoading = true
+            try {
+                val response = RetrofitInstance.feedApi.getRecommendations(
+                    token = "Bearer ${userSession!!.token}",
+                    userId = userSession!!.userId
+                )
+                feedPosts = response.posts
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -56,9 +74,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
-                }) {
-                    Text("Sí")
-                }
+                }) { Text("Sí") }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
@@ -74,7 +90,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
             ModalDrawerSheet {
                 Spacer(Modifier.height(12.dp))
 
-                // Aquí agregamos la navegación real al perfil
                 Text(
                     text = "Perfil (${userSession?.username ?: "Desconocido"})",
                     modifier = Modifier
@@ -111,16 +126,12 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                 TopAppBar(
                     title = { Text("Feigram") },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menú")
                         }
                     },
                     actions = {
-                        IconButton(onClick = {
-                            println("Buscar usuario desde ícono")
-                        }) {
+                        IconButton(onClick = { println("Buscar usuario desde ícono") }) {
                             Icon(Icons.Default.Search, contentDescription = "Buscar")
                         }
                     }
@@ -151,27 +162,43 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
             }
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(
-                    contentPadding = padding,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(3) { index ->
-                        PostItem(
-                            username = "usuario$index",
-                            profileImageUrl = "https://randomuser.me/api/portraits/men/${index + 10}.jpg",
-                            imageUrl = "https://res.cloudinary.com/demo/image/upload/sample.jpg",
-                            description = "Publicación de ejemplo #$index",
-                            comments = listOf("Comentario 1", "Comentario 2", "Comentario 3"),
-                            date = "07 jun 2025",
-                            onCommentsClick = {
-                                currentComments = listOf(
-                                    Comment("ana", "https://randomuser.me/api/portraits/women/1.jpg", "Comentario 1"),
-                                    Comment("juan", "https://randomuser.me/api/portraits/men/2.jpg", "Comentario 2"),
-                                    Comment("luz", "https://randomuser.me/api/portraits/women/3.jpg", "Comentario 3")
-                                )
-                                showComments = true
+
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else {
+                    LazyColumn(
+                        contentPadding = padding,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(feedPosts) { post ->
+                            var profile by remember { mutableStateOf<Profile?>(null) }
+
+                            LaunchedEffect(post.id_usuario) {
+                                try {
+                                    profile = RetrofitInstance.profileApi.getProfileById(
+                                        id = post.id_usuario,
+                                        token = "Bearer ${userSession?.token.orEmpty()}"
+                                    )
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
                             }
-                        )
+
+                            PostItem(
+                                username = profile?.name ?: "Cargando",
+                                profileImageUrl = profile?.photo?.takeIf { it.isNotBlank() } ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                imageUrl = post.url_media,
+                                description = post.descripcion,
+                                date = post.fechaPublicacion.substring(0, 10),
+                                commentCount = post.comentarios,
+                                likeCount = post.likes,
+                                onCommentsClick = {
+                                    currentComments = emptyList()
+                                    showComments = true
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -205,13 +232,9 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                             .size(40.dp)
                                             .padding(end = 8.dp)
                                     )
-
                                     Column {
-                                        Text(
-                                            text = comment.username,
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                        Text(text = comment.text)
+                                        Text(comment.username, style = MaterialTheme.typography.labelMedium)
+                                        Text(comment.text)
                                     }
                                 }
                             }

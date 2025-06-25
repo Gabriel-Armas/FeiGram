@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
@@ -20,17 +21,22 @@ fun PostItem(
     imageUrl: String,
     description: String,
     date: String,
-    comments: List<String>,
+    commentCount: Int,
+    likeCount: Int,
     onCommentsClick: () -> Unit
 ) {
     var isLiked by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)  // 👈 Solo un pequeño espacio entre posts
+    ) {
+        // Header del usuario
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .fillMaxWidth()
         ) {
             AsyncImage(
@@ -41,30 +47,26 @@ fun PostItem(
                     .padding(end = 8.dp)
             )
             Column {
-                Text(
-                    text = username,
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(text = username, style = MaterialTheme.typography.labelLarge)
+                Text(text = date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
+        // Imagen del post (más alargada)
         AsyncImage(
             model = imageUrl,
             contentDescription = "Imagen publicada",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(500.dp),  // 👈 Altura más larga
+            contentScale = ContentScale.Crop
         )
 
+        // Likes y comentarios
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -77,18 +79,27 @@ fun PostItem(
             }
 
             Text(
-                text = "Ver comentarios (${comments.size})",
-                modifier = Modifier.clickable { onCommentsClick() },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
+                text = "$likeCount Me gusta • $commentCount comentarios",
+                style = MaterialTheme.typography.bodySmall
             )
         }
 
+        // Descripción
         Text(
             text = description,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.bodyMedium
         )
 
-        HorizontalDivider()
+        // Ver comentarios
+        Text(
+            text = "Ver comentarios",
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .clickable { onCommentsClick() }
+        )
     }
 }

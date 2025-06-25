@@ -2,6 +2,7 @@ package com.example.feigram.network.service
 
 import android.annotation.SuppressLint
 import com.example.feigram.network.api.AuthApi
+import com.example.feigram.network.api.FeedApi
 import com.example.feigram.network.api.PostApi
 import com.example.feigram.network.api.ProfileApi
 import okhttp3.OkHttpClient
@@ -49,4 +50,7 @@ object RetrofitInstance {
     val authApi: AuthApi = retrofit.create(AuthApi::class.java)
     val profileApi: ProfileApi = retrofit.create(ProfileApi::class.java)
     val postApi: PostApi = retrofit.create(PostApi::class.java)
+    val feedApi: FeedApi by lazy {
+        retrofit.create(FeedApi::class.java)
+    }
 }
