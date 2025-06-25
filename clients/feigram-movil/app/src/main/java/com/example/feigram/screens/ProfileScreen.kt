@@ -1,5 +1,9 @@
 package com.example.feigram.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,8 +23,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import com.example.feigram.network.service.RetrofitInstance
+import com.example.feigram.network.model.Profile
+import com.example.feigram.network.model.posts.PostResponse
 import com.example.feigram.screens.components.UserSession
 import com.example.feigram.viewmodels.SessionViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,43 +41,37 @@ fun ProfileScreen(
     val currentUser by sessionViewModel.userSession.collectAsState()
     val isMyProfile = currentUser?.userId == profileId
 
-    val userProfile = if (currentUser != null && isMyProfile) {
-        UserSession(
-            userId = currentUser!!.userId,
-            username = currentUser!!.username,
-            enrollment = currentUser!!.enrollment,
-            email = "example1@gmail.com",
-            profileImageUrl = currentUser!!.profileImageUrl,
-            rol = currentUser!!.rol
-        )
-    } else {
-        UserSession(
-            userId = profileId,
-            username = "Desconocido",
-            enrollment = "SXXXXXX",
-            email = "No disponible",
-            profileImageUrl = "https://th.bing.com/th/id/OIP.ccRFOtJyhtb9QxwnH3N89wHaHa?rs=1&pid=ImgDetMain&cb=idpwebp2&o=7&rm=3",
-            rol = "Banned"
-        )
+    val scope = rememberCoroutineScope()
+    var userPosts by remember { mutableStateOf<List<PostResponse>>(emptyList()) }
+    var publicacionSeleccionada by remember { mutableStateOf<String?>(null) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Launcher para cambiar imagen de perfil
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        selectedImageUri = uri
+        // Aquí podrías subir la imagen al backend
     }
 
-    val publicacionesUrls = listOf(
-        "https://picsum.photos/id/1011/300/300",
-        "https://picsum.photos/id/1025/300/300",
-        "https://picsum.photos/id/1035/300/300",
-        "https://picsum.photos/id/1043/300/300",
-        "https://picsum.photos/id/106/300/300",
-        "https://picsum.photos/id/107/300/300"
-    )
-
-    val seguidores = if (isMyProfile) 128 else 54
-
-    var publicacionSeleccionada by remember { mutableStateOf<String?>(null) }
+    // Cargar publicaciones del usuario
+    LaunchedEffect(profileId, currentUser) {
+        try {
+            loadError = null
+            val posts = RetrofitInstance.postApi.getUserPosts(
+                userId = profileId,
+                token = "Bearer ${currentUser?.token.orEmpty()}"
+            )
+            userPosts = posts
+        } catch (e: Exception) {
+            e.printStackTrace()
+            loadError = "Error al cargar publicaciones"
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = if (isMyProfile) "Mi perfil" else userProfile.username) },
+                title = { Text(text = if (isMyProfile) "Mi perfil" else "Perfil de usuario") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -85,28 +88,46 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AsyncImage(
-                model = userProfile.profileImageUrl,
+            // Imagen de perfil
+            selectedImageUri?.let {
+                Image(
+                    painter = rememberAsyncImagePainter(it),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(160.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                )
+            } ?: AsyncImage(
+                model = currentUser?.profileImageUrl ?: "https://randomuser.me/api/portraits/lego/1.jpg",
                 contentDescription = "Foto de perfil",
                 modifier = Modifier
                     .size(160.dp)
                     .clip(CircleShape)
                     .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = userProfile.username, style = MaterialTheme.typography.titleLarge)
-            Text(text = userProfile.enrollment, style = MaterialTheme.typography.bodyMedium)
+            // Nombre, matrícula y correo
+            Text(text = currentUser?.username ?: "Cargando...", style = MaterialTheme.typography.titleLarge)
+            Text(text = currentUser?.enrollment ?: "SXXXXXX", style = MaterialTheme.typography.bodyMedium)
+            Text(text = currentUser?.email ?: "Correo no disponible", style = MaterialTheme.typography.bodyMedium)
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Seguidores: $seguidores", style = MaterialTheme.typography.bodyMedium)
+            // Botón para cambiar foto si es mi perfil
+            if (isMyProfile) {
+                Button(onClick = { launcher.launch("image/*") }) {
+                    Text("Cambiar imagen de perfil")
+                }
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // Botón seguir o texto
             if (!isMyProfile) {
-                Button(onClick = {
-                }) {
+                Button(onClick = { /* TODO: Seguir usuario */ }) {
                     Text("Seguir")
                 }
             } else {
@@ -122,31 +143,36 @@ fun ProfileScreen(
             Text("Publicaciones", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 300.dp, max = 600.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                userScrollEnabled = false,
-                content = {
-                    items(publicacionesUrls) { url ->
-                        AsyncImage(
-                            model = url,
-                            contentDescription = "Publicación de ${userProfile.username}",
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxWidth()
-                                .clickable {
-                                    publicacionSeleccionada = url
-                                }
-                        )
+            if (loadError != null) {
+                Text(text = loadError!!, color = MaterialTheme.colorScheme.error)
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 300.dp, max = 600.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    userScrollEnabled = false,
+                    content = {
+                        items(userPosts) { post ->
+                            AsyncImage(
+                                model = post.urlMedia,
+                                contentDescription = "Publicación de ${currentUser?.username}",
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        publicacionSeleccionada = post.urlMedia
+                                    }
+                            )
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
+        // Dialogo para ver la imagen seleccionada en grande
         if (publicacionSeleccionada != null) {
             AlertDialog(
                 onDismissRequest = { publicacionSeleccionada = null },
