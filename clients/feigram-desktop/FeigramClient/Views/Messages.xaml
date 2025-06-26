@@ -105,7 +105,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+            <Button x:Name="btnAccounts" Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
         HorizontalContentAlignment="Left" Click="Accounts_Click">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
@@ -113,7 +113,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+            <Button x:Name="btnStats" Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
         HorizontalContentAlignment="Left" Click="Stadistic_Click">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>

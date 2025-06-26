@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -46,10 +47,18 @@ namespace FeigramClient.Views
             this.isOwnProfile = isOwnProfile;
             _postsService = App.Services.GetRequiredService<PostsService>();
             _viewModel = new ProfileViewModel(profile, friend);
+
+            if (profile.Role != "Admin")
+            {
+                btnAccounts.Visibility = Visibility.Collapsed;
+                btnStats.Visibility = Visibility.Collapsed;
+            }
+
             _mainWindow = mainWindow;
             _ModalFrame = modalFrame;
             _ModalOverlay = modalOverlay;
             this.DataContext = _viewModel;
+
             if (_friend != null && following == true)
             {
                 btnFollow.Content = "Siguiendo";
@@ -111,8 +120,11 @@ namespace FeigramClient.Views
             }
         }
 
-        private void PostImage_Click(object sender, RoutedEventArgs e)
+        private async void PostImage_Click(object sender, RoutedEventArgs e)
         {
+            var postsService = App.Services.GetRequiredService<PostsService>();
+            postsService.SetToken(_viewModel.Me.Token);
+
             if (sender is Button button && button.DataContext is UserPostDto post)
             {
                 if (_friend != null)
@@ -124,6 +136,7 @@ namespace FeigramClient.Views
                     postButton.Description = post.Descripcion;
                     postButton.PostImage = post.UrlMedia;
                     postButton.TimeAgo = GetTimeAgo(post.FechaPublicacion);
+                    postButton.Likes = await postsService.GetLikesCounterAsync(post.PostId.ToString());
 
                     var consultPost = new ConsultPost(postButton, ModalOverlay, _viewModel.Me, _friend);
                     ModalFrame.Navigate(consultPost);
@@ -138,6 +151,7 @@ namespace FeigramClient.Views
                     postButton.Description = post.Descripcion;
                     postButton.PostImage = post.UrlMedia;
                     postButton.TimeAgo = GetTimeAgo(post.FechaPublicacion);
+                    postButton.Likes = await postsService.GetLikesCounterAsync(post.PostId.ToString());
 
                     var consultPost = new ConsultPost(postButton, ModalOverlay, _viewModel.Me);
                     ModalFrame.Navigate(consultPost);

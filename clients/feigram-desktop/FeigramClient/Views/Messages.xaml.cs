@@ -42,10 +42,16 @@ namespace FeigramClient.Views
             _ModalOverlay = modalOverlay;
             _chatService = App.Services.GetRequiredService<ChatWebSocketService>();
 
+            if (_me.Role != "Admin")
+            {
+                btnAccounts.Visibility = Visibility.Collapsed;
+                btnStats.Visibility = Visibility.Collapsed;
+            }
+
             ((MessageBubbleColorConverter)Resources["MessageBubbleColorConverter"]).CurrentUserId = _me.Id;
 
             _chatService.OnMessageReceived += OnIncomingMessage;
-            _chatService.OnError += ChatService_OnError;  // Aquí te suscribes al evento de error
+            _chatService.OnError += ChatService_OnError;
 
             this.Loaded += Messages_Loaded;
 
@@ -54,7 +60,6 @@ namespace FeigramClient.Views
 
         private void ChatService_OnError(string errorMessage)
         {
-            // Ejecutar en el hilo UI porque es un callback desde otro hilo
             Dispatcher.Invoke(() =>
             {
                 if (errorMessage.Contains("token expirado", StringComparison.OrdinalIgnoreCase))
@@ -69,7 +74,6 @@ namespace FeigramClient.Views
                 }
                 else
                 {
-                    // Otros errores
                     MessageBox.Show($"Error: {errorMessage}", "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
@@ -77,16 +81,12 @@ namespace FeigramClient.Views
 
         private void RedirectToLogin()
         {
-            // Cierra esta ventana / página y vuelve a mostrar la ventana login principal
-
-            // Limpias datos si es necesario
             _mainWindow.MainFrame.Content = null;
             _mainWindow.GridLogin.Visibility = Visibility.Visible;
             _mainWindow.GridMainMenu.Visibility = Visibility.Hidden;
             _mainWindow.EmailTextBox.Text = "";
             _mainWindow.PasswordBox.Password = "";
 
-            // Opcional: cerrar la ventana actual si es independiente
             Window.GetWindow(this)?.Close();
         }
 

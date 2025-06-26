@@ -68,6 +68,11 @@ namespace FeigramClient.Services
         {
             var response = await _httpClient.GetAsync($"/profiles/profiles/enrollment/{enrollment}");
 
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 await HandleErrorResponse(response);
@@ -76,6 +81,7 @@ namespace FeigramClient.Services
 
             return await response.Content.ReadFromJsonAsync<ProfileWithFollowerCount>();
         }
+
 
         public async Task<List<ProfileWithFollowerCount>> SearchProfilesByNameAsync(string name)
         {

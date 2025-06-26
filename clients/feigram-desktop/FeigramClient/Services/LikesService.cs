@@ -88,6 +88,5 @@ namespace FeigramClient.Services
                 return false;
             }
         }
-
     }
 }

@@ -24,11 +24,12 @@ namespace FeigramClient.Services
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _jwtToken);
         }
 
-        public async Task<List<PostDto>> GetRecommendations(string userId)
+        public async Task<List<PostDto>> GetRecommendations(string userId, int skip = 0, int limit = 10)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/feed/posts/recommendations");
+                var url = $"/feed/posts/recommendations?user_id={userId}&skip={skip}&limit={limit}";
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -55,12 +56,13 @@ namespace FeigramClient.Services
             }
             catch (UnauthorizedAccessException)
             {
-                throw; // se propaga para que la UI lo maneje y vuelva a login si es necesario
+                throw;
             }
             catch (Exception ex)
             {
                 throw new Exception("Error al obtener recomendaciones del servidor", ex);
             }
         }
+
     }
 }
