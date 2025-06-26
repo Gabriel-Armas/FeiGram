@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace FeigramClient.Services
@@ -135,6 +136,37 @@ namespace FeigramClient.Services
                 throw new Exception("Error al obtener los posts del usuario", ex);
             }
         }
+
+        public async Task<int> GetLikesCounterAsync(string postId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"/posts/posts/{postId}/likes-count");
+                if (!response.IsSuccessStatusCode)
+                {
+                    HandleErrorResponse(response, "Error al obtener el contador de likes");
+                }
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+                using var doc = await JsonDocument.ParseAsync(stream);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("like_count", out var likeCountElement) &&
+                    likeCountElement.TryGetInt32(out var likeCount))
+                {
+                    return likeCount;
+                }
+
+                return 0;
+            }
+            catch (UnauthorizedAccessException) { throw; }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener el contador de likes", ex);
+            }
+        }
+
+
 
         private class CommentResponse
         {

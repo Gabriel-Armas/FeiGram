@@ -51,6 +51,13 @@ namespace FeigramClient.Views
             Loaded += async (s, e) =>
             {
                 ChatMessages.Height = PostContainer.ActualHeight;
+
+                _post.IsLiked = await likesService.CheckIfUserLikedPostAsync(_me.Id, _post.Id.ToString());
+
+                ImgLike.Source = new BitmapImage(new Uri(_post.IsLiked
+                    ? "pack://application:,,,/Resources/megustaActivo.png"
+                    : "pack://application:,,,/Resources/megusta.png"));
+
                 await LoadComments();
             };
         }

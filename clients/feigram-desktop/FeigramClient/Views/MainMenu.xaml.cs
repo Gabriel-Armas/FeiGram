@@ -50,6 +50,13 @@ namespace FeigramClient.Views
             likesService = App.Services.GetRequiredService<LikesService>();
 
             _isLoadingRecommendations = true;
+
+            if (_me.Role != "Admin")
+            {
+                btnAccounts.Visibility = Visibility.Collapsed;
+                btnStats.Visibility = Visibility.Collapsed;
+            }
+
             LoadRecommendations();
             LoadFriends();
             DataContext = this;
@@ -119,22 +126,17 @@ namespace FeigramClient.Views
 
         private async void LoadRecommendations()
         {
-            if (PostsCompletos.Count > 0)
-            {
-                _isLoadingRecommendations = false;
-                return;
-            }
-
             try
             {
                 var feedService = App.Services.GetRequiredService<FeedService>();
                 feedService.SetToken(_me.Token);
-                var recomendaciones = await feedService.GetRecommendations(_me.Id);
-                PostsRecommendations = recomendaciones;
-                PostsCompletos.Clear();
+
+                // Pedir más recomendaciones con paginado
+                var recomendaciones = await feedService.GetRecommendations(_me.Id, skip: PostsCompletos.Count, limit: 10);
                 var profileService = App.Services.GetRequiredService<ProfileService>();
                 profileService.SetToken(_me.Token);
                 var likesService = App.Services.GetRequiredService<LikesService>();
+
                 foreach (var p in recomendaciones)
                 {
                     var profile = await profileService.GetProfileAsync(p.IdUsuario);
@@ -151,12 +153,12 @@ namespace FeigramClient.Views
                         IsLiked = await likesService.CheckIfUserLikedPostAsync(_me.Id, p.PostId.ToString())
                     });
                 }
-                _isLoadingRecommendations = false; 
+
+                _isLoadingRecommendations = false;
             }
             catch (HttpRequestException httpEx)
             {
-                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
-                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}", "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (UnauthorizedAccessException unauthEx)
             {
@@ -173,6 +175,7 @@ namespace FeigramClient.Views
                 MessageBox.Show("Error cargando recomendaciones: " + ex.Message);
             }
         }
+
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
@@ -191,7 +194,6 @@ namespace FeigramClient.Views
             {
                 _isLoadingRecommendations = true;
                 LoadRecommendations();
-                scrollViewer.ScrollToTop();
             }
         }
 
