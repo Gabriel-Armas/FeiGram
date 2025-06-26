@@ -53,15 +53,25 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
 app.Use(async (context, next) =>
 {
     var token = context.Request.Cookies["jwt_token"];
+    
     if (!string.IsNullOrEmpty(token))
     {
+        logger.LogInformation("JWT encontrado en cookie: {Token}", token);
         context.Request.Headers["Authorization"] = $"Bearer {token}";
     }
+    else
+    {
+        logger.LogWarning("No se encontró la cookie jwt_token.");
+    }
+
     await next();
 });
+
 
 app.UseAuthentication();
 app.UseAuthorization();

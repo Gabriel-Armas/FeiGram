@@ -24,7 +24,6 @@ namespace app.Pages.Feed
             if (!User.Identity.IsAuthenticated)
                 return RedirectToPage("/Login");
 
-            var userId = User.FindFirst("id")?.Value;
 
             var client = _clientFactory.CreateClient();
             client.BaseAddress = new Uri("https://feigram-nginx");
@@ -33,7 +32,7 @@ namespace app.Pages.Feed
 
             try
             {
-                var response = await client.GetFromJsonAsync<List<PostViewModel>>($"feed/recommendations/{userId}");
+                var response = await client.GetFromJsonAsync<List<PostViewModel>>($"feed/recommendations");
                 if (response != null)
                     Posts = response;
             }

@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System.Text.Json.Serialization;
+
 
 namespace app.Pages
 {
@@ -58,7 +60,10 @@ namespace app.Pages
             LoginResponse result = null;
             try
             {
+                _logger.LogInformation("1");
                 result = JsonSerializer.Deserialize<LoginResponse>(json);
+                _logger.LogInformation("Respuesta login: " + result.Token + " rol: "+ result.Rol +" user id:" +result.UserId);
+                _logger.LogInformation("2");
             }
             catch
             {
@@ -77,12 +82,13 @@ namespace app.Pages
             Response.Cookies.Append("jwt_token", result.Token, new CookieOptions
             {
                 HttpOnly = true,
-                SameSite = SameSiteMode.None,
-                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = false,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
-            return RedirectToPage("/Feed");
+
+            return RedirectToPage("/Feed/Feed");
         }
 
         public async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
@@ -110,10 +116,16 @@ namespace app.Pages
         }
 
         private class LoginResponse
-        {
+{
+            [JsonPropertyName("token")]
             public string Token { get; set; }
-        }
 
+            [JsonPropertyName("userId")]
+            public string UserId { get; set; } = string.Empty;
+
+            [JsonPropertyName("rol")]
+            public string Rol { get; set; } = string.Empty;
+        }
         public static class TokenHelper
         {
             public static bool TokenExpirado(string token)
