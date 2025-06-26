@@ -1,11 +1,13 @@
 package com.example.feigram.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -13,9 +15,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.feigram.R
 import com.example.feigram.network.model.Profile
 import com.example.feigram.network.model.feed.FeedPost
 import com.example.feigram.network.service.RetrofitInstance
@@ -42,7 +46,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val userSession by sessionViewModel.userSession.collectAsState()
-
     var feedPosts by remember { mutableStateOf<List<FeedPost>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -124,7 +127,14 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Feigram") },
+                    title = {
+                        Image(
+                            painter = painterResource(id = R.drawable.feigram_logofont),
+                            contentDescription = "Logo Feigram",
+                            modifier = Modifier
+                                .height(32.dp)  // Ajusta tamaño si quieres
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menú")
@@ -133,6 +143,11 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                     actions = {
                         IconButton(onClick = { println("Buscar usuario desde ícono") }) {
                             Icon(Icons.Default.Search, contentDescription = "Buscar")
+                        }
+                        IconButton(onClick = {
+                            navController.navigate("messages")
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Mensajes")
                         }
                     }
                 )
@@ -162,7 +177,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
             }
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize()) {
-
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 } else {
@@ -187,7 +201,8 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
 
                             PostItem(
                                 username = profile?.name ?: "Cargando",
-                                profileImageUrl = profile?.photo?.takeIf { it.isNotBlank() } ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                profileImageUrl = profile?.photo?.takeIf { it.isNotBlank() }
+                                    ?: "https://randomuser.me/api/portraits/lego/1.jpg",
                                 imageUrl = post.url_media,
                                 description = post.descripcion,
                                 date = post.fechaPublicacion.substring(0, 10),

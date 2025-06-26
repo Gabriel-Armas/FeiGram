@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.compose.*
+import com.example.feigram.screens.ChatScreen
+import com.example.feigram.screens.ContactListScreen
 import com.example.feigram.screens.HomeScreen
 import com.example.feigram.screens.LoginScreen
 import com.example.feigram.screens.NewPostScreen
@@ -45,6 +47,15 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("newpost") {
                         NewPostScreen(navController = navController)
+                    }
+                    composable("messages") {
+                        ContactListScreen(navController)
+                    }
+
+                    composable("chat/{contactId}/{contactName}") { backStackEntry ->
+                        val contactId = backStackEntry.arguments?.getString("contactId") ?: ""
+                        val contactName = backStackEntry.arguments?.getString("contactName") ?: "Desconocido"
+                        ChatScreen(navController, contactId, contactName)
                     }
                 }
             }

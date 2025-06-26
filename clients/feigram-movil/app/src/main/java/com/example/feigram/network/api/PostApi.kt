@@ -33,19 +33,19 @@ interface PostApi {
 
     @DELETE("/posts/posts/{post_id}")
     suspend fun deletePost(
-        @Path("post_id") postId: String,
+        @Path("post_id") postId: Int,
         @Header("Authorization") token: String
     ): MessageResponse
 
     @GET("/posts/posts/{post_id}/comments")
     suspend fun getPostComments(
-        @Path("post_id") postId: String,
+        @Path("post_id") postId: Int,
         @Header("Authorization") token: String
     ): CommentListResponse
 
     @GET("/posts/posts/{post_id}/likes-count")
     suspend fun getPostLikesCount(
-        @Path("post_id") postId: String,
+        @Path("post_id") postId: Int,
         @Header("Authorization") token: String
     ): LikeCountResponse
 }
