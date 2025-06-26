@@ -40,7 +40,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="280"/>
             </Grid.ColumnDefinitions>
 
             <!-- Línea entre columna 0 y 1 -->
@@ -89,7 +88,7 @@ Foreground="Black"/>
          Foreground="Black"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                <Button x:Name="btnAccounts" Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
  HorizontalContentAlignment="Left" Click="Accounts_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="/Resources/cuentas.png" Width="20" Height="20" Margin="0,0,10,0"/>
@@ -99,7 +98,7 @@ Foreground="Black"/>
          Foreground="Black"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
+                <Button x:Name="btnStats" Style="{StaticResource RoundedHoverButtonStyle}" Margin="0,5" Height="40" Padding="5,0"
  HorizontalContentAlignment="Left" Click="Stadistic_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="/Resources/grafico.png" Width="20" Height="20" Margin="0,0,10,0"/>
@@ -216,74 +215,6 @@ Foreground="Black"/>
                 </StackPanel>
 
             </ScrollViewer>
-
-
-            <!-- COLUMNA DERECHA - AMIGOS -->
-            <StackPanel Grid.Column="2" Margin="10">
-                <TextBlock Text="Amigos" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-
-                <Grid Height="40" Margin="0,0,0,10">
-                    <Border Background="White" BorderBrush="#CCC" BorderThickness="1" CornerRadius="10" VerticalAlignment="Stretch">
-                        <Grid>
-                            <TextBox Margin="10,0,40,0" VerticalContentAlignment="Center" Background="Transparent" BorderThickness="0" FontSize="14" Foreground="Black" Height="40"/>
-                        </Grid>
-                    </Border>
-                    <Image Source="/Resources/busqueda.png" Width="22" Height="22" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,0,5,0" Panel.ZIndex="1"/>
-                </Grid>
-
-                <ListBox BorderThickness="0" Background="Transparent">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Margin" Value="0,0,0,10"/>
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Padding" Value="5"/>
-                            <Setter Property="Cursor" Value="Hand"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <ContentPresenter />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="OverridesDefaultStyle" Value="True"/>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="35" Height="35" Margin="0,0,10,0">
-                                <Ellipse.Fill>
-                                    <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                                </Ellipse.Fill>
-                            </Ellipse>
-                            <TextBlock Text="Amigo 1" VerticalAlignment="Center" FontSize="14"/>
-                        </StackPanel>
-                    </ListBoxItem>
-
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="35" Height="35" Margin="0,0,10,0">
-                                <Ellipse.Fill>
-                                    <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                                </Ellipse.Fill>
-                            </Ellipse>
-                            <TextBlock Text="Amigo 2" VerticalAlignment="Center" FontSize="14"/>
-                        </StackPanel>
-                    </ListBoxItem>
-
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="35" Height="35" Margin="0,0,10,0">
-                                <Ellipse.Fill>
-                                    <ImageBrush ImageSource="/Resources/noprofile.png"/>
-                                </Ellipse.Fill>
-                            </Ellipse>
-                            <TextBlock Text="Amigo 3" VerticalAlignment="Center" FontSize="14"/>
-                        </StackPanel>
-                    </ListBoxItem>
-                </ListBox>
-            </StackPanel>
             <Grid x:Name="ModalOverlay"
       Grid.ColumnSpan="3"
       Visibility="Collapsed"

@@ -75,9 +75,10 @@ namespace FeigramClient.Views
             {
                 var perfiles = await _profileService.GetProfilesAsync();
                 var authService = App.Services.GetRequiredService<AuthenticationService>();
-
+                authService.SetToken(_me.Token);
                 var tasks = perfiles.Select(async p =>
                 {
+                    MessageBox.Show(DateTime.UtcNow.ToString("O"));
                     var response = await authService.GetAccountAsync(p.Id ?? "");
 
                     return new FullUser
@@ -102,6 +103,16 @@ namespace FeigramClient.Views
             {
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                MessageBox.Show(uaEx.Message, "Acceso no autorizado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {
@@ -191,7 +202,7 @@ namespace FeigramClient.Views
 
             Action cerrarModal = () => Overlay.Visibility = Visibility.Collapsed;
             
-            var banearPage = new BanAccountPage(cuenta, cerrarModal);
+            var banearPage = new BanAccountPage(cuenta, cerrarModal, _me);
 
             ModalFrame.Navigate(banearPage);
             Overlay.Visibility = Visibility.Visible;

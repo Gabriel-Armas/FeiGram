@@ -7,3 +7,4 @@ cloudinary
 python-multipart
 python-jose
 pika
+pytz

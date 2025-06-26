@@ -56,6 +56,24 @@ def get_following(user_id: str, current_user: str = Depends(get_current_user)):
     except Neo4jError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@router.get("/is_following/{follower}/{followed}")
+def is_following(follower: str, followed: str, current_user: str = Depends(get_current_user)):
+    try:
+        with driver.session() as session:
+            result = session.run("""
+                MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
+                RETURN COUNT(r) > 0 AS is_following
+            """, from_user=follower, to_user=followed)
+
+            record = result.single()
+            is_following = record["is_following"] if record else False
+
+        return {"is_following": is_following}
+    except Neo4jError as e:
+        raise HTTPException(status_code=500, detail=f"Neo4j error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
 @router.delete("/delete/{user_id}")
 def delete_user(user_id: str, current_user: str = Depends(get_current_user)):
     try:

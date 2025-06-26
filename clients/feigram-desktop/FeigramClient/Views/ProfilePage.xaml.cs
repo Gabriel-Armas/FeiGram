@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -46,14 +47,21 @@ namespace FeigramClient.Views
             this.isOwnProfile = isOwnProfile;
             _postsService = App.Services.GetRequiredService<PostsService>();
             _viewModel = new ProfileViewModel(profile, friend);
+
+            if (profile.Role != "Admin")
+            {
+                btnAccounts.Visibility = Visibility.Collapsed;
+                btnStats.Visibility = Visibility.Collapsed;
+            }
+
             _mainWindow = mainWindow;
             _ModalFrame = modalFrame;
             _ModalOverlay = modalOverlay;
             this.DataContext = _viewModel;
+
             if (_friend != null && following == true)
             {
                 btnFollow.Content = "Siguiendo";
-                btnFollow.IsEnabled = false;
             }
             else if (_friend != null)
             {
@@ -96,14 +104,27 @@ namespace FeigramClient.Views
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar publicaciones: {ex.Message}");
             }
         }
 
-        private void PostImage_Click(object sender, RoutedEventArgs e)
+        private async void PostImage_Click(object sender, RoutedEventArgs e)
         {
+            var postsService = App.Services.GetRequiredService<PostsService>();
+            postsService.SetToken(_viewModel.Me.Token);
+
             if (sender is Button button && button.DataContext is UserPostDto post)
             {
                 if (_friend != null)
@@ -115,6 +136,7 @@ namespace FeigramClient.Views
                     postButton.Description = post.Descripcion;
                     postButton.PostImage = post.UrlMedia;
                     postButton.TimeAgo = GetTimeAgo(post.FechaPublicacion);
+                    postButton.Likes = await postsService.GetLikesCounterAsync(post.PostId.ToString());
 
                     var consultPost = new ConsultPost(postButton, ModalOverlay, _viewModel.Me, _friend);
                     ModalFrame.Navigate(consultPost);
@@ -129,6 +151,7 @@ namespace FeigramClient.Views
                     postButton.Description = post.Descripcion;
                     postButton.PostImage = post.UrlMedia;
                     postButton.TimeAgo = GetTimeAgo(post.FechaPublicacion);
+                    postButton.Likes = await postsService.GetLikesCounterAsync(post.PostId.ToString());
 
                     var consultPost = new ConsultPost(postButton, ModalOverlay, _viewModel.Me);
                     ModalFrame.Navigate(consultPost);
@@ -199,25 +222,70 @@ namespace FeigramClient.Views
 
         private async void Follow_Click(object sender, RoutedEventArgs e)
         {
-            try
+            var btnFollowContent = btnFollow.Content;
+            if (btnFollowContent.Equals("Siguiendo"))
             {
-                if (!this.isOwnProfile)
+                try
                 {
-                    var followService = App.Services.GetRequiredService<FollowService>();
-                    followService.SetToken(_viewModel.Me.Token);
-                    await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
-                    btnFollow.Content = "Siguiendo";
-                    btnFollow.Visibility = Visibility.Collapsed;
+                    if (!this.isOwnProfile)
+                    {
+                        var followService = App.Services.GetRequiredService<FollowService>();
+                        followService.SetToken(_viewModel.Me.Token);
+                        await followService.UnfollowUserAsync(_viewModel.Me.Id, _friend.Id);
+                        btnFollow.Content = "Seguir";
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                    "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (UnauthorizedAccessException unauthEx)
+                {
+                    MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var login = new MainWindow();
+                        login.Show();
+                        Window.GetWindow(this)?.Close();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            catch (HttpRequestException httpEx)
+            else
             {
-                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
-                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    if (!this.isOwnProfile)
+                    {
+                        var followService = App.Services.GetRequiredService<FollowService>();
+                        followService.SetToken(_viewModel.Me.Token);
+                        await followService.FollowUserAsync(_viewModel.Me.Id, _friend.Id);
+                        btnFollow.Content = "Siguiendo";
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                    "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (UnauthorizedAccessException unauthEx)
+                {
+                    MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var login = new MainWindow();
+                        login.Show();
+                        Window.GetWindow(this)?.Close();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al seguir:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
     }

@@ -36,6 +36,8 @@ namespace FeigramClient.Views
         private bool _isLoadingRecommendations = false;
         private ProfileSingleton _me;
         private RulesValidator _rulesValidator;
+        private bool _scrollActivo = false;
+
 
         public MainMenu(ProfileSingleton profile, MainWindow mainWindow)
         {
@@ -46,6 +48,15 @@ namespace FeigramClient.Views
             _rulesValidator.EviteDangerLettersInTextbox(SearchBox);
             _rulesValidator.AddLimitToTextBox(SearchBox, 80);
             likesService = App.Services.GetRequiredService<LikesService>();
+
+            _isLoadingRecommendations = true;
+
+            if (_me.Role != "Admin")
+            {
+                btnAccounts.Visibility = Visibility.Collapsed;
+                btnStats.Visibility = Visibility.Collapsed;
+            }
+
             LoadRecommendations();
             LoadFriends();
             DataContext = this;
@@ -83,6 +94,16 @@ namespace FeigramClient.Views
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
+            }
             catch (Exception ex)
             {
                 MessageBox.Show("Error cargando amigos: " + ex.Message);
@@ -109,12 +130,13 @@ namespace FeigramClient.Views
             {
                 var feedService = App.Services.GetRequiredService<FeedService>();
                 feedService.SetToken(_me.Token);
-                var recomendaciones = await feedService.GetRecommendations(_me.Id);
-                PostsRecommendations = recomendaciones;
-                PostsCompletos.Clear();
+
+                // Pedir más recomendaciones con paginado
+                var recomendaciones = await feedService.GetRecommendations(_me.Id, skip: PostsCompletos.Count, limit: 10);
                 var profileService = App.Services.GetRequiredService<ProfileService>();
                 profileService.SetToken(_me.Token);
                 var likesService = App.Services.GetRequiredService<LikesService>();
+
                 foreach (var p in recomendaciones)
                 {
                     var profile = await profileService.GetProfileAsync(p.IdUsuario);
@@ -131,12 +153,22 @@ namespace FeigramClient.Views
                         IsLiked = await likesService.CheckIfUserLikedPostAsync(_me.Id, p.PostId.ToString())
                     });
                 }
-                _isLoadingRecommendations = false; 
+
+                _isLoadingRecommendations = false;
             }
             catch (HttpRequestException httpEx)
             {
-                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
-                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}", "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {
@@ -144,24 +176,33 @@ namespace FeigramClient.Views
             }
         }
 
+
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            var scrollViewer = sender as ScrollViewer;
+            if (sender is not ScrollViewer scrollViewer) return;
 
-            if (scrollViewer != null &&
+            // Activar scroll solo si ya hay espacio suficiente para scrollear
+            if (!_scrollActivo && scrollViewer.ExtentHeight > scrollViewer.ViewportHeight + 100)
+            {
+                _scrollActivo = true;
+            }
+
+            // Si ya está activo, verificar si llegamos al fondo
+            if (_scrollActivo &&
                 scrollViewer.VerticalOffset + scrollViewer.ViewportHeight >= scrollViewer.ExtentHeight &&
                 !_isLoadingRecommendations)
             {
-                _isLoadingRecommendations = true; // evitar múltiples llamadas
+                _isLoadingRecommendations = true;
                 LoadRecommendations();
             }
         }
 
 
 
+
         private string GetTimeAgo(DateTime fecha)
         {
-            var diff = DateTime.Now - fecha;
+            var diff = DateTime.UtcNow.ToLocalTime() - fecha.ToLocalTime();
 
             if (diff.TotalMinutes < 60)
                 return $"Hace {Math.Floor(diff.TotalMinutes)} minutos";
@@ -376,6 +417,16 @@ namespace FeigramClient.Views
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
+            }
             catch (Exception ex)
             {
                 Console.WriteLine("Error en búsqueda: " + ex.Message);
@@ -385,24 +436,50 @@ namespace FeigramClient.Views
 
 
 
-        private void SearchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void SearchResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SearchResultsListBox.SelectedItem is ProfileWithFollowerCount profile)
+            try
             {
-                Friend friend = new Friend();
-                friend.Id = profile.Id;
-                friend.Name = profile.Name;
-                friend.Tuition = profile.Enrollment;
-                friend.Photo = profile.Photo;
-                friend.Sex = profile.Sex;
-                friend.FollowerCount = profile.FollowerCount;
-                if (profile != null)
+                if (SearchResultsListBox.SelectedItem is ProfileWithFollowerCount profile)
                 {
-                    GridMenu.Visibility = Visibility.Collapsed;
-                    var profilePage = new Profile(_me, _mainWindow, ModalFrame, ModalOverlay, false, friend);
-                    ModalFrame.Navigate(profilePage);
-                    ModalOverlay.Visibility = Visibility.Visible;
+                    Friend friend = new Friend();
+                    friend.Id = profile.Id;
+                    friend.Name = profile.Name;
+                    friend.Tuition = profile.Enrollment;
+                    friend.Photo = profile.Photo;
+                    friend.Sex = profile.Sex;
+                    friend.FollowerCount = profile.FollowerCount;
+                    if (profile != null)
+                    {
+                        var followService = App.Services.GetRequiredService<FollowService>();
+                        followService.SetToken(_me.Token);
+                        var isFollowing = await followService.IsFollowingAsync(_me.Id, friend.Id);
+                        GridMenu.Visibility = Visibility.Collapsed;
+                        var profilePage = new Profile(_me, _mainWindow, ModalFrame, ModalOverlay, false, friend, isFollowing);
+                        ModalFrame.Navigate(profilePage);
+                        ModalOverlay.Visibility = Visibility.Visible;
+                    }
+                    SearchPopup.IsOpen = false;
                 }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error en búsqueda: " + ex.Message);
                 SearchPopup.IsOpen = false;
             }
         }
@@ -417,7 +494,19 @@ namespace FeigramClient.Views
         public string Description { get; set; }
         public string UserProfileImage { get; set; }
         public string PostImage { get; set; }
-        public int Comentarios { get; set; }
+        public int comentarios { get; set; }
+        public int Comentarios
+        {
+            get => comentarios;
+            set
+            {
+                if (comentarios != value)
+                {
+                    comentarios = value;
+                    OnPropertyChanged(nameof(Comentarios));
+                }
+            }
+        }
 
         private int likes;
         public int Likes

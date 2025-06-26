@@ -51,6 +51,13 @@ namespace FeigramClient.Views
             Loaded += async (s, e) =>
             {
                 ChatMessages.Height = PostContainer.ActualHeight;
+
+                _post.IsLiked = await likesService.CheckIfUserLikedPostAsync(_me.Id, _post.Id.ToString());
+
+                ImgLike.Source = new BitmapImage(new Uri(_post.IsLiked
+                    ? "pack://application:,,,/Resources/megustaActivo.png"
+                    : "pack://application:,,,/Resources/megusta.png"));
+
                 await LoadComments();
             };
         }
@@ -101,6 +108,16 @@ namespace FeigramClient.Views
             {
                 MessageBox.Show($"Error de HTTP: {httpEx.Message}",
                                 "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
             }
             catch (Exception ex)
             {
@@ -204,6 +221,7 @@ namespace FeigramClient.Views
                     panel.Children.Add(time);
 
                     ChatMessages.Items.Add(panel);
+                    _post.Comentarios++;
                     MessageInput.Clear();
                 }
             }

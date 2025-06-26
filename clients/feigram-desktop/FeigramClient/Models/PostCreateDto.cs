@@ -10,6 +10,6 @@ namespace FeigramClient.Models
     {
         public string descripcion { get; set; } = "";
         public string url_media { get; set; } = "";
-        public DateTime fechaPublicacion { get; set; } = DateTime.UtcNow;
+        public DateTime fechaPublicacion { get; set; }
     }
 }

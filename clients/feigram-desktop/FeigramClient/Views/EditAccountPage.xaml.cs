@@ -123,6 +123,21 @@ namespace FeigramClient.Views
 
                 success = response;
             }
+            catch (HttpRequestException httpEx)
+            {
+                MessageBox.Show($"Error de HTTP: {httpEx.Message}",
+                                "Error de comunicación", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (UnauthorizedAccessException unauthEx)
+            {
+                MessageBox.Show(unauthEx.Message, "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var login = new MainWindow();
+                    login.Show();
+                    Window.GetWindow(this)?.Close();
+                });
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"¡Error al editar el perfil!\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
