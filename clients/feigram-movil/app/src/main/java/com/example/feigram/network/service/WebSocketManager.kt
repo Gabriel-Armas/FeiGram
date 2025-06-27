@@ -19,8 +19,8 @@ object WebSocketManager {
         onMessageReceived = onMessage
 
         val request = Request.Builder()
-            //.url("wss://192.168.1.11/messages/ws/?token=$token")
-            .url("wss://192.168.1.251/messages/ws/?token=$token")
+            .url("wss://192.168.1.11/messages/ws/?token=$token")
+            //.url("wss://192.168.1.251/messages/ws/?token=$token")
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
