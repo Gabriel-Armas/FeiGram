@@ -37,7 +37,6 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
     val scope = rememberCoroutineScope()
     var contactProfile by remember { mutableStateOf<Profile?>(null) }
 
-    // Obtener el perfil del contacto
     LaunchedEffect(contactId) {
         try {
             contactProfile = RetrofitInstance.profileApi.getProfileById(
@@ -49,7 +48,6 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
         }
     }
 
-    // Conectar y escuchar WebSocket SOLO para este chat (sobre-escribe listener global)
     LaunchedEffect(contactId) {
         if (userSession != null) {
             WebSocketManager.connect(userSession.token) { msg ->
@@ -128,7 +126,7 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
                 modifier = Modifier
                     .weight(1f)
                     .padding(8.dp),
-                reverseLayout = true
+                reverseLayout = false
             ) {
                 items(messages) { message ->
                     val isMe = message.from == userSession?.userId
