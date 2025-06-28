@@ -15,11 +15,11 @@
   <div class="row justify-content-center">
 
     <div class="col-12 col-md-9 col-lg-9 offset-lg-2">
-      @foreach (var post in Model.Posts)
+      @foreach (var post in Model.PostCompletos)
       {
         <div class="card p-3 shadow-sm mb-4 rounded-4" onclick="openPostModal(@post.Id)" style="cursor: pointer;">
         <div class="d-flex align-items-center mb-2">
-          <img src="@post.ImageUrl" alt="Perfil" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">
+          <img src="@post.UserProfileImage" alt="Perfil" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">
           <div>
             <h6 class="mb-0 fw-semibold">Asuna Yuuki</h6>
             <small class="text-muted">Hace 2 horas</small>
@@ -27,10 +27,10 @@
         </div>
 
         <div class="mb-3">
-          <img src="@post.ImageUrl" class="img-fluid rounded shadow-sm" alt="Post de Asuna" style="max-height: 450px; object-fit: cover; width: 100%;" />
+          <img src="@post.PostImage" class="img-fluid rounded shadow-sm" alt="Post de Asuna" style="max-height: 450px; object-fit: cover; width: 100%;" />
         </div>
 
-        <p class="mb-3">@post.Caption</p>
+        <p class="mb-3">@post.Description</p>
 
         <div class="text-muted px-1">
           <i class="bi bi-heart-fill text-danger me-2"></i>128 me gusta

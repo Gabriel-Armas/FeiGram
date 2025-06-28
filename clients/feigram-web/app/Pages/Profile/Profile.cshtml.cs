@@ -9,7 +9,7 @@ namespace app.Pages.Profile
     public class ProfileModel : PageModel
     {
         public ProfileViewModel Profile { get; set; } = new ProfileViewModel();
-
+        /*
         public async Task<IActionResult> OnGetAsync()
         {
             var usuario_token = "123";
@@ -86,6 +86,6 @@ namespace app.Pages.Profile
                     new CommentDTO { Author = "Zelda", Text = $"Sabio consejo para el héroe del post {id}~" }
                 }
             };
-        }
+        }*/
     }
 }
