@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.example.feigram.network.model.Profile
 import com.example.feigram.network.model.posts.PostResponse
 import com.example.feigram.network.service.RetrofitInstance
 import com.example.feigram.viewmodels.SessionViewModel
@@ -47,6 +48,7 @@ fun ProfileScreen(
     val isMyProfile = currentUser?.userId == profileId
 
     val scope = rememberCoroutineScope()
+    var profile by remember { mutableStateOf<Profile?>(null) }
     var userPosts by remember { mutableStateOf<List<PostResponse>>(emptyList()) }
     var selectedPost by remember { mutableStateOf<PostResponse?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
@@ -90,6 +92,12 @@ fun ProfileScreen(
     LaunchedEffect(profileId, currentUser) {
         try {
             loadError = null
+
+            profile = RetrofitInstance.profileApi.getProfileById(
+                id = profileId,
+                token = "Bearer ${currentUser?.token.orEmpty()}"
+            )
+
             val posts = RetrofitInstance.postApi.getUserPosts(
                 userId = profileId,
                 token = "Bearer ${currentUser?.token.orEmpty()}"
@@ -97,7 +105,7 @@ fun ProfileScreen(
             userPosts = posts
         } catch (e: Exception) {
             e.printStackTrace()
-            loadError = "Error al cargar publicaciones"
+            loadError = "Error al cargar perfil o publicaciones"
         }
     }
 
@@ -138,7 +146,7 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 } ?: AsyncImage(
-                    model = currentUser?.profileImageUrl ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                    model = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
                     contentDescription = "Foto de perfil",
                     modifier = Modifier.fillMaxSize()
                 )
@@ -160,9 +168,8 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = currentUser?.username ?: "Cargando...", style = MaterialTheme.typography.titleLarge)
-            Text(text = "Matrícula: ${currentUser?.enrollment ?: "SXXXXXX"}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Correo: ${currentUser?.email ?: "Correo no disponible"}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = profile?.name ?: "Cargando...", style = MaterialTheme.typography.titleLarge)
+            Text(text = "Matrícula: ${profile?.enrollment ?: "SXXXXXX"}", style = MaterialTheme.typography.bodyMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -190,7 +197,7 @@ fun ProfileScreen(
                         items(userPosts) { post ->
                             AsyncImage(
                                 model = post.urlMedia,
-                                contentDescription = "Publicación de ${currentUser?.username}",
+                                contentDescription = "Publicación de ${profile?.name}",
                                 modifier = Modifier
                                     .aspectRatio(1f)
                                     .fillMaxWidth()
@@ -202,6 +209,7 @@ fun ProfileScreen(
             }
         }
 
+        // Aquí el diálogo para mostrar detalles de la publicación seleccionada
         selectedPost?.let { post ->
             var likeCount by remember { mutableStateOf(0) }
             var comments by remember { mutableStateOf<List<com.example.feigram.network.model.comments.Comment>>(emptyList()) }
@@ -274,13 +282,10 @@ fun ProfileScreen(
                                 .clip(MaterialTheme.shapes.medium)
                         )
 
-                        Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(post.description ?: "Sin descripción", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
 
-                        Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
@@ -365,6 +370,8 @@ fun ProfileScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            var newComment by remember { mutableStateOf("") }
+
                             OutlinedTextField(
                                 value = newComment,
                                 onValueChange = { newComment = it },
@@ -423,6 +430,5 @@ fun ProfileScreen(
                 }
             )
         }
-
     }
 }
