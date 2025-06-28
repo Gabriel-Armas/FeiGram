@@ -34,7 +34,6 @@ fun ContactListScreen(navController: NavController) {
     val contactProfiles = remember { mutableStateListOf<Profile>() }
     var isLoading by remember { mutableStateOf(true) }
 
-    // --- Listener específico para esta pantalla ---
     val contactListener = remember {
         { message: String ->
             try {
@@ -46,7 +45,6 @@ fun ContactListScreen(navController: NavController) {
                         contactIds.add(contactList.getString(i))
                     }
 
-                    // Cargar perfiles
                     contactProfiles.clear()
                     contactIds.forEach { contactId ->
                         scope.launch {
@@ -69,22 +67,17 @@ fun ContactListScreen(navController: NavController) {
         }
     }
 
-    // --- Suscribirse y desuscribirse del WebSocket ---
     DisposableEffect(Unit) {
         WebSocketManager.addListener(contactListener)
 
-        // Al salir de la pantalla, eliminar el listener
         onDispose {
             WebSocketManager.removeListener(contactListener)
         }
     }
 
-    // --- Solo conecta si aún no está conectado ---
     LaunchedEffect(Unit) {
         if (userSession != null) {
             WebSocketManager.connect(userSession.token)
-
-            // Pedir la lista de contactos
             val request = JSONObject().apply { put("type", "get_contacts") }
             WebSocketManager.sendJsonMessage(request)
         }

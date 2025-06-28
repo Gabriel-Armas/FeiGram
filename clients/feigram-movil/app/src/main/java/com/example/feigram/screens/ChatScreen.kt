@@ -37,7 +37,12 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
     val scope = rememberCoroutineScope()
     var contactProfile by remember { mutableStateOf<Profile?>(null) }
 
-    // --- Carga el perfil del contacto ---
+    LaunchedEffect(Unit) {
+        if (userSession != null) {
+            WebSocketManager.connect(userSession.token)
+        }
+    }
+
     LaunchedEffect(contactId) {
         try {
             contactProfile = RetrofitInstance.profileApi.getProfileById(
@@ -54,7 +59,7 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
             scope.launch {
                 try {
                     val json = JSONObject(msg)
-                    when (json.getString("type")) {
+                    when (json.optString("type", "")) {
                         "history" -> {
                             val history = json.getJSONArray("messages")
                             messages.clear()
@@ -69,15 +74,19 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
                             }
                         }
                         else -> {
-                            if ((json.has("from") && json.has("content")) &&
-                                (json.getString("from") == contactId || json.getString("to") == contactId)
-                            ) {
-                                messages.add(
-                                    ChatMessage(
-                                        from = json.getString("from"),
-                                        content = json.getString("content")
+                            if (json.has("from") && json.has("to") && json.has("content")) {
+                                val from = json.getString("from")
+                                val to = json.getString("to")
+                                val userId = userSession?.userId
+
+                                if ((from == contactId && to == userId) || (from == userId && to == contactId)) {
+                                    messages.add(
+                                        ChatMessage(
+                                            from = from,
+                                            content = json.getString("content")
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }

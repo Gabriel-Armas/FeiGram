@@ -13,6 +13,7 @@ import com.example.feigram.screens.LoginScreen
 import com.example.feigram.screens.NewPostScreen
 import com.example.feigram.screens.ProfileScreen
 import com.example.feigram.screens.SettingsScreen
+import com.example.feigram.screens.UserSearchScreen
 import com.example.feigram.ui.theme.FeigramTheme
 import com.example.feigram.viewmodels.SessionViewModel
 
@@ -51,11 +52,14 @@ class MainActivity : ComponentActivity() {
                     composable("messages") {
                         ContactListScreen(navController)
                     }
-
                     composable("chat/{contactId}/{contactName}") { backStackEntry ->
                         val contactId = backStackEntry.arguments?.getString("contactId") ?: ""
                         val contactName = backStackEntry.arguments?.getString("contactName") ?: "Desconocido"
                         ChatScreen(navController, contactId, contactName)
+                    }
+                    composable("usersearch") {
+                        val token = sessionViewModel.userSession.value?.token ?: ""
+                        UserSearchScreen(navController, token)
                     }
                 }
             }

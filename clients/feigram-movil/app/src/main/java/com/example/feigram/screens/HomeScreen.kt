@@ -103,16 +103,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                 )
 
                 Text(
-                    "Ajustes",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
-                            navController.navigate("settings")
-                            scope.launch { drawerState.close() }
-                        }
-                )
-
-                Text(
                     "Cerrar sesión",
                     modifier = Modifier
                         .padding(16.dp)
@@ -138,8 +128,8 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                         }
                     },
                     actions = {
-                        IconButton(onClick = { println("Buscar usuario desde ícono") }) {
-                            Icon(Icons.Default.Search, contentDescription = "Buscar")
+                        IconButton(onClick = { navController.navigate("usersearch") }) {
+                            Icon(Icons.Default.Search, contentDescription = "Buscar usuario")
                         }
                         IconButton(onClick = {
                             navController.navigate("messages")
