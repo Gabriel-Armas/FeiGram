@@ -21,17 +21,13 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.feigram.R
 import com.example.feigram.network.model.Profile
+import com.example.feigram.network.model.comments.Comment
 import com.example.feigram.network.model.feed.FeedPost
+import com.example.feigram.network.model.likes.LikeRequest
 import com.example.feigram.network.service.RetrofitInstance
 import com.example.feigram.screens.components.PostItem
 import com.example.feigram.viewmodels.SessionViewModel
 import kotlinx.coroutines.launch
-
-data class Comment(
-    val username: String,
-    val profileImageUrl: String,
-    val text: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +44,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     val userSession by sessionViewModel.userSession.collectAsState()
     var feedPosts by remember { mutableStateOf<List<FeedPost>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var currentPostId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(userSession) {
         if (userSession != null) {
@@ -187,6 +184,9 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                     ) {
                         items(feedPosts) { post ->
                             var profile by remember { mutableStateOf<Profile?>(null) }
+                            var likeCount by remember { mutableStateOf(post.likes) }
+                            var commentCount by remember { mutableStateOf(post.comentarios) }
+                            var hasLiked by remember { mutableStateOf(false) }
 
                             LaunchedEffect(post.id_usuario) {
                                 try {
@@ -194,25 +194,94 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                         id = post.id_usuario,
                                         token = "Bearer ${userSession?.token.orEmpty()}"
                                     )
+
+                                    hasLiked = RetrofitInstance.likeApi.checkLike(
+                                        userId = userSession?.userId ?: "",
+                                        postId = post.post_id.toString(),
+                                        token = "Bearer ${userSession?.token.orEmpty()}"
+                                    )
+
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
                             }
 
-                            PostItem(
-                                username = profile?.name ?: "Cargando",
-                                profileImageUrl = profile?.photo?.takeIf { it.isNotBlank() }
-                                    ?: "https://randomuser.me/api/portraits/lego/1.jpg",
-                                imageUrl = post.url_media,
-                                description = post.descripcion,
-                                date = post.fechaPublicacion.substring(0, 10),
-                                commentCount = post.comentarios,
-                                likeCount = post.likes,
-                                onCommentsClick = {
-                                    currentComments = emptyList()
-                                    showComments = true
-                                }
-                            )
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                PostItem(
+                                    username = profile?.name ?: "Cargando...",
+                                    profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                    imageUrl = post.url_media,
+                                    description = post.descripcion,
+                                    date = post.fechaPublicacion.substring(0, 10),
+                                    commentCount = commentCount,
+                                    likeCount = likeCount,
+                                    onCommentsClick = {
+                                        scope.launch {
+                                            try {
+                                                // Guarda el postId antes de abrir el modal
+                                                currentPostId = post.post_id
+
+                                                val response = RetrofitInstance.postApi.getPostComments(
+                                                    postId = post.post_id,
+                                                    token = "Bearer ${userSession?.token.orEmpty()}"
+                                                )
+
+                                                val commentsWithUsernames = response.comments.map { c ->
+                                                    val profile = try {
+                                                        RetrofitInstance.profileApi.getProfileById(
+                                                            id = c.userId,
+                                                            token = "Bearer ${userSession?.token.orEmpty()}"
+                                                        )
+                                                    } catch (e: Exception) {
+                                                        null
+                                                    }
+
+                                                    Comment(
+                                                        username = profile?.name ?: c.userId,
+                                                        profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                                        text = c.textComment ?: ""
+                                                    )
+                                                }
+
+                                                currentComments = commentsWithUsernames
+                                                showComments = true
+
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }
+                                    },
+                                    onLikeClick = {
+                                        scope.launch {
+                                            try {
+                                                if (hasLiked) {
+                                                    RetrofitInstance.likeApi.deleteLike(
+                                                        like = LikeRequest(
+                                                            userId = userSession?.userId ?: "",
+                                                            postId = post.post_id.toString()
+                                                        ),
+                                                        token = "Bearer ${userSession?.token.orEmpty()}"
+                                                    )
+                                                    likeCount--
+                                                } else {
+                                                    RetrofitInstance.likeApi.addLike(
+                                                        like = LikeRequest(
+                                                            userId = userSession?.userId ?: "",
+                                                            postId = post.post_id.toString()
+                                                        ),
+                                                        token = "Bearer ${userSession?.token.orEmpty()}"
+                                                    )
+                                                    likeCount++
+                                                }
+                                                hasLiked = !hasLiked
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }
+                                    },
+                                    hasLiked = hasLiked
+                                )
+                            }
                         }
                     }
                 }
@@ -267,20 +336,57 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
 
                             Button(
                                 onClick = {
-                                    if (newComment.isNotBlank()) {
-                                        val fakeUser = Comment(
-                                            username = userSession?.username ?: "yo",
-                                            profileImageUrl = "https://randomuser.me/api/portraits/lego/1.jpg",
-                                            text = newComment
-                                        )
-                                        currentComments = currentComments + fakeUser
-                                        newComment = ""
+                                    if (newComment.isNotBlank() && currentPostId != null) {
+                                        scope.launch {
+                                            try {
+                                                // Enviar el comentario
+                                                RetrofitInstance.commentApi.addComment(
+                                                    comment = com.example.feigram.network.model.comments.CommentRequest(
+                                                        userId = userSession?.userId ?: "",
+                                                        postId = currentPostId.toString(),
+                                                        textComment = newComment,
+                                                        createdAt = java.time.Instant.now().toString()
+                                                    ),
+                                                    token = "Bearer ${userSession?.token.orEmpty()}"
+                                                )
+
+                                                // Recargar los comentarios después de agregar el nuevo
+                                                val response = RetrofitInstance.postApi.getPostComments(
+                                                    postId = currentPostId!!,
+                                                    token = "Bearer ${userSession?.token.orEmpty()}"
+                                                )
+
+                                                val commentsWithProfiles = response.comments.map { c ->
+                                                    val profile = try {
+                                                        RetrofitInstance.profileApi.getProfileById(
+                                                            id = c.userId,
+                                                            token = "Bearer ${userSession?.token.orEmpty()}"
+                                                        )
+                                                    } catch (e: Exception) {
+                                                        null
+                                                    }
+
+                                                    Comment(
+                                                        username = profile?.name ?: c.userId,
+                                                        profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                                        text = c.textComment
+                                                    )
+                                                }
+
+                                                currentComments = commentsWithProfiles
+                                                newComment = ""
+
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }
                                     }
                                 },
                                 modifier = Modifier.align(Alignment.End)
                             ) {
                                 Text("Enviar")
                             }
+
                         }
                     }
                 }

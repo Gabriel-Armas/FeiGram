@@ -6,7 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,14 +23,14 @@ fun PostItem(
     date: String,
     commentCount: Int,
     likeCount: Int,
+    hasLiked: Boolean,
+    onLikeClick: () -> Unit,
     onCommentsClick: () -> Unit
 ) {
-    var isLiked by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)  // 👈 Solo un pequeño espacio entre posts
+            .padding(bottom = 8.dp)
     ) {
         // Header del usuario
         Row(
@@ -52,17 +52,17 @@ fun PostItem(
             }
         }
 
-        // Imagen del post (más alargada)
+        // Imagen del post
         AsyncImage(
             model = imageUrl,
             contentDescription = "Imagen publicada",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp),  // 👈 Altura más larga
+                .height(500.dp),
             contentScale = ContentScale.Crop
         )
 
-        // Likes y comentarios
+        // Likes y botón de comentarios organizados
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,36 +70,27 @@ fun PostItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = { isLiked = !isLiked }) {
-                Icon(
-                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = if (isLiked) "Deshacer like" else "Dar like",
-                    tint = if (isLiked) Color.Red else LocalContentColor.current
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onLikeClick) {
+                    Icon(
+                        imageVector = if (hasLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (hasLiked) "Quitar Like" else "Dar Like",
+                        tint = if (hasLiked) Color.Red else Color.Gray
+                    )
+                }
+                Text(text = "$likeCount likes", style = MaterialTheme.typography.labelMedium)
             }
 
-            Text(
-                text = "$likeCount Me gusta • $commentCount comentarios",
-                style = MaterialTheme.typography.bodySmall
-            )
+            TextButton(onClick = onCommentsClick) {
+                Text(text = "Ver comentarios ($commentCount)")
+            }
         }
 
-        // Descripción
         Text(
             text = description,
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             style = MaterialTheme.typography.bodyMedium
-        )
-
-        // Ver comentarios
-        Text(
-            text = "Ver comentarios",
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-                .clickable { onCommentsClick() }
         )
     }
 }

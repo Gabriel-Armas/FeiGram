@@ -1,4 +1,4 @@
-package com.example.feigram.screens.components
+package com.example.feigram.network.model.comments
 
 data class Comment(
     val username: String,
