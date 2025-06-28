@@ -44,26 +44,6 @@ namespace app.Pages
             _logger.LogInformation("Token recibido: {Token} - Rol: {Rol} - UserId: {UserId}",
                 result.Token, result.Rol, result.UserId);
 
-            LoginResponse result = null;
-            try
-            {
-                _logger.LogInformation("1");
-                result = JsonSerializer.Deserialize<LoginResponse>(json);
-                _logger.LogInformation("Respuesta login: " + result.Token + " rol: "+ result.Rol +" user id:" +result.UserId);
-                _logger.LogInformation("2");
-            }
-            catch
-            {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al procesar la respuesta del servidor");
-                return Page();
-            }
-
-            if (result == null || string.IsNullOrEmpty(result.Token))
-            {
-                ModelState.AddModelError(string.Empty, "Respuesta inválida del servidor");
-                return Page();
-            }
-            
             Response.Cookies.Append("jwt_token", result.Token, new CookieOptions
             {
                 HttpOnly = true,

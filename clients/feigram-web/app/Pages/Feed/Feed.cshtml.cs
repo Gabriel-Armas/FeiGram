@@ -91,7 +91,7 @@ namespace app.Pages.Feed
                     PostCompletos.Add(new PostViewModel
                     {
                         Id = p.PostId,
-                        Username = userProfile.Name,
+                        Username = userProfile.Username,
                         Description = p.Descripcion,
                         UserProfileImage = userProfile.Photo,
                         PostImage = p.UrlMedia,
