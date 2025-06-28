@@ -218,7 +218,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                     onCommentsClick = {
                                         scope.launch {
                                             try {
-                                                // Guarda el postId antes de abrir el modal
                                                 currentPostId = post.post_id
 
                                                 val response = RetrofitInstance.postApi.getPostComments(
@@ -281,6 +280,12 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                     },
                                     hasLiked = hasLiked
                                 )
+
+                                Divider(
+                                    thickness = 0.5.dp, // Línea muy fina
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), // Color gris clarito
+                                    modifier = Modifier.padding(vertical = 4.dp) // Un poco de espacio arriba y abajo
+                                )
                             }
                         }
                     }
@@ -339,7 +344,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                     if (newComment.isNotBlank() && currentPostId != null) {
                                         scope.launch {
                                             try {
-                                                // Enviar el comentario
                                                 RetrofitInstance.commentApi.addComment(
                                                     comment = com.example.feigram.network.model.comments.CommentRequest(
                                                         userId = userSession?.userId ?: "",
@@ -350,7 +354,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                                     token = "Bearer ${userSession?.token.orEmpty()}"
                                                 )
 
-                                                // Recargar los comentarios después de agregar el nuevo
                                                 val response = RetrofitInstance.postApi.getPostComments(
                                                     postId = currentPostId!!,
                                                     token = "Bearer ${userSession?.token.orEmpty()}"

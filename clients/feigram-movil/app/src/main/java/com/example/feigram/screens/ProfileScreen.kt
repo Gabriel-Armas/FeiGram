@@ -15,7 +15,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -202,25 +204,46 @@ fun ProfileScreen(
 
         selectedPost?.let { post ->
             var likeCount by remember { mutableStateOf(0) }
-            var comments by remember { mutableStateOf<List<String>>(emptyList()) }
+            var comments by remember { mutableStateOf<List<com.example.feigram.network.model.comments.Comment>>(emptyList()) }
             var newComment by remember { mutableStateOf("") }
             var isLiked by remember { mutableStateOf(false) }
 
             LaunchedEffect(post) {
                 try {
-                    val likesResponse = RetrofitInstance.postApi.getPostLikesCount(
+                    val likeResponse = RetrofitInstance.postApi.getPostLikesCount(
                         postId = post.postId,
                         token = "Bearer ${currentUser?.token.orEmpty()}"
                     )
-                    likeCount = likesResponse.likeCount
+                    likeCount = likeResponse.likeCount
+
+                    isLiked = RetrofitInstance.likeApi.checkLike(
+                        userId = currentUser?.userId ?: "",
+                        postId = post.postId.toString(),
+                        token = "Bearer ${currentUser?.token.orEmpty()}"
+                    )
 
                     val commentsResponse = RetrofitInstance.postApi.getPostComments(
                         postId = post.postId,
                         token = "Bearer ${currentUser?.token.orEmpty()}"
                     )
-                    comments = commentsResponse.comments.map { it.textComment }
 
-                    // TODO: Obtener si el usuario ya dio like (requiere endpoint extra)
+                    comments = commentsResponse.comments.map { c ->
+                        val profile = try {
+                            RetrofitInstance.profileApi.getProfileById(
+                                id = c.userId,
+                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+
+                        com.example.feigram.network.model.comments.Comment(
+                            username = profile?.name ?: c.userId,
+                            profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                            text = c.textComment
+                        )
+                    }
+
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -228,72 +251,178 @@ fun ProfileScreen(
 
             AlertDialog(
                 onDismissRequest = { selectedPost = null },
-                confirmButton = {
+                confirmButton = {},
+                dismissButton = {
                     TextButton(onClick = { selectedPost = null }) {
                         Text("Cerrar")
                     }
                 },
                 text = {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .heightIn(min = 600.dp, max = 800.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         AsyncImage(
                             model = post.urlMedia,
                             contentDescription = "Detalle publicación",
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(4f / 5f)
+                                .clip(MaterialTheme.shapes.medium)
                         )
 
+                        Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Likes: $likeCount")
 
-                        Button(onClick = {
-                            scope.launch {
-                                try {
-                                    if (!isLiked) {
-                                        // TODO: Llamar al endpoint para dar like
-                                        likeCount += 1
-                                        isLiked = true
-                                    } else {
-                                        // TODO: Llamar al endpoint para quitar like
-                                        likeCount -= 1
-                                        isLiked = false
+                        Text(post.description ?: "Sin descripción", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        ) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    try {
+                                        if (isLiked) {
+                                            RetrofitInstance.likeApi.deleteLike(
+                                                like = com.example.feigram.network.model.likes.LikeRequest(
+                                                    userId = currentUser?.userId ?: "",
+                                                    postId = post.postId.toString()
+                                                ),
+                                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                                            )
+                                            likeCount -= 1
+                                            isLiked = false
+                                        } else {
+                                            RetrofitInstance.likeApi.addLike(
+                                                like = com.example.feigram.network.model.likes.LikeRequest(
+                                                    userId = currentUser?.userId ?: "",
+                                                    postId = post.postId.toString()
+                                                ),
+                                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                                            )
+                                            likeCount += 1
+                                            isLiked = true
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
                                     }
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
                                 }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Favorite,
+                                    contentDescription = "Like",
+                                    tint = if (isLiked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                                )
                             }
-                        }) {
-                            Text(if (isLiked) "Dislike" else "Like")
+                            Text("$likeCount Likes", style = MaterialTheme.typography.bodyMedium)
+                            Text("${comments.size} Comentarios", style = MaterialTheme.typography.bodyMedium)
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Text("Comentarios:")
-                        comments.forEach { commentText ->
-                            Text("- $commentText", style = MaterialTheme.typography.bodySmall)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState())
+                                .padding(8.dp)
+                        ) {
+                            comments.forEach { comment ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AsyncImage(
+                                        model = comment.profileImageUrl,
+                                        contentDescription = "Foto de ${comment.username}",
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .padding(end = 8.dp)
+                                    )
+                                    Column {
+                                        Text(comment.username, style = MaterialTheme.typography.labelMedium)
+                                        Text(comment.text, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                                Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        OutlinedTextField(
-                            value = newComment,
-                            onValueChange = { newComment = it },
-                            label = { Text("Escribe un comentario...") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = newComment,
+                                onValueChange = { newComment = it },
+                                label = { Text("Escribe un comentario...") },
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = {
+                                scope.launch {
+                                    if (newComment.isNotBlank()) {
+                                        try {
+                                            RetrofitInstance.commentApi.addComment(
+                                                comment = com.example.feigram.network.model.comments.CommentRequest(
+                                                    userId = currentUser?.userId ?: "",
+                                                    postId = post.postId.toString(),
+                                                    textComment = newComment,
+                                                    createdAt = java.time.Instant.now().toString()
+                                                ),
+                                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                                            )
 
-                        Button(onClick = {
-                            scope.launch {
-                                // TODO: Llamar al endpoint para subir el comentario
-                                if (newComment.isNotBlank()) {
-                                    comments = comments + newComment
-                                    newComment = ""
+                                            val updatedComments = RetrofitInstance.postApi.getPostComments(
+                                                postId = post.postId,
+                                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                                            )
+
+                                            comments = updatedComments.comments.map { c ->
+                                                val profile = try {
+                                                    RetrofitInstance.profileApi.getProfileById(
+                                                        id = c.userId,
+                                                        token = "Bearer ${currentUser?.token.orEmpty()}"
+                                                    )
+                                                } catch (e: Exception) {
+                                                    null
+                                                }
+
+                                                com.example.feigram.network.model.comments.Comment(
+                                                    username = profile?.name ?: c.userId,
+                                                    profileImageUrl = profile?.photo
+                                                        ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                                    text = c.textComment
+                                                )
+                                            }
+
+                                            newComment = ""
+
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
+                                    }
                                 }
+                            }) {
+                                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar comentario")
                             }
-                        }) {
-                            Text("Publicar comentario")
                         }
                     }
                 }
             )
         }
+
     }
 }
