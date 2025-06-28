@@ -5,8 +5,23 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
-
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ProfileService>();
+
+builder.Services.AddHttpClient("feigram", client =>
+{
+    client.BaseAddress = new Uri("https://feigram-nginx");
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    return new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    };
+});
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -58,7 +73,7 @@ var logger = app.Services.GetRequiredService<ILogger<Program>>();
 app.Use(async (context, next) =>
 {
     var token = context.Request.Cookies["jwt_token"];
-    
+
     if (!string.IsNullOrEmpty(token))
     {
         logger.LogInformation("JWT encontrado en cookie: {Token}", token);
@@ -71,7 +86,6 @@ app.Use(async (context, next) =>
 
     await next();
 });
-
 
 app.UseAuthentication();
 app.UseAuthorization();

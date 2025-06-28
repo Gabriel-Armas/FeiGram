@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Serialization;
-
+using app.DTO;
 
 namespace app.Pages
 {
@@ -17,13 +17,13 @@ namespace app.Pages
     {
         [BindProperty]
         public LoginViewModel Input { get; set; }
+        private readonly AuthService _authService;
         private readonly ILogger<LoginModel> _logger;
-        private readonly IHttpClientFactory _httpClientFactory;
 
-        public LoginModel(ILogger<LoginModel> logger, IHttpClientFactory httpClientFactory)
+        public LoginModel(AuthService authService, ILogger<LoginModel> logger)
         {
+            _authService = authService;
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -33,52 +33,17 @@ namespace app.Pages
                 return Page();
             }
 
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
+            var result = await _authService.LoginAsync(Input.Email, Input.Password);
 
-            using var client = new HttpClient(handler);
-            client.BaseAddress = new Uri("https://feigram-nginx");
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(new { email = Input.Email, password = Input.Password }),
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            var response = await client.PostAsync("/auth/login", content);
-            if (!response.IsSuccessStatusCode)
+            if (result == null || string.IsNullOrEmpty(result.Token))
             {
                 ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos");
                 return Page();
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("Respuesta login: " + json);
+            _logger.LogInformation("Token recibido: {Token} - Rol: {Rol} - UserId: {UserId}",
+                result.Token, result.Rol, result.UserId);
 
-            LoginResponse result = null;
-            try
-            {
-                _logger.LogInformation("1");
-                result = JsonSerializer.Deserialize<LoginResponse>(json);
-                _logger.LogInformation("Respuesta login: " + result.Token + " rol: "+ result.Rol +" user id:" +result.UserId);
-                _logger.LogInformation("2");
-            }
-            catch
-            {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al procesar la respuesta del servidor");
-                return Page();
-            }
-
-            if (result == null || string.IsNullOrEmpty(result.Token))
-            {
-                ModelState.AddModelError(string.Empty, "Respuesta inválida del servidor");
-                return Page();
-            }
-
-            _logger.LogInformation("Token recibido: " + result.Token);
-            
             Response.Cookies.Append("jwt_token", result.Token, new CookieOptions
             {
                 HttpOnly = true,
@@ -86,7 +51,6 @@ namespace app.Pages
                 Secure = false,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
-
 
             return RedirectToPage("/Feed/Feed");
         }
@@ -115,17 +79,6 @@ namespace app.Pages
             return Task.CompletedTask;
         }
 
-        private class LoginResponse
-{
-            [JsonPropertyName("token")]
-            public string Token { get; set; }
-
-            [JsonPropertyName("userId")]
-            public string UserId { get; set; } = string.Empty;
-
-            [JsonPropertyName("rol")]
-            public string Rol { get; set; } = string.Empty;
-        }
         public static class TokenHelper
         {
             public static bool TokenExpirado(string token)

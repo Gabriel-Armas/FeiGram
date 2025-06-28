@@ -1,28 +1,63 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using app.ViewModel;
-using app.DTO;
+// using Microsoft.AspNetCore.Mvc;
+// using Microsoft.AspNetCore.Mvc.RazorPages;
+// using app.ViewModel;
+// using app.DTO;
 
-namespace app.Pages.Account
-{
-    public class CreateAccountModel : PageModel
-    {
-        [BindProperty]
-        public CreateAccountViewModel CreateAccount { get; set; } = new CreateAccountViewModel();
+// namespace app.Pages.Account
+// {
+//     public class CreateAccountModel : PageModel
+//     {
+//         private readonly AuthService _authService;
 
-        public IActionResult OnGet()
-        {
-            return Page();
-        }
+//         public CreateAccountModel(AuthService authService)
+//         {
+//             _authService = authService;
+//         }
 
-        public IActionResult OnPost()
-        {
-            if (!ModelState.IsValid)
-            {
-                return Page();
-            }
+//         [BindProperty]
+//         public CreateAccountViewModel CreateAccount { get; set; } = new CreateAccountViewModel();
 
-            return RedirectToPage("/Login");
-        }
-    }
-}
+//         [BindProperty]
+//         public IFormFile? Photo { get; set; }
+
+//         public IActionResult OnGet()
+//         {
+//             return Page();
+//         }
+
+//         public async Task<IActionResult> OnPostAsync()
+//         {
+//             if (!ModelState.IsValid)
+//             {
+//                 return Page();
+//             }
+
+//             Stream? photoStream = null;
+//             string? photoFileName = null;
+
+//             if (Photo != null)
+//             {
+//                 photoStream = Photo.OpenReadStream();
+//                 photoFileName = Photo.FileName;
+//             }
+
+//             var result = await _authService.RegisterAsync(
+//                 CreateAccount.Username,
+//                 CreateAccount.Password,
+//                 CreateAccount.Email,
+//                 CreateAccount.Sex,
+//                 CreateAccount.Enrollment,
+//                 photoStream,
+//                 photoFileName
+//             );
+
+//             if (!result)
+//             {
+//                 ModelState.AddModelError(string.Empty, "No se pudo crear la cuenta, por favor intenta de nuevo :(");
+//                 return Page();
+//             }
+
+//             return RedirectToPage("/Account/Accounts");
+//         }
+//     }
+// }

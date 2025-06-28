@@ -18,8 +18,8 @@
             {
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-1 fw-semibold">@account.FullName</h5>
-                        <small class="text-muted">📧 @account.Email | 🎓 Matrícula: @account.StudentId</small>
+                        <h5 class="mb-1 fw-semibold">@account.Username</h5>
+                        <small class="text-muted">📧 @account.Email | 🎓 Matrícula: @account.Enrollment</small>
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAccountModal-@account.Id">📝 Editar</button>
@@ -29,38 +29,53 @@
                     </div>
                 </div>
 
-                <div class="modal fade" id="editAccountModal-@account.Id" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Editar cuenta de @account.FullName</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal fade" id="editAccountModal-@account.Id" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Editar cuenta de @account.Username</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-page-handler="Edit" enctype="multipart/form-data" asp-validation-summary="All" class="text-danger">
+                    <input type="hidden" name="Id" value="@account.Id" />
+                    <div class="row">
+                        <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-end">
+                            <label for="PhotoUploadEdit-@account.Id" class="form-label fw-semibold mb-3">Subir Foto</label>
+                            <input type="file" class="form-control" id="PhotoUploadEdit-@account.Id" name="Photo" accept="image/*" value="@account.ProfilePictureUrl" />
+                            <small class="text-muted mt-2">Formato: JPG, PNG. Tamaño max: 2MB</small>
+
+                            @if (!string.IsNullOrEmpty(account.ProfilePictureUrl))
+                            {
+                                <img src="@account.ProfilePictureUrl" alt="Foto actual" class="img-thumbnail mt-3" style="max-height: 150px;" />
+                            }
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre(s)</label>
+                                <input class="form-control" name="Username" value="@account.Username" required />
                             </div>
-                            <div class="modal-body">
-                                <form method="post" asp-page-handler="Edit">
-                                    <input type="hidden" name="Id" value="@account.Id" />
-                                    <div class="mb-3">
-                                        <label class="form-label">Nombre</label>
-                                        <input class="form-control" name="Nombre" value="@account.Name" required />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Apellidos</label>
-                                        <input class="form-control" name="Apellidos" value="@account.LastName" required />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input class="form-control" name="Email" value="@account.Email" required />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Matrícula</label>
-                                        <input class="form-control" name="Matricula" value="@account.StudentId" required />
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                                </form>
+                            <div class="mb-3">
+                                <label class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" name="Email" value="@account.Email" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Matrícula</label>
+                                <input class="form-control" name="Enrollment" value="@account.Enrollment" required />
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
             }
         </div>
     }
@@ -78,43 +93,37 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <form method="post" asp-page-handler="Add" onsubmit="return validarContrasenias();">
+                <form method="post" enctype="multipart/form-data" asp-validation-summary="All" class="text-danger">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Nombre(s)</label>
-                                <input class="form-control" name="Nombre" placeholder="Ej. Sakura" required />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="Email" placeholder="sakura@example.com" required />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Matrícula</label>
-                                <input class="form-control" name="Matricula" placeholder="Ej. 202503999" required />
-                            </div>
+                        <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-end">
+                            <label for="PhotoUpload" class="form-label fw-semibold mb-3">Subir Foto</label>
+                            <input type="file" class="form-control" id="PhotoUpload" name="Photo" accept="image/*" />
+                            <small class="text-muted mt-2">Formato: JPG, PNG. Tamaño max: 2MB</small>
                         </div>
 
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Apellidos</label>
-                                <input class="form-control" name="Apellidos" placeholder="Ej. Kinomoto" required />
+                                <label class="form-label">Nombre(s)</label>
+                                <input class="form-control" asp-for="CreateAccount.Username" placeholder="Ej. Ernesto Rodríguez Salazar" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" asp-for="CreateAccount.Email" placeholder="ernesto@ruta.com" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Matrícula</label>
+                                <input class="form-control" asp-for="CreateAccount.Enrollment" placeholder="Ej. S20013671" required />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="contrasena" name="Contrasena" required />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Confirmar Contraseña</label>
-                                <input type="password" class="form-control" id="confirmarContrasena" required />
-                                <div class="form-text text-danger d-none" id="mensajeError">Las contraseñas no coinciden</div>
+                                <input type="password" class="form-control" asp-for="CreateAccount.Password" id="contrasena" required />
                             </div>
                         </div>
                     </div>
 
                     <div class="text-end mt-3">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Crear cuenta</button>
+                        <button type="submit" class="btn btn-success" asp-page-handler="Add">Crear cuenta</button>
                     </div>
                 </form>
             </div>
