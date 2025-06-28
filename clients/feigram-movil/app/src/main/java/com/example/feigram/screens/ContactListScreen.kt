@@ -34,41 +34,57 @@ fun ContactListScreen(navController: NavController) {
     val contactProfiles = remember { mutableStateListOf<Profile>() }
     var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
-        if (userSession != null) {
-            WebSocketManager.connect(userSession.token) { message ->
-                try {
-                    val json = JSONObject(message)
-                    if (json.getString("type") == "contacts") {
-                        val contactList = json.getJSONArray("contacts")
-                        contactIds.clear()
-                        for (i in 0 until contactList.length()) {
-                            contactIds.add(contactList.getString(i))
-                        }
+    // --- Listener específico para esta pantalla ---
+    val contactListener = remember {
+        { message: String ->
+            try {
+                val json = JSONObject(message)
+                if (json.getString("type") == "contacts") {
+                    val contactList = json.getJSONArray("contacts")
+                    contactIds.clear()
+                    for (i in 0 until contactList.length()) {
+                        contactIds.add(contactList.getString(i))
+                    }
 
-                        // Cargar perfiles
-                        contactProfiles.clear()
-                        contactIds.forEach { contactId ->
-                            scope.launch {
-                                try {
-                                    val profile = RetrofitInstance.profileApi.getProfileById(
-                                        id = contactId,
-                                        token = "Bearer ${userSession.token}"
-                                    )
-                                    contactProfiles.add(profile)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
+                    // Cargar perfiles
+                    contactProfiles.clear()
+                    contactIds.forEach { contactId ->
+                        scope.launch {
+                            try {
+                                val profile = RetrofitInstance.profileApi.getProfileById(
+                                    id = contactId,
+                                    token = "Bearer ${userSession?.token}"
+                                )
+                                contactProfiles.add(profile)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
                         }
-                        isLoading = false
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                    isLoading = false
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
+        }
+    }
 
-            // Pedir lista de contactos
+    // --- Suscribirse y desuscribirse del WebSocket ---
+    DisposableEffect(Unit) {
+        WebSocketManager.addListener(contactListener)
+
+        // Al salir de la pantalla, eliminar el listener
+        onDispose {
+            WebSocketManager.removeListener(contactListener)
+        }
+    }
+
+    // --- Solo conecta si aún no está conectado ---
+    LaunchedEffect(Unit) {
+        if (userSession != null) {
+            WebSocketManager.connect(userSession.token)
+
+            // Pedir la lista de contactos
             val request = JSONObject().apply { put("type", "get_contacts") }
             WebSocketManager.sendJsonMessage(request)
         }
@@ -85,9 +101,10 @@ fun ContactListScreen(navController: NavController) {
             )
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -100,7 +117,7 @@ fun ContactListScreen(navController: NavController) {
                         ContactItem(profile) {
                             navController.navigate("chat/${profile.id}/${profile.name}")
                         }
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
             }

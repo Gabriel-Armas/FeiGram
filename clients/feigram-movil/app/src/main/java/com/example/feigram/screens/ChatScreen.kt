@@ -37,6 +37,7 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
     val scope = rememberCoroutineScope()
     var contactProfile by remember { mutableStateOf<Profile?>(null) }
 
+    // --- Carga el perfil del contacto ---
     LaunchedEffect(contactId) {
         try {
             contactProfile = RetrofitInstance.profileApi.getProfileById(
@@ -48,48 +49,58 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
         }
     }
 
-    LaunchedEffect(contactId) {
-        if (userSession != null) {
-            WebSocketManager.connect(userSession.token) { msg ->
-                scope.launch {
-                    try {
-                        val json = JSONObject(msg)
-                        when (json.getString("type")) {
-                            "history" -> {
-                                val history = json.getJSONArray("messages")
-                                messages.clear()
-                                for (i in 0 until history.length()) {
-                                    val item = history.getJSONObject(i)
-                                    messages.add(
-                                        ChatMessage(
-                                            from = item.getString("from"),
-                                            content = item.getString("content")
-                                        )
+    val chatListener: (String) -> Unit = remember(contactId) {
+        { msg ->
+            scope.launch {
+                try {
+                    val json = JSONObject(msg)
+                    when (json.getString("type")) {
+                        "history" -> {
+                            val history = json.getJSONArray("messages")
+                            messages.clear()
+                            for (i in 0 until history.length()) {
+                                val item = history.getJSONObject(i)
+                                messages.add(
+                                    ChatMessage(
+                                        from = item.getString("from"),
+                                        content = item.getString("content")
                                     )
-                                }
-                            }
-                            else -> {
-                                if (json.has("from") && json.has("content")) {
-                                    messages.add(
-                                        ChatMessage(
-                                            from = json.getString("from"),
-                                            content = json.getString("content")
-                                        )
-                                    )
-                                }
+                                )
                             }
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                        else -> {
+                            if ((json.has("from") && json.has("content")) &&
+                                (json.getString("from") == contactId || json.getString("to") == contactId)
+                            ) {
+                                messages.add(
+                                    ChatMessage(
+                                        from = json.getString("from"),
+                                        content = json.getString("content")
+                                    )
+                                )
+                            }
+                        }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
+        }
+    }
 
+    DisposableEffect(contactId) {
+        WebSocketManager.addListener(chatListener)
+
+        if (userSession != null) {
             val startChat = JSONObject().apply {
                 put("type", "start_chat")
                 put("with", contactId)
             }
             WebSocketManager.sendJsonMessage(startChat)
+        }
+
+        onDispose {
+            WebSocketManager.removeListener(chatListener)
         }
     }
 

@@ -12,15 +12,15 @@ object WebSocketManager {
     private val client = getUnsafeOkHttpClient()
     private var currentToken: String? = null
 
-    var onMessageReceived: ((String) -> Unit)? = null
+    private val listeners = mutableListOf<(String) -> Unit>()
 
-    fun connect(token: String, onMessage: (String) -> Unit) {
+    fun connect(token: String) {
+        if (webSocket != null) return
+
         currentToken = token
-        onMessageReceived = onMessage
 
         val request = Request.Builder()
             .url("wss://192.168.1.11/messages/ws/?token=$token")
-            //.url("wss://192.168.1.251/messages/ws/?token=$token")
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
@@ -30,7 +30,7 @@ object WebSocketManager {
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 println("Mensaje recibido: $text")
-                onMessage(text)
+                listeners.forEach { it(text) }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -44,6 +44,14 @@ object WebSocketManager {
         })
     }
 
+    fun addListener(listener: (String) -> Unit) {
+        listeners.add(listener)
+    }
+
+    fun removeListener(listener: (String) -> Unit) {
+        listeners.remove(listener)
+    }
+
     fun sendJsonMessage(json: JSONObject) {
         webSocket?.send(json.toString())
     }
@@ -54,11 +62,14 @@ object WebSocketManager {
 
     fun disconnect() {
         webSocket?.close(1000, "App closed")
+        webSocket = null
+        listeners.clear()
     }
 
     private fun getUnsafeOkHttpClient(): OkHttpClient {
         try {
             val trustAllCerts = arrayOf<TrustManager>(
+                @SuppressLint("CustomX509TrustManager")
                 object : X509TrustManager {
                     @SuppressLint("TrustAllX509TrustManager")
                     override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
@@ -76,7 +87,6 @@ object WebSocketManager {
                 .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
                 .hostnameVerifier { _, _ -> true }
                 .build()
-
         } catch (e: Exception) {
             throw RuntimeException(e)
         }

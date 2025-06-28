@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.feigram.R
+import com.example.feigram.network.service.SessionManager.userSession
+import com.example.feigram.network.service.WebSocketManager
 import com.example.feigram.viewmodels.SessionViewModel
 
 @Composable
@@ -106,6 +108,7 @@ fun LoginScreen(
                     sessionViewModel.login(email, password) { success ->
                         isLoading = false
                         if (success) {
+                            WebSocketManager.connect(userSession?.token ?: "0")
                             navController.navigate("home") {
                                 popUpTo("login") { inclusive = true }
                             }
