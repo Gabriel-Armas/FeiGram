@@ -46,7 +46,7 @@ namespace app.Pages
 
             Response.Cookies.Append("jwt_token", result.Token, new CookieOptions
             {
-                HttpOnly = true,
+                HttpOnly = false,
                 SameSite = SameSiteMode.Lax,
                 Secure = false,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)

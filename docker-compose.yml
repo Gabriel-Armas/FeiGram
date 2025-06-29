@@ -212,8 +212,8 @@ services:
       dockerfile: Dockerfile
     platform: linux/amd64
     container_name: feigram-web
-    ports:
-      - "8089:8089"
+    # ports:
+    #   - "8089:8089"
     networks:
       - feinet
 
