@@ -45,9 +45,18 @@ public class ProfileService
         Stream? photoStream = null,
         string? photoFileName = null)
     {
+
+        var token = _httpContextAccessor.HttpContext?.Request.Cookies["jwt_token"];
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
         using var content = new MultipartFormDataContent
         {
-            { new StringContent(username), "Username" },
+            { new StringContent(username), "Name" },
             { new StringContent(enrollment), "Enrollment" }
         };
 

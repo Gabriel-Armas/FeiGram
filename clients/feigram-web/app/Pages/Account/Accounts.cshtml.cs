@@ -77,36 +77,31 @@ namespace app.Pages.Account
 
         public async Task<IActionResult> OnPostBan(int id, string email)
         {
-            var handler = new HttpClientHandler
+            var token = HttpContext.Request.Cookies["jwt_token"];
+            
+            if (!string.IsNullOrEmpty(token))
             {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
-
-            using var client = new HttpClient(handler);
-            client.BaseAddress = new Uri("https://feigram-nginx");
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(new { Email = email }),
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            try
-            {
-                var response = await client.PostAsync("/auth/ban-user", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation("Usuario con ID {Id} y correo {Email} fue baneado exitosamente", id, email);
-                }
-                else
-                {
-                    _logger.LogWarning("No se pudo banear al usuario {Email} Status: {StatusCode}", email, response.StatusCode);
-                }
+                _authService.SetBearerToken(token);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "¡Error! No se pudo banear al usuario {Email}", email);
+                _logger.LogWarning("No se encontró token JWT para hacer peticiones autorizadas");
+            }
+
+            _logger.LogInformation("Intentando banear al usuario con ID: {Id} y Email: {Email}", id, email);
+
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError(string.Empty, "El email no puede estar vacío");
+                return Page();
+            }
+
+            bool result = await _authService.BanUserAsync(email);
+
+            if (!result)
+            {
+                ModelState.AddModelError(string.Empty, "No se pudo banear al usuario, por favor intenta de nuevo");
+                return Page();
             }
 
             return RedirectToPage();

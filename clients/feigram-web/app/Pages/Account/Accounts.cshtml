@@ -16,15 +16,27 @@
         <div class="list-group shadow-sm">
             @foreach (var account in Model.Accounts)
             {
-                <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="list-group-item d-flex justify-content-between align-items-center @(account.Role == "Banned" ? "bg-light text-danger border-danger" : "")">
                     <div>
                         <h5 class="mb-1 fw-semibold">@account.Username</h5>
                         <small class="text-muted">📧 @account.Email | 🎓 Matrícula: @account.Enrollment</small>
+                        @if (account.Role == "Banned")
+                        {
+                            <small class="badge bg-danger ms-2">BANEADO</small>
+                        }
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAccountModal-@account.Id">📝 Editar</button>
-                        <form method="post" asp-page-handler="Ban" asp-route-id="@account.Id" onsubmit="return confirm('¿Estás seguro que quieres banear a esta cuenta?');">
-                            <button type="submit" class="btn btn-outline-danger btn-sm">🚫 Banear</button>
+                        <form method="post" asp-page-handler="Ban" asp-route-id="@account.Id" onsubmit="return confirm('¿Estás seguro que quieres @(account.Role == "Banned" ? "desbanear" : "banear") a esta cuenta?');">
+                            <input type="hidden" name="email" value="@account.Email" />
+                            @if (account.Role == "Banned")
+                            {
+                                <button type="submit" class="btn btn-outline-success btn-sm">✅ Desbanear</button>
+                            }
+                            else
+                            {
+                                <button type="submit" class="btn btn-outline-danger btn-sm">🚫 Banear</button>
+                            }
                         </form>
                     </div>
                 </div>
@@ -37,7 +49,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <form method="post" asp-page-handler="Edit" enctype="multipart/form-data" asp-validation-summary="All" class="text-danger">
+                <form method="post" asp-page-handler="Edit" asp-route-id="@account.Id" enctype="multipart/form-data" asp-validation-summary="All" class="text-danger">
                     <input type="hidden" name="Id" value="@account.Id" />
                     <div class="row">
                         <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-end">
