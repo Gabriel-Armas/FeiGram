@@ -20,6 +20,7 @@ function connectWebSocket() {
 
     socket.onopen = () => {
         console.log("[Client] ✅ WebSocket conectado");
+        requestContacts();
     };
 
     socket.onmessage = (event) => {
