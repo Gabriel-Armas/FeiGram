@@ -1,7 +1,5 @@
 package com.example.feigram.network.api
 
-
-import com.example.feigram.network.model.feed.FeedPost
 import com.example.feigram.network.model.feed.FeedRecommendationsResponse
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -16,7 +14,3 @@ interface FeedApi {
         @Query("limit") limit: Int = 10
     ): FeedRecommendationsResponse
 }
-
-data class FeedRecommendationsResponse(
-    val posts: List<FeedPost>
-)

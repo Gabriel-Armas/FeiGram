@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.Menu
@@ -46,9 +47,15 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     var isLoading by remember { mutableStateOf(false) }
     var currentPostId by remember { mutableStateOf<Int?>(null) }
 
+    var skip by remember { mutableStateOf(0) }
+    val listState = rememberLazyListState()
+
+    var firstLoadDone by remember { mutableStateOf(false) }
+
     LaunchedEffect(userSession) {
         if (userSession != null) {
             isLoading = true
+            skip = 0
             try {
                 val response = RetrofitInstance.feedApi.getRecommendations(
                     token = "Bearer ${userSession!!.token}",
@@ -59,6 +66,30 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                 e.printStackTrace()
             } finally {
                 isLoading = false
+                firstLoadDone = true
+            }
+        }
+    }
+
+    LaunchedEffect(listState, feedPosts.size) {
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+        }.collect { lastVisibleIndex ->
+            if (lastVisibleIndex != null && lastVisibleIndex >= feedPosts.size - 1 && !isLoading) {
+                isLoading = true
+                skip += 10
+                try {
+                    val newResponse = RetrofitInstance.feedApi.getRecommendations(
+                        token = "Bearer ${userSession?.token.orEmpty()}",
+                        userId = userSession?.userId ?: "",
+                        skip = skip
+                    )
+                    feedPosts = feedPosts + newResponse.posts
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    isLoading = false
+                }
             }
         }
     }
@@ -164,11 +195,12 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
             }
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize()) {
-                if (isLoading) {
+                if (!firstLoadDone) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 } else {
                     LazyColumn(
                         contentPadding = padding,
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -269,11 +301,24 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                     hasLiked = hasLiked
                                 )
 
-                                Divider(
-                                    thickness = 0.5.dp, // Línea muy fina
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), // Color gris clarito
-                                    modifier = Modifier.padding(vertical = 4.dp) // Un poco de espacio arriba y abajo
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                                 )
+                            }
+                        }
+
+                        item {
+                            if (isLoading) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
                             }
                         }
                     }
@@ -377,7 +422,6 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                             ) {
                                 Text("Enviar")
                             }
-
                         }
                     }
                 }
