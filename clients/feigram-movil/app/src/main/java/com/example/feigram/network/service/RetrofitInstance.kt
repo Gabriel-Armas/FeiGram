@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import com.example.feigram.network.api.AuthApi
 import com.example.feigram.network.api.CommentApi
 import com.example.feigram.network.api.FeedApi
+import com.example.feigram.network.api.FollowApi
 import com.example.feigram.network.api.LikeApi
 import com.example.feigram.network.api.PostApi
 import com.example.feigram.network.api.ProfileApi
@@ -58,4 +59,5 @@ object RetrofitInstance {
     }
     val likeApi: LikeApi = retrofit.create(LikeApi::class.java)
     val commentApi: CommentApi = retrofit.create(CommentApi::class.java)
+    val followApi: FollowApi = retrofit.create(FollowApi::class.java)
 }

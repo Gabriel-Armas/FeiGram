@@ -55,6 +55,7 @@ fun ProfileScreen(
     var loadError by remember { mutableStateOf<String?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isUploading by remember { mutableStateOf(false) }
+    var isFollowing by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -175,8 +176,32 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (!isMyProfile) {
-                Button(onClick = { /* TODO: Seguir usuario */ }) {
-                    Text("Seguir")
+                Button(
+                    onClick = {
+                        scope.launch {
+                            try {
+                                if (isFollowing) {
+                                    RetrofitInstance.followApi.unfollowUser(
+                                        follower = currentUser?.userId ?: "",
+                                        followed = profileId,
+                                        token = "Bearer ${currentUser?.token.orEmpty()}"
+                                    )
+                                    isFollowing = false
+                                } else {
+                                    RetrofitInstance.followApi.followUser(
+                                        follower = currentUser?.userId ?: "",
+                                        followed = profileId,
+                                        token = "Bearer ${currentUser?.token.orEmpty()}"
+                                    )
+                                    isFollowing = true
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                ) {
+                    Text(if (isFollowing) "Siguiendo" else "Seguir")
                 }
             }
 
@@ -251,6 +276,19 @@ fun ProfileScreen(
                             profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
                             text = c.textComment
                         )
+                    }
+
+                    if (!isMyProfile) {
+                        try {
+                            val response = RetrofitInstance.followApi.isFollowing(
+                                follower = currentUser?.userId ?: "",
+                                followed = profileId,
+                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                            )
+                            isFollowing = response["is_following"] ?: false
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
 
                 } catch (e: Exception) {
