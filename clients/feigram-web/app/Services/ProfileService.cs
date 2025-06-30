@@ -62,4 +62,65 @@ public class ProfileService
 
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<List<ProfileDTO>?> GetFollowingAsync(string userId)
+    {
+        AttachTokenFromCookie();
+
+        var response = await _client.GetAsync($"/profiles/profiles/{userId}/following");
+        if (!response.IsSuccessStatusCode) return null;
+
+        var content = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"JSON de seguidos de {userId}: " + content);
+
+        return JsonSerializer.Deserialize<List<ProfileDTO>>(content, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
+
+    public async Task<ProfileDTO?> GetProfileByIdAsync(string userId)
+    {
+        AttachTokenFromCookie();
+
+        var response = await _client.GetAsync($"/profiles/profiles/{userId}");
+        if (!response.IsSuccessStatusCode) return null;
+
+        var content = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Perfil JSON para user {userId}: " + content);
+
+        return JsonSerializer.Deserialize<ProfileDTO>(content, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
+
+    private void AttachTokenFromCookie()
+    {
+        var token = _httpContextAccessor.HttpContext?.Request.Cookies["jwt_token"];
+        if (!string.IsNullOrEmpty(token))
+        {
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
+    public async Task<List<ProfileDTO>?> GetProfileDetailsForUserListAsync(List<string> userIds)
+    {
+        var token = _httpContextAccessor.HttpContext?.Request.Cookies["jwt_token"];
+        if (!string.IsNullOrEmpty(token))
+        {
+            SetBearerToken(token);
+        }
+
+        var response = await _client.PostAsJsonAsync("/profiles/batch", userIds);
+
+        if (!response.IsSuccessStatusCode) return null;
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<ProfileDTO>>(content, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
 }

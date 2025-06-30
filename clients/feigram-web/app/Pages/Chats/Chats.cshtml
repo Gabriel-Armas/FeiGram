@@ -5,7 +5,6 @@
     Layout = "_Layout";
 }
 
-<!-- Token expuesto como variable JavaScript -->
 <script>
     const jwtToken = '@Model.JwtToken';
     console.log("[Client] 🛡️ Token inyectado desde backend (primeros 10 chars):", jwtToken.substring(0, 10));
@@ -13,10 +12,13 @@
 
 <div style="margin-left: 320px; padding-top: 1rem;">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-4 border-end" style="max-height: 85vh; overflow-y: auto;">
+        <div class="row" style="height: 85vh;">
+            <div class="col-md-4 border-end d-flex flex-column" >
                 <h5 class="fw-bold mt-3 ms-2">Chats</h5>
-                <ul class="list-group list-group-flush" id="friendList">
+                <ul 
+                    id="friendList" 
+                    class="list-group list-group-flush flex-grow-1 overflow-auto"
+                    style="max-height: 80vh;">
                 </ul>
             </div>
 
@@ -40,6 +42,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    const contactProfiles = @Html.Raw(Json.Serialize(Model.ContactProfiles));
+
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log("[Client] 👥 Perfiles de contactos:", contactProfiles);
+        renderContactList(contactProfiles);
+        connectWebSocket();
+    });
+</script>
 
 @section Scripts {
     <script src="~/js/chats.js"></script>

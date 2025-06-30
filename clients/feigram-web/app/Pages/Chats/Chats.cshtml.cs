@@ -1,18 +1,46 @@
 using app.ViewModel;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using app.DTO;
 
 namespace app.Pages.Chats
 {
     public class ChatModel : PageModel
     {
-        public List<FriendViewModel> Friends { get; set; } = new List<FriendViewModel>();
+        private readonly ProfileService _profileService;
+
+        public ChatModel(ProfileService profileService)
+        {
+            _profileService = profileService;
+        }
 
         public string? JwtToken { get; set; }
+        public List<ProfileDTO> ContactProfiles { get; set; } = new List<ProfileDTO>();
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
             JwtToken = Request.Cookies["jwt_token"];
+            if (string.IsNullOrEmpty(JwtToken)) return;
+
+            _profileService.SetBearerToken(JwtToken);
+
+            var myUserId = Request.Cookies["user_id"];
+            if (string.IsNullOrEmpty(myUserId))
+            {
+                ContactProfiles = new List<ProfileDTO>();
+                return;
+            }
+
+            var followingProfiles = await _profileService.GetFollowingAsync(myUserId);
+            if (followingProfiles == null || followingProfiles.Count == 0)
+            {
+                ContactProfiles = new List<ProfileDTO>();
+                return;
+            }
+            ContactProfiles = followingProfiles;
         }
+
     }
 }
