@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using ChartApi.Grpc;
+using Grpc.Net.Client;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +16,7 @@ builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<LikesService>();
 builder.Services.AddScoped<PostService>();
 
+builder.Services.AddScoped<StatisticsService>();
 
 builder.Services.AddHttpClient("feigram", client =>
 {
@@ -25,6 +29,10 @@ builder.Services.AddHttpClient("feigram", client =>
     };
 });
 
+builder.Services.AddGrpcClient<ChartService.ChartServiceClient>(options =>
+{
+    options.Address = new Uri("https://feigram-nginx/chart.ChartService"); // o la dirección de tu servicio ChartApi
+});
 
 builder.Services.AddAuthentication(options =>
 {

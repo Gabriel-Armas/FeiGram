@@ -73,7 +73,7 @@ public class AuthService
             PropertyNameCaseInsensitive = true
         });
     }
-    
+
     public async Task<bool> BanUserAsync(string email)
     {
         var content = new StringContent(
@@ -83,6 +83,19 @@ public class AuthService
         );
 
         var response = await _client.PostAsync("/auth/ban-user", content);
+
+        return response.IsSuccessStatusCode;
+    }
+    
+    public async Task<bool> UnbanUserAsync(string email)
+    {
+        var content = new StringContent(
+            JsonSerializer.Serialize(new { Email = email }),
+            System.Text.Encoding.UTF8,
+            "application/json"
+        );
+
+        var response = await _client.PostAsync("/auth/unban-user", content);
 
         return response.IsSuccessStatusCode;
     }

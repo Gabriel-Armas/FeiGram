@@ -107,6 +107,38 @@ namespace app.Pages.Account
             return RedirectToPage();
         }
 
+        public async Task<IActionResult> OnPostUnban(int id, string email)
+        {
+            var token = HttpContext.Request.Cookies["jwt_token"];
+            
+            if (!string.IsNullOrEmpty(token))
+            {
+                _authService.SetBearerToken(token);
+            }
+            else
+            {
+                _logger.LogWarning("No se encontró token JWT para hacer peticiones autorizadas");
+            }
+
+            _logger.LogInformation("Intentando desbanear al usuario con ID: {Id} y Email: {Email}", id, email);
+
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError(string.Empty, "El email no puede estar vacío");
+                return Page();
+            }
+
+            bool result = await _authService.UnbanUserAsync(email);
+
+            if (!result)
+            {
+                ModelState.AddModelError(string.Empty, "No se pudo desbanear al usuario, por favor intenta de nuevo");
+                return Page();
+            }
+
+            return RedirectToPage();
+        }   
+
         public async Task<IActionResult> OnPostAddAsync()
         {
             var token = HttpContext.Request.Cookies["jwt_token"];
