@@ -1,16 +1,16 @@
 let socket = null;
 let currentChatUserId = null;
-let myUserId = null; // userId que el servidor envía vía WebSocket
 let allContacts = [...contactProfiles]; // <-- Aquí guardaremos todos, inicializando con los que vinieron del backend
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("[Client] DOMContentLoaded - Iniciando conexión WebSocket");
+    console.log("[Client] DOM listo. Conectando WebSocket...");
 
     if (!jwtToken || jwtToken === "null") {
-        console.error("[Client] ❌ No hay jwtToken disponible para conectar WebSocket");
+        console.error("[Client] ❌ No hay token disponible");
         return;
     }
 
+    console.log("[Client] ✅ Ya conozco mi userId:", myUserId);
     connectWebSocket();
 });
 
@@ -21,7 +21,9 @@ function connectWebSocket() {
 
     socket.onopen = () => {
         console.log("[Client] ✅ WebSocket conectado");
-    };
+    
+        requestContacts(); // 👈 lo mandas tú sin esperar al servidor
+    };    
 
     socket.onmessage = (event) => {
         console.log("[Client] 📥 Mensaje recibido:", event.data);
@@ -69,15 +71,28 @@ function requestContacts() {
     }
 }
 
-function mergeAndRenderContacts(wsContacts) {
-    console.log("[Client] 🔄 Mezclando contactos WebSocket + Backend");
+async function mergeAndRenderContacts(contactIds) {
+    console.log("[Client] 🔄 Recibidos desde WebSocket:", contactIds);
 
-    wsContacts.forEach(wsContact => {
-        const exists = allContacts.some(c => c.id === wsContact.id);
-        if (!exists) {
-            allContacts.push(wsContact);
+    const newIds = contactIds.filter(id => !allContacts.some(c => c.id === id));
+
+    for (const id of newIds) {
+        try {
+            const response = await fetch(`/profiles/profiles/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${jwtToken}`
+                }
+            });
+            if (response.ok) {
+                const profile = await response.json();
+                allContacts.push(profile);
+            } else {
+                console.error(`[Client] ❌ No se encontró perfil para id=${id}`);
+            }
+        } catch (error) {
+            console.error(`[Client] ❌ Error al obtener perfil para id=${id}`, error);
         }
-    });
+    }
 
     console.log(`[Client] 👥 Total de contactos combinados: ${allContacts.length}`);
     renderContactList(allContacts);

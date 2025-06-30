@@ -17,6 +17,7 @@ namespace app.Pages.Chats
         }
 
         public string? JwtToken { get; set; }
+        public string? MyUserId { get; set; }
         public List<ProfileDTO> ContactProfiles { get; set; } = new List<ProfileDTO>();
 
         public async Task OnGetAsync()
@@ -26,14 +27,14 @@ namespace app.Pages.Chats
 
             _profileService.SetBearerToken(JwtToken);
 
-            var myUserId = Request.Cookies["user_id"];
-            if (string.IsNullOrEmpty(myUserId))
+            MyUserId = Request.Cookies["user_id"];
+            if (string.IsNullOrEmpty(MyUserId))
             {
                 ContactProfiles = new List<ProfileDTO>();
                 return;
             }
 
-            var followingProfiles = await _profileService.GetFollowingAsync(myUserId);
+            var followingProfiles = await _profileService.GetFollowingAsync(MyUserId);
             if (followingProfiles == null || followingProfiles.Count == 0)
             {
                 ContactProfiles = new List<ProfileDTO>();
