@@ -245,10 +245,8 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                             try {
                                                 if (hasLiked) {
                                                     RetrofitInstance.likeApi.deleteLike(
-                                                        like = LikeRequest(
-                                                            userId = userSession?.userId ?: "",
-                                                            postId = post.post_id.toString()
-                                                        ),
+                                                        userId = userSession?.userId ?: "",
+                                                        postId = post.post_id.toString(),
                                                         token = "Bearer ${userSession?.token.orEmpty()}"
                                                     )
                                                     likeCount--

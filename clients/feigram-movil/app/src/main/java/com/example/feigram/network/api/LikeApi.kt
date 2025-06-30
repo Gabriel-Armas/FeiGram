@@ -19,9 +19,10 @@ interface LikeApi {
         @Header("Authorization") token: String
     ): LikeResponse
 
-    @HTTP(method = "DELETE", path = "/likes/likes", hasBody = true)
+    @DELETE("/likes/likes")
     suspend fun deleteLike(
-        @Body like: LikeRequest,
+        @Query("userId") userId: String,
+        @Query("postId") postId: String,
         @Header("Authorization") token: String
     ): Unit
 }

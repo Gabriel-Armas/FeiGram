@@ -31,6 +31,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.feigram.network.model.Profile
 import com.example.feigram.network.model.posts.PostResponse
 import com.example.feigram.network.service.RetrofitInstance
+import com.example.feigram.network.service.SessionManager.userSession
 import com.example.feigram.viewmodels.SessionViewModel
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -298,12 +299,11 @@ fun ProfileScreen(
                                     try {
                                         if (isLiked) {
                                             RetrofitInstance.likeApi.deleteLike(
-                                                like = com.example.feigram.network.model.likes.LikeRequest(
-                                                    userId = currentUser?.userId ?: "",
-                                                    postId = post.postId.toString()
-                                                ),
-                                                token = "Bearer ${currentUser?.token.orEmpty()}"
+                                                userId = userSession?.userId ?: "",
+                                                postId = post.postId.toString(),
+                                                token = "Bearer ${userSession?.token.orEmpty()}"
                                             )
+
                                             likeCount -= 1
                                             isLiked = false
                                         } else {
