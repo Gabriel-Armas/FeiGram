@@ -54,7 +54,7 @@ namespace app.Pages
 
             Response.Cookies.Append("user_id", result.UserId, new CookieOptions
             {
-                HttpOnly = true,
+                HttpOnly = false,
                 SameSite = SameSiteMode.Lax,
                 Secure = false,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)

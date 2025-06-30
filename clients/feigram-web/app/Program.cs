@@ -10,6 +10,9 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<LikesService>();
+builder.Services.AddScoped<PostService>();
+
 
 builder.Services.AddHttpClient("feigram", client =>
 {

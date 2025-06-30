@@ -4,6 +4,8 @@ using app.ViewModel;
 using app.DTO;
 using System.Text.Json;
 using System.Net.Http.Headers;
+using System.Text;
+
 
 namespace app.Pages.Feed
 {
@@ -13,15 +15,20 @@ namespace app.Pages.Feed
         private readonly IWebHostEnvironment _env;
         public List<PostViewModel> PostCompletos { get; set; } = new();
         private readonly ILogger<FeedModel> _logger;
+        private readonly LikesService _likesService;
+        private readonly PostService _postService;
+
 
 
         //public List<PostViewModel> Posts { get; set; } = new();
 
-        public FeedModel(IHttpClientFactory clientFactory, IWebHostEnvironment env, ILogger<FeedModel> logger)
+        public FeedModel(IHttpClientFactory clientFactory, IWebHostEnvironment env, ILogger<FeedModel> logger, LikesService likesService, PostService postService)
         {
             _clientFactory = clientFactory;
             _env = env;
             _logger = logger;
+            _likesService = likesService;
+            _postService = postService;
         }
 
 
@@ -124,76 +131,148 @@ namespace app.Pages.Feed
             else
                 return $"Hace {Math.Floor(diff.TotalDays)} días";
         }
-    
-        /*public async Task<IActionResult> OnGetPostModalAsync(int postId)
-        {
-            var client = _clientFactory.CreateClient();
-            client.BaseAddress = new Uri("https://feigram-nginx");
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", Request.Cookies["jwt_token"]);
 
-            var post = await client.GetFromJsonAsync<PostDTO>($"api/posts/{postId}");
-            if (post == null) return NotFound();
 
-            var model = new PostPartialViewModel
-            {
-                Id = post.Id,
-                ImageUrl = post.ImageUrl,
-                Caption = post.Caption,
-                Likes = post.Likes,
-                Comments = post.Comments.Select(c => new CommentViewModel
-                {
-                    User = c.Author,
-                    Text = c.Text
-                }).ToList()
-            };
-
-            return Partial("PostPartial", model);
-        }*/
-        /*
         public async Task<IActionResult> OnPostNuevoPostAsync(IFormFile imagen, string description)
         {
             if (imagen == null || imagen.Length == 0)
             {
-                TempData["Error"] = "Debes seleccionar una imagen.";
-                return RedirectToPage();
+                return new JsonResult(new { success = false, message = "Debes seleccionar una imagen." });
             }
 
-            var client = _clientFactory.CreateClient();
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+
+            var client = new HttpClient(handler);
             client.BaseAddress = new Uri("https://feigram-nginx");
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", Request.Cookies["jwt_token"]);
 
-            using var content = new MultipartFormDataContent();
-            using var fileStream = imagen.OpenReadStream();
-            var streamContent = new StreamContent(fileStream);
-            streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+            string imageUrl;
 
-            content.Add(streamContent, "imagen", imagen.FileName);
-            content.Add(new StringContent(description ?? ""), "description");
-
-            var response = await client.PostAsync("posts/posts", content);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                TempData["Error"] = "Ocurrió un error al subir la publicación.";
+                using var imageStream = imagen.OpenReadStream();
+                var imageContent = new StreamContent(imageStream);
+                imageContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+
+                using var uploadContent = new MultipartFormDataContent();
+                uploadContent.Add(imageContent, "file", imagen.FileName);
+
+                var uploadResponse = await client.PostAsync("/posts/upload-image", uploadContent);
+                if (!uploadResponse.IsSuccessStatusCode)
+                {
+                    return new JsonResult(new { success = false, message = "Error al subir la imagen al servidor." });
+                }
+
+                var uploadResult = await uploadResponse.Content.ReadFromJsonAsync<ImageUploadResult>();
+                if (uploadResult == null || string.IsNullOrEmpty(uploadResult.Url))
+                {
+                    return new JsonResult(new { success = false, message = "Respuesta inválida al subir imagen." });
+                }
+
+                imageUrl = uploadResult.Url;
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = "Error al subir la imagen: " + ex.Message });
             }
 
-            return RedirectToPage();
+            try
+            {
+                var postData = new
+                {
+                    descripcion = description,
+                    url_media = imageUrl,
+                    fechaPublicacion = DateTime.UtcNow
+                };
+
+                var postJson = new StringContent(
+                    JsonSerializer.Serialize(postData),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var postResponse = await client.PostAsync("/posts/posts", postJson);
+
+                if (!postResponse.IsSuccessStatusCode)
+                {
+                    return new JsonResult(new { success = false, message = "Error al crear la publicación." });
+                }
+
+                return new JsonResult(new { success = true, message = "Publicación creada correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = "Error al crear el post: " + ex.Message });
+            }
         }
-    }*/
+
+        public async Task<IActionResult> OnPostLikeAsync([FromBody] Like like)
+        {
+            Console.WriteLine("✅ Entró a OnPostLikeAsync");
+            if (like == null)
+                return BadRequest("No se pudo deserializar el Like");
+
+            Console.WriteLine($"Id: {like.Id}, PostId: {like.PostId}, UserId: {like.UserId}");
+
+            if (string.IsNullOrEmpty(like?.UserId) || string.IsNullOrEmpty(like?.PostId))
+            {
+                return new JsonResult(new { success = false, message = "Datos inválidos." }) { StatusCode = 400 };
+            }
+
+            var result = await _likesService.CreateLikeAsync(like);
+            if (result != null)
+            {
+                return new JsonResult(new { success = true, message = "Like registrado correctamente." });
+            }
+
+            return new JsonResult(new { success = false, message = "No se pudo registrar el like." }) { StatusCode = 500 };
+        }
+
+        public async Task<IActionResult> OnGetComentariosAsync(int postId)
+        {
+            try
+            {
+                var token = HttpContext.Request.Cookies["jwt_token"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _postService.SetBearerToken(token);
+                }
+                else
+                {
+                    _logger.LogWarning("No se encontró token JWT para hacer peticiones autorizadas");
+                }
+
+                var comments = await _postService.GetCommentsAsync(postId); // tu método del servicio
+                return new JsonResult(comments);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al obtener comentarios: {ex.Message}");
+                return StatusCode(500, "Error al obtener comentarios.");
+            }
+        }
+
+
+
+
+    }
+    
+
     
     public class PostViewModel
-{
-    public int Id { get; set; }
-    public string Username { get; set; }
-    public string TimeAgo { get; set; }
-    public string Description { get; set; }
-    public string UserProfileImage { get; set; }
-    public string PostImage { get; set; }
-    public int Comentarios { get; set; }
-    public int Likes { get; set; }
-    public bool IsLiked { get; set; }
-}
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string TimeAgo { get; set; }
+        public string Description { get; set; }
+        public string UserProfileImage { get; set; }
+        public string PostImage { get; set; }
+        public int Comentarios { get; set; }
+        public int Likes { get; set; }
+        public bool IsLiked { get; set; }
     }
 }
