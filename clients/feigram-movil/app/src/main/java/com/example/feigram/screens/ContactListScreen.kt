@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,21 +46,44 @@ fun ContactListScreen(navController: NavController) {
                         contactIds.add(contactList.getString(i))
                     }
 
-                    contactProfiles.clear()
-                    contactIds.forEach { contactId ->
-                        scope.launch {
-                            try {
-                                val profile = RetrofitInstance.profileApi.getProfileById(
-                                    id = contactId,
-                                    token = "Bearer ${userSession?.token}"
-                                )
-                                contactProfiles.add(profile)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                    // Al obtener los contactos desde WS, ahora combinamos con los que sigo
+                    scope.launch {
+                        try {
+                            // 1. Obtener lista de perfiles de contactos vía WS
+                            val wsProfiles = mutableListOf<Profile>()
+                            for (contactId in contactIds) {
+                                try {
+                                    val profile = RetrofitInstance.profileApi.getProfileById(
+                                        id = contactId,
+                                        token = "Bearer ${userSession?.token}"
+                                    )
+                                    wsProfiles.add(profile)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
                             }
+
+                            // 2. Obtener lista de perfiles que sigo desde API
+                            val followingList = RetrofitInstance.profileApi.getFollowingList(
+                                userId = userSession?.userId ?: "",
+                                token = "Bearer ${userSession?.token}"
+                            )
+
+                            // 3. Combinar sin repetir (por id)
+                            val combinedMap = mutableMapOf<String, Profile>()
+                            (wsProfiles + followingList).forEach { profile ->
+                                combinedMap[profile.id] = profile
+                            }
+
+                            contactProfiles.clear()
+                            contactProfiles.addAll(combinedMap.values)
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        } finally {
+                            isLoading = false
                         }
                     }
-                    isLoading = false
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -69,10 +93,7 @@ fun ContactListScreen(navController: NavController) {
 
     DisposableEffect(Unit) {
         WebSocketManager.addListener(contactListener)
-
-        onDispose {
-            WebSocketManager.removeListener(contactListener)
-        }
+        onDispose { WebSocketManager.removeListener(contactListener) }
     }
 
     LaunchedEffect(Unit) {
@@ -86,10 +107,11 @@ fun ContactListScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis Chats", fontSize = 22.sp, fontWeight = FontWeight.Bold) },
+                title = { Text("Chats", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
                 )
             )
         }
@@ -98,19 +120,22 @@ fun ContactListScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(contactProfiles) { profile ->
                         ContactItem(profile) {
                             navController.navigate("chat/${profile.id}/${profile.name}")
                         }
-                        HorizontalDivider()
+                        HorizontalDivider(
+                            thickness = 0.5.dp,
+                            color = Color.LightGray.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }
@@ -124,7 +149,7 @@ fun ContactItem(profile: Profile, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(8.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -132,15 +157,15 @@ fun ContactItem(profile: Profile, onClick: () -> Unit) {
             contentDescription = "Foto de ${profile.name}",
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(50.dp)
-                .clip(MaterialTheme.shapes.medium)
+                .size(56.dp)
+                .clip(CircleShape)
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column {
-            Text(text = profile.name, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-            Text(text = "@${profile.enrollment}", fontSize = 14.sp, color = Color.Gray)
+            Text(text = profile.name, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(text = "@${profile.enrollment}", fontSize = 13.sp, color = Color.Gray)
         }
     }
 }

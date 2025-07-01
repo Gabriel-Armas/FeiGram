@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.compose.*
+import com.example.feigram.screens.AdminAccountsScreen
 import com.example.feigram.screens.ChatScreen
 import com.example.feigram.screens.ContactListScreen
 import com.example.feigram.screens.HomeScreen
@@ -60,6 +61,9 @@ class MainActivity : ComponentActivity() {
                     composable("usersearch") {
                         val token = sessionViewModel.userSession.value?.token ?: ""
                         UserSearchScreen(navController, token)
+                    }
+                    composable("adminAccounts") {
+                        AdminAccountsScreen(navController, sessionViewModel)
                     }
                 }
             }

@@ -8,7 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -43,6 +46,9 @@ fun NewPostScreen(
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var description by remember { mutableStateOf("") }
+    var galleryOpened by remember { mutableStateOf(false) }
+    var showCameraPermissionDialog by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
 
     val cameraImageUri = remember {
         val file = File.createTempFile("captured", ".jpg", context.cacheDir).apply {
@@ -67,7 +73,7 @@ fun NewPostScreen(
         if (isGranted) {
             cameraLauncher.launch(cameraImageUri)
         } else {
-            Toast.makeText(context, "Se requiere permiso de cámara", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -77,85 +83,17 @@ fun NewPostScreen(
         imageUri = uri
     }
 
+    LaunchedEffect(Unit) {
+        if (!galleryOpened) {
+            galleryOpened = true
+            galleryLauncher.launch("image/*")
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva publicación") },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            Toast.makeText(context, "Click palomita", Toast.LENGTH_SHORT).show()
-
-                            if (imageUri == null) {
-                                Toast.makeText(context, "No hay imagen seleccionada", Toast.LENGTH_SHORT).show()
-                                return@IconButton
-                            }
-
-                            if (description.isBlank()) {
-                                Toast.makeText(context, "La descripción está vacía", Toast.LENGTH_SHORT).show()
-                                return@IconButton
-                            }
-
-                            if (userSession == null) {
-                                Toast.makeText(context, "No hay sesión de usuario", Toast.LENGTH_SHORT).show()
-                                return@IconButton
-                            }
-
-                            coroutineScope.launch {
-                                try {
-                                    Toast.makeText(context, "Iniciando carga de imagen...", Toast.LENGTH_SHORT).show()
-
-                                    val inputStream = context.contentResolver.openInputStream(imageUri!!)
-                                    if (inputStream == null) {
-                                        Toast.makeText(context, "No se pudo abrir InputStream", Toast.LENGTH_SHORT).show()
-                                        return@launch
-                                    }
-
-                                    val tempFile = File.createTempFile("upload", ".jpg", context.cacheDir)
-                                    inputStream.use { input ->
-                                        tempFile.outputStream().use { output ->
-                                            input.copyTo(output)
-                                        }
-                                    }
-
-                                    Toast.makeText(context, "Imagen copiada a temp", Toast.LENGTH_SHORT).show()
-
-                                    val requestBody = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
-                                    val multipart = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
-
-                                    val uploadResponse = RetrofitInstance.postApi.uploadImage(
-                                        file = multipart,
-                                        token = "Bearer ${userSession.token}"
-                                    )
-
-                                    Toast.makeText(context, "Imagen subida: URL: ${uploadResponse.url}", Toast.LENGTH_LONG).show()
-
-                                    val post = PostCreateRequest(
-                                        description = description,
-                                        urlMedia = uploadResponse.url,
-                                        publicationDate = Instant.now().toString()
-                                    )
-
-                                    RetrofitInstance.postApi.createPost(
-                                        post = post,
-                                        token = "Bearer ${userSession.token}"
-                                    )
-
-                                    Toast.makeText(context, "Publicación creada", Toast.LENGTH_SHORT).show()
-                                    navController.popBackStack()
-
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                    Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        },
-                        enabled = imageUri != null && description.isNotBlank()
-                    ) {
-                        Icon(Icons.Default.Check, contentDescription = "Publicar")
-                    }
-
-                }
+                title = { Text("Nueva publicación") }
             )
         }
     ) { padding ->
@@ -166,21 +104,54 @@ fun NewPostScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {
-                    galleryLauncher.launch("image/*")
-                }) {
-                    Text("Galería")
+
+            if (imageUri == null) {
+                Text(
+                    "Selecciona una imagen",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                OutlinedButton(
+                    onClick = {
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                android.Manifest.permission.CAMERA
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            cameraLauncher.launch(cameraImageUri)
+                        } else {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CameraAlt,
+                        contentDescription = "Abrir cámara",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Abrir Cámara")
                 }
 
-                Button(onClick = {
-                    if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                        cameraLauncher.launch(cameraImageUri)
-                    } else {
-                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                    }
-                }) {
-                    Text("Cámara")
+                OutlinedButton(
+                    onClick = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Photo,
+                        contentDescription = "Abrir galería",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Abrir Galería")
                 }
             }
 
@@ -193,14 +164,82 @@ fun NewPostScreen(
                         .height(250.dp),
                     contentScale = ContentScale.Crop
                 )
-            }
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Descripción") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Button(
+                    onClick = {
+                        isUploading = true
+                        coroutineScope.launch {
+                            try {
+                                val inputStream =
+                                    context.contentResolver.openInputStream(imageUri!!)
+                                val tempFile =
+                                    File.createTempFile("upload", ".jpg", context.cacheDir)
+                                inputStream?.use { input ->
+                                    tempFile.outputStream().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
+
+                                val requestBody =
+                                    tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                                val multipart = MultipartBody.Part.createFormData(
+                                    "file",
+                                    tempFile.name,
+                                    requestBody
+                                )
+
+                                val uploadResponse = RetrofitInstance.postApi.uploadImage(
+                                    file = multipart,
+                                    token = "Bearer ${userSession?.token.orEmpty()}"
+                                )
+
+                                val post = PostCreateRequest(
+                                    description = description,
+                                    urlMedia = uploadResponse.url,
+                                    publicationDate = Instant.now().toString()
+                                )
+
+                                RetrofitInstance.postApi.createPost(
+                                    post = post,
+                                    token = "Bearer ${userSession?.token.orEmpty()}"
+                                )
+
+                                Toast.makeText(context, "Publicación creada", Toast.LENGTH_SHORT)
+                                    .show()
+                                navController.popBackStack()
+
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(context, "Error al publicar", Toast.LENGTH_SHORT)
+                                    .show()
+                            } finally {
+                                isUploading = false
+                            }
+                        }
+                    },
+                    enabled = description.isNotBlank() && !isUploading
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Publicando...")
+                    } else {
+                        Text("Publicar")
+                    }
+                }
+
+            }
         }
     }
 }

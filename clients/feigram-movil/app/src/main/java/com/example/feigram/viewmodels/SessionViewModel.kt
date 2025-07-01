@@ -112,7 +112,6 @@ class SessionViewModel : ViewModel() {
             }
 
             try {
-                // 1. Subir la nueva foto
                 RetrofitInstance.profileApi.updateProfile(
                     id = profileId,
                     token = "Bearer $currentToken",

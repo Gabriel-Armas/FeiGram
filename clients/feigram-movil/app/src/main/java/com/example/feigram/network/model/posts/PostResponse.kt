@@ -16,5 +16,7 @@ data class PostResponse(
     val urlMedia: String,
 
     @SerializedName("fechaPublicacion")
-    val publicationDate: String
+    val publicationDate: String,
+
+    val likeCount: Int = 0
 )

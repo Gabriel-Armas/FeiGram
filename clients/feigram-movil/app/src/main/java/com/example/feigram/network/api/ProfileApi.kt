@@ -31,6 +31,11 @@ interface ProfileApi {
         @Header("Authorization") token: String
     ): List<Profile>
 
+    @GET("profiles/profiles")
+    suspend fun getAllProfiles(
+        @Header("Authorization") token: String
+    ): List<Profile>
+
     @Multipart
     @PUT("profiles/profiles/{id}")
     suspend fun updateProfile(

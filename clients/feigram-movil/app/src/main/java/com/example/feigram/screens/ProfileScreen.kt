@@ -104,7 +104,22 @@ fun ProfileScreen(
                 userId = profileId,
                 token = "Bearer ${currentUser?.token.orEmpty()}"
             )
-            userPosts = posts
+
+            val postsWithLikes = posts.map { post ->
+                try {
+                    val likeResponse = RetrofitInstance.postApi.getPostLikesCount(
+                        postId = post.postId,
+                        token = "Bearer ${currentUser?.token.orEmpty()}"
+                    )
+                    post.copy(likeCount = likeResponse.like_count)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    post.copy(likeCount = 0)
+                }
+            }
+
+            userPosts = postsWithLikes
+
         } catch (e: Exception) {
             e.printStackTrace()
             loadError = "Error al cargar perfil o publicaciones"
@@ -235,7 +250,6 @@ fun ProfileScreen(
             }
         }
 
-        // Aquí el diálogo para mostrar detalles de la publicación seleccionada
         selectedPost?.let { post ->
             var likeCount by remember { mutableStateOf(0) }
             var comments by remember { mutableStateOf<List<com.example.feigram.network.model.comments.Comment>>(emptyList()) }
@@ -248,7 +262,7 @@ fun ProfileScreen(
                         postId = post.postId,
                         token = "Bearer ${currentUser?.token.orEmpty()}"
                     )
-                    likeCount = likeResponse.likeCount
+                    likeCount = likeResponse.like_count
 
                     isLiked = RetrofitInstance.likeApi.checkLike(
                         userId = currentUser?.userId ?: "",

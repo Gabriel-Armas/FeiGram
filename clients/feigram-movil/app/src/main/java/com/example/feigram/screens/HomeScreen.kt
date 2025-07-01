@@ -7,14 +7,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -51,6 +57,8 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     val listState = rememberLazyListState()
 
     var firstLoadDone by remember { mutableStateOf(false) }
+
+    val isAdmin = userSession?.rol.equals("Admin", ignoreCase = true)
 
     LaunchedEffect(userSession) {
         if (userSession != null) {
@@ -118,30 +126,72 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Spacer(Modifier.height(12.dp))
+            ModalDrawerSheet(
+                modifier = Modifier.fillMaxHeight()
+            ) {
+                Spacer(Modifier.height(16.dp))
 
                 Text(
-                    text = "Perfil (${userSession?.username ?: "Desconocido"})",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable {
+                    text = "Menú",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                HorizontalDivider()
+
+                ListItem(
+                    headlineContent = { Text("Mi perfil") },
+                    leadingContent = { Icon(Icons.Default.AccountCircle, contentDescription = "Perfil") },
+                    modifier = Modifier.clickable {
+                        scope.launch {
                             userSession?.userId?.let { id ->
                                 navController.navigate("profile/$id")
                             }
-                            scope.launch { drawerState.close() }
+                            drawerState.close()
                         }
+                    }
                 )
 
-                Text(
-                    "Cerrar sesión",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable { showLogoutDialog = true }
+                ListItem(
+                    headlineContent = { Text("Cerrar sesión") },
+                    leadingContent = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Cerrar sesión") },
+                    modifier = Modifier.clickable {
+                        scope.launch {
+                            showLogoutDialog = true
+                            drawerState.close()
+                        }
+                    }
+                )
+
+                if (isAdmin) {
+                    ListItem(
+                        headlineContent = { Text("Gestión de cuentas") },
+                        leadingContent = { Icon(Icons.Default.Block, contentDescription = "Admin") },
+                        modifier = Modifier.clickable {
+                            scope.launch {
+                                navController.navigate("adminAccounts")
+                                drawerState.close()
+                            }
+                        }
+                    )
+                }
+
+                HorizontalDivider()
+
+                ListItem(
+                    headlineContent = { Text("Mensajes") },
+                    leadingContent = { Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Mensajes") },
+                    modifier = Modifier.clickable {
+                        scope.launch {
+                            navController.navigate("messages")
+                            drawerState.close()
+                        }
+                    }
                 )
             }
         }
-    ) {
+    )
+    {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -190,7 +240,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                         .scale(scale),
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Text("+", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+                    Icon(Icons.Default.Add, contentDescription = "Nuevo post", tint = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         ) { padding ->
@@ -345,18 +395,29 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.Top
                                 ) {
                                     AsyncImage(
                                         model = comment.profileImageUrl,
                                         contentDescription = "Foto de ${comment.username}",
                                         modifier = Modifier
-                                            .size(40.dp)
+                                            .size(36.dp)
+                                            .clip(CircleShape)
                                             .padding(end = 8.dp)
                                     )
-                                    Column {
-                                        Text(comment.username, style = MaterialTheme.typography.labelMedium)
-                                        Text(comment.text)
+
+                                    Column(  // <-- Aquí antes no tenías modifiers
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            comment.username,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            comment.text,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
                                     }
                                 }
                             }
@@ -423,6 +484,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                 Text("Enviar")
                             }
                         }
+
                     }
                 }
             }
