@@ -95,6 +95,8 @@ namespace app.Pages.Feed
                 PropertyNameCaseInsensitive = true
             });
 
+            bool isLiked = await _likesService.CheckIfUserLikedPostAsync(userId, p.PostId.ToString());
+
             PostCompletos.Add(new PostViewModel
             {
                 Id = p.PostId,
@@ -105,7 +107,7 @@ namespace app.Pages.Feed
                 TimeAgo = GetTimeAgo(p.FechaPublicacion),
                 Likes = p.Likes,
                 Comentarios = p.Comentarios,
-                IsLiked = true
+                IsLiked = isLiked
             });
         }
 
@@ -246,15 +248,16 @@ namespace app.Pages.Feed
             }
         }
 
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> OnPostLikeAsync()
         {
             var postId = Request.Form["PostId"];
             var userId = Request.Form["UserId"];
 
+            Console.WriteLine($"✅ OnPostLikeAsync recibió Like: postId={postId}, userId={userId}");
+
             if (string.IsNullOrEmpty(postId) || string.IsNullOrEmpty(userId))
-            {
                 return new JsonResult(new { success = false, message = "Datos inválidos." }) { StatusCode = 400 };
-            }
 
             var like = new Like
             {
@@ -262,32 +265,18 @@ namespace app.Pages.Feed
                 UserId = userId
             };
 
-            try
-            {
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                };
+            var token = Request.Cookies["jwt_token"];
+            if (string.IsNullOrEmpty(token))
+                return Unauthorized();
 
-                var client = new HttpClient(handler)
-                {
-                    BaseAddress = new Uri("https://feigram-nginx")
-                };
+            _likesService.SetBearerToken(token);
 
-                var response = await client.PostAsJsonAsync("/likes/likes", like);
+            var createdLike = await _likesService.CreateLikeAsync(like);
+            if (createdLike == null)
+                return StatusCode(500, "Error al crear el like.");
 
-                if (!response.IsSuccessStatusCode)
-                    return StatusCode((int)response.StatusCode, "Error al crear el like.");
-
-                return new JsonResult(new { success = true, message = "Like registrado correctamente." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al registrar el like: {ex.Message}");
-            }
+            return new JsonResult(new { success = true, message = "Like registrado correctamente." });
         }
-
-
 
         public async Task<IActionResult> OnGetComentariosAsync(int postId)
         {
@@ -329,61 +318,57 @@ namespace app.Pages.Feed
             }
         }
 
+        
+
         public async Task<IActionResult> OnPostCommentAsync()
+{
+    var postId = Request.Form["PostId"];
+    var commentText = Request.Form["CommentText"];
+
+    if (string.IsNullOrWhiteSpace(commentText))
+        return RedirectToPage();  // En caso de comentario vacío, simplemente vuelve al Feed
+
+    var token = HttpContext.Request.Cookies["jwt_token"];
+    string? userId = !string.IsNullOrEmpty(token)
+        ? ObtenerUserIdDesdeToken(token)
+        : null;
+
+    var comment = new CommentPost
+    {
+        PostId = postId!,
+        TextComment = commentText!,
+        CreatedAt = DateTime.UtcNow,
+        UserId = userId
+    };
+
+    try
+    {
+        var handler = new HttpClientHandler
         {
-            var postId = Request.Form["PostId"];
-            var commentText = Request.Form["CommentText"];
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
 
-            if (string.IsNullOrWhiteSpace(commentText))
-                return BadRequest("Comentario vacío");
+        var client = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://feigram-nginx")
+        };
 
-            var token = HttpContext.Request.Cookies["jwt_token"];
-            string? userId = !string.IsNullOrEmpty(token)
-                ? ObtenerUserIdDesdeToken(token)
-                : null;
+        var response = await client.PostAsJsonAsync("/comments/comments", comment);
 
-            var comment = new CommentPost
-            {
-                PostId = postId!,
-                TextComment = commentText!,
-                CreatedAt = DateTime.UtcNow,
-                UserId = userId
-            };
-
-            try
-            {
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                };
-
-                var client = new HttpClient(handler)
-                {
-                    BaseAddress = new Uri("https://feigram-nginx")
-                };
-
-                var response = await client.PostAsJsonAsync("/comments/comments", comment);
-
-                if (!response.IsSuccessStatusCode)
-                    return StatusCode((int)response.StatusCode, "Error al crear el comentario.");
-
-                var nuevoComentario = await response.Content.ReadFromJsonAsync<CommentPost>();
-
-                var profile = await _profileService.GetProfileByIdAsync(userId!);
-                var username = profile?.Username ?? "Desconocido";
-
-                return new JsonResult(new
-                {
-                    text = comment.TextComment,
-                    userId = comment.UserId,
-                    username = username
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al crear el comentario: {ex.Message}");
-            }
+        if (!response.IsSuccessStatusCode)
+        {
+            // Aquí puedes redirigir con algún mensaje de error si quieres
+            return RedirectToPage(); 
         }
+
+        return RedirectToPage(); // ✅ La clave es esto, que regrese al feed
+    }
+    catch (Exception)
+    {
+        return RedirectToPage();  // ✅ También redirige en caso de error
+    }
+}
+
 
 
         public static string ObtenerUserIdDesdeToken(string jwtToken)

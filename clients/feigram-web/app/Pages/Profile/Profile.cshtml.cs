@@ -37,7 +37,7 @@ namespace app.Pages.Profile
             return Page();
         }
 
-
+    /*
         private List<PostViewModel> MapPosts(List<PostDTO> postDtos)
         {
             return postDtos.Select(p => new PostViewModel
@@ -47,6 +47,7 @@ namespace app.Pages.Profile
             }).ToList();
         }
 
+        
         public IActionResult OnGetPostModal(int postId)
         {
             var postDto = GetPostById(postId); // Aquí simulas como si lo trajeras de la API
@@ -72,10 +73,12 @@ namespace app.Pages.Profile
             return Partial("PostPartial", model);
         }
 
+        
         private PostDTO GetPostById(int id)
         {
             return new PostDTO
             {
+
                 Id = id,
                 ImageUrl = $"/images/post{id}.png",
                 Caption = $"Post número {id} ~✨",
@@ -85,7 +88,9 @@ namespace app.Pages.Profile
                     new CommentDTO { Author = "Kokomi", Text = $"¡Comentario mágico para el post {id}!" },
                     new CommentDTO { Author = "Zelda", Text = $"Sabio consejo para el héroe del post {id}~" }
                 }
+
             };
         }
+        */
     }
 }

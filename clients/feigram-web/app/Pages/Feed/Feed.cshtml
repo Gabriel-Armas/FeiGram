@@ -35,15 +35,16 @@
 
         <div class="d-flex align-items-center text-muted px-1 gap-4">
         <form class="d-inline-flex align-items-center gap-2" id="likeForm-@post.Id">
-  <input type="hidden" name="PostId" value="@post.Id" />
-  
-  <button type="submit" class="btn btn-link p-0 text-danger d-flex align-items-center">
-    <i class="bi bi-heart-fill me-1"></i>
-    <span>Me gusta</span>
-  </button>
-  
-  <span id="likes-count-@post.Id">@post.Likes</span>
-</form>
+          <input type="hidden" name="PostId" value="@post.Id" />
+          <input type="hidden" name="UserId" value="@HttpContext.Request.Cookies["user_id"]" />
+          
+          <button type="submit" class="btn btn-link p-0 text-danger d-flex align-items-center">
+            <i class="bi bi-heart-fill me-1"></i>
+            <span>Me gusta</span>
+          </button>
+          
+          <span id="likes-count-@post.Id">@post.Likes</span>
+        </form>
 
 
 
@@ -255,6 +256,7 @@
 
 </script>
 
+<!--
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // Seleccionamos todos los formularios con id que empiece con likeForm-
@@ -308,6 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+comentarios-->
 </script>
 
 <script>
