@@ -1,5 +1,9 @@
 package com.example.feigram.screens
 
+import android.net.Uri
+import android.os.FileUtils
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,9 +31,15 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.feigram.network.model.Profile
 import com.example.feigram.network.model.RegisterRequest
 import com.example.feigram.network.service.RetrofitInstance
+import com.example.feigram.network.service.SessionManager.userSession
+import com.example.feigram.screens.components.FileUtils.getFileFromUri
 import com.example.feigram.viewmodels.SessionViewModel
 import com.example.feigram.viewmodels.UserSession
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 data class ProfileWithRole(
     val profile: Profile,
@@ -207,15 +218,22 @@ fun AccountItem(
 @Composable
 fun AddAccountDialog(token: String, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current  // <--- Mover aquí
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var enrollment by remember { mutableStateOf("") }
     var sex by remember { mutableStateOf("") }
-    var photo by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        photoUri = uri
+    }
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -224,15 +242,26 @@ fun AddAccountDialog(token: String, onDismiss: () -> Unit) {
                 scope.launch {
                     isLoading = true
                     try {
+                        val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val passwordPart = password.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val enrollmentPart = enrollment.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val sexPart = sex.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                        val photoPart = photoUri?.let { uri ->
+                            val file = getFileFromUri(context, uri)  // aquí uso context
+                            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                            MultipartBody.Part.createFormData("photo", file.name, requestFile)
+                        }
+
                         RetrofitInstance.authApi.register(
-                            RegisterRequest(
-                                name = name,
-                                email = email,
-                                password = password,
-                                enrollment = enrollment,
-                                sex = sex,
-                                photo = photo
-                            )
+                            name = namePart,
+                            email = emailPart,
+                            password = passwordPart,
+                            enrollment = enrollmentPart,
+                            sex = sexPart,
+                            photo = photoPart,
+                            token = "Bearer ${userSession?.token.orEmpty()}"
                         )
                         onDismiss()
                     } catch (e: Exception) {
@@ -259,7 +288,14 @@ fun AddAccountDialog(token: String, onDismiss: () -> Unit) {
                 OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") })
                 OutlinedTextField(value = enrollment, onValueChange = { enrollment = it }, label = { Text("Matrícula") })
                 OutlinedTextField(value = sex, onValueChange = { sex = it }, label = { Text("Sexo") })
-                OutlinedTextField(value = photo, onValueChange = { photo = it }, label = { Text("URL Foto") })
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(onClick = { launcher.launch("image/*") }) {
+                    Text("Seleccionar Foto")
+                }
+                photoUri?.let { Text("Foto seleccionada", color = MaterialTheme.colorScheme.primary) }
+
                 if (errorMessage != null) {
                     Text(errorMessage!!, color = MaterialTheme.colorScheme.error)
                 }
