@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+
 
 namespace app.Pages.Profile
 {
@@ -154,57 +156,63 @@ namespace app.Pages.Profile
 
             return Page();
         }
+        
+        private class IsFollowingResponse
+        {
+            [JsonPropertyName("is_following")]
+            public bool IsFollowing { get; set; }
+        }
 
     /*
-        private List<PostViewModel> MapPosts(List<PostDTO> postDtos)
-        {
-            return postDtos.Select(p => new PostViewModel
-            {
-                ImageUrl = p.UrlMedia,
-                Caption = p.Descripcion
-            }).ToList();
-        }
-
-        
-        public IActionResult OnGetPostModal(int postId)
-        {
-            var postDto = GetPostById(postId); // Aquí simulas como si lo trajeras de la API
-
-            if (postDto == null)
-            {
-                return NotFound();
-            }
-
-            var model = new PostPartialViewModel
-            {
-                Id = postDto.PostId,
-                ImageUrl = postDto.UrlMedia,
-                Caption = postDto.Descripcion,
-                Likes = postDto.Likes,
-            };
-
-            return Partial("PostPartial", model);
-        }
-
-        
-        private PostDTO GetPostById(int id)
-        {
-            return new PostDTO
-            {
-
-                Id = id,
-                ImageUrl = $"/images/post{id}.png",
-                Caption = $"Post número {id} ~✨",
-                Likes = id * 10,
-                Comments = new List<CommentDTO>
+                private List<PostViewModel> MapPosts(List<PostDTO> postDtos)
                 {
-                    new CommentDTO { Author = "Kokomi", Text = $"¡Comentario mágico para el post {id}!" },
-                    new CommentDTO { Author = "Zelda", Text = $"Sabio consejo para el héroe del post {id}~" }
+                    return postDtos.Select(p => new PostViewModel
+                    {
+                        ImageUrl = p.UrlMedia,
+                        Caption = p.Descripcion
+                    }).ToList();
                 }
 
-            };
-        }
-        */
+
+                public IActionResult OnGetPostModal(int postId)
+                {
+                    var postDto = GetPostById(postId); // Aquí simulas como si lo trajeras de la API
+
+                    if (postDto == null)
+                    {
+                        return NotFound();
+                    }
+
+                    var model = new PostPartialViewModel
+                    {
+                        Id = postDto.PostId,
+                        ImageUrl = postDto.UrlMedia,
+                        Caption = postDto.Descripcion,
+                        Likes = postDto.Likes,
+                    };
+
+                    return Partial("PostPartial", model);
+                }
+
+
+                private PostDTO GetPostById(int id)
+                {
+                    return new PostDTO
+                    {
+
+                        Id = id,
+                        ImageUrl = $"/images/post{id}.png",
+                        Caption = $"Post número {id} ~✨",
+                        Likes = id * 10,
+                        Comments = new List<CommentDTO>
+                        {
+                            new CommentDTO { Author = "Kokomi", Text = $"¡Comentario mágico para el post {id}!" },
+                            new CommentDTO { Author = "Zelda", Text = $"Sabio consejo para el héroe del post {id}~" }
+                        }
+
+                    };
+                }
+                */
 
         public async Task<IActionResult> OnPostFollowAsync()
         {
