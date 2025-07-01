@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http
 @{
     var usuario_token ="123";
+    var userRole = Context.Request.Cookies["rol"] ?? "";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -33,27 +34,34 @@
                                         <i class="bi bi-house-door-fill"></i> Inicio
                                     </a>
                                 </li>
+
                                 <li class="list-group-item border-0 px-0">
                                     <a href="/Profile" class="text-decoration-none d-flex align-items-center gap-3 fs-5 fw-semibold">
                                         <i class="bi bi-person-fill"></i> Perfil
                                     </a>
                                 </li>
-                                <li class="list-group-item border-0 px-0"></li>
+
+                                <li class="list-group-item border-0 px-0">
                                     <a href="/Chat" class="text-decoration-none d-flex align-items-center gap-3 fs-5 fw-semibold">
-                                        <i class="bi bi-person-fill"></i> Mensajes
+                                        <i class="bi bi-chat-dots-fill"></i> Mensajes
                                     </a>
                                 </li>
-                                <li class="list-group-item border-0 px-0">
-                                    <a href="/Accounts" class="text-decoration-none d-flex align-items-center gap-3 fs-5 fw-semibold">
-                                        <i class="bi bi-person-circle"></i> Cuentas
-                                    </a>
-                                </li>
-                                <li class="list-group-item border-0 px-0">
-                                    <a href="/Stats" class="text-decoration-none d-flex align-items-center gap-3 fs-5 fw-semibold">
-                                        <i class="bi bi-bar-chart-fill text-primary"></i> Estadísticas
-                                    </a>
-                                </li>
-                                <li class="list-group-item border-0 px-0">
+
+                                @if (userRole == "Admin")
+                                {
+                                    <li class="list-group-item border-0 px-0">
+                                        <a href="/Accounts" class="text-decoration-none d-flex align-items-center gap-3 fs-5 fw-semibold">
+                                            <i class="bi bi-person-circle"></i> Cuentas
+                                        </a>
+                                    </li>
+
+                                    <li class="list-group-item border-0 px-0">
+                                        <a href="/Stats" class="text-decoration-none d-flex align-items-center gap-3 fs-5 fw-semibold">
+                                            <i class="bi bi-bar-chart-fill text-primary"></i> Estadísticas
+                                        </a>
+                                    </li>
+                                }
+                                <li class="list-group-item border-0 px-0"></li>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#postModal" class="text-decoration-none d-flex align-items-center gap-3 text-danger fs-5 fw-semibold">
                                         <i class="bi bi-box-arrow-right text-danger"></i> Cerrar sesión
                                     </a>

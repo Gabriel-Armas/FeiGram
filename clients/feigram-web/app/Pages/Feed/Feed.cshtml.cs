@@ -357,15 +357,14 @@ namespace app.Pages.Feed
 
         if (!response.IsSuccessStatusCode)
         {
-            // Aquí puedes redirigir con algún mensaje de error si quieres
             return RedirectToPage(); 
         }
 
-        return RedirectToPage(); // ✅ La clave es esto, que regrese al feed
+        return RedirectToPage();
     }
     catch (Exception)
     {
-        return RedirectToPage();  // ✅ También redirige en caso de error
+        return RedirectToPage();
     }
 }
 
