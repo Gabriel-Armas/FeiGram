@@ -32,10 +32,8 @@ fun SettingsScreen(
     val currentUser by sessionViewModel.userSession.collectAsState()
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Abrir selector de imagen
     val launcher = rememberLauncherForActivityResult(GetContent()) { uri: Uri? ->
         selectedImageUri = uri
-        // Aquí puedes subir la imagen a tu backend o Firebase y guardar el nuevo URL
     }
 
     Scaffold(

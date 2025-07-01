@@ -32,7 +32,6 @@ fun PostItem(
             .fillMaxWidth()
             .padding(bottom = 8.dp)
     ) {
-        // Header del usuario
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -52,7 +51,6 @@ fun PostItem(
             }
         }
 
-        // Imagen del post
         AsyncImage(
             model = imageUrl,
             contentDescription = "Imagen publicada",
@@ -62,7 +60,6 @@ fun PostItem(
             contentScale = ContentScale.Crop
         )
 
-        // Likes y botón de comentarios organizados
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -201,7 +201,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                             painter = painterResource(id = R.drawable.feigram_logofont),
                             contentDescription = "Logo Feigram",
                             modifier = Modifier
-                                .height(32.dp)  // Ajusta tamaño si quieres
+                                .height(32.dp)
                         )
                     },
                     navigationIcon = {

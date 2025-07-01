@@ -79,7 +79,7 @@ fun AdminAccountsScreen(navController: NavController, sessionViewModel: SessionV
                         )
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        null // omitimos perfiles con error
+                        null
                     }
                 }
 
@@ -358,7 +358,6 @@ fun EditAccountDialog(
                             MultipartBody.Part.createFormData("photo", file.name, requestFile)
                         }
 
-                        // Actualizar perfil (ProfileAPI)
                         RetrofitInstance.profileApi.updateProfile(
                             id = profile.profile.id,
                             token = "Bearer $token",
@@ -368,7 +367,6 @@ fun EditAccountDialog(
                             photo = photoPart
                         )
 
-                        // Si el email cambió -> Actualizar en AuthAPI
                         if (email != profile.email) {
                             val body = mapOf("newEmail" to email)
                             RetrofitInstance.authApi.updateUserEmail(

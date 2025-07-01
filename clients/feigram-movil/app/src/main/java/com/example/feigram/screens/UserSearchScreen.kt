@@ -26,7 +26,7 @@ fun UserSearchScreen(navController: NavController, token: String) {
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(query) {
-        if (query.length >= 1) { // Buscar solo si hay al menos 1 carácter
+        if (query.length >= 1) {
             isLoading = true
             try {
                 val response = RetrofitInstance.profileApi.searchProfilesByName(
