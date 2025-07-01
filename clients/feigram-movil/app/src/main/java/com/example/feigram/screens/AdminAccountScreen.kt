@@ -156,6 +156,8 @@ fun AccountItem(
     val isBanned = profileWithRole.role.equals("BANNED", ignoreCase = true)
     val scope = rememberCoroutineScope()
 
+    var showEditDialog by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,18 +209,26 @@ fun AccountItem(
             )
         }
 
-        IconButton(onClick = {
-            // Aquí deberías navegar a una pantalla o abrir un diálogo para editar el perfil
-        }) {
+        IconButton(onClick = { showEditDialog = true }) {
             Icon(Icons.Default.Edit, contentDescription = "Editar cuenta")
         }
+
+        if (showEditDialog) {
+            EditAccountDialog(
+                profile = profileWithRole,
+                token = currentUser?.token.orEmpty(),
+                onDismiss = { showEditDialog = false },
+                onProfileUpdated = onActionCompleted
+            )
+        }
+
     }
 }
 
 @Composable
 fun AddAccountDialog(token: String, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current  // <--- Mover aquí
+    val context = LocalContext.current
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -288,6 +298,111 @@ fun AddAccountDialog(token: String, onDismiss: () -> Unit) {
                 OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") })
                 OutlinedTextField(value = enrollment, onValueChange = { enrollment = it }, label = { Text("Matrícula") })
                 OutlinedTextField(value = sex, onValueChange = { sex = it }, label = { Text("Sexo") })
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(onClick = { launcher.launch("image/*") }) {
+                    Text("Seleccionar Foto")
+                }
+                photoUri?.let { Text("Foto seleccionada", color = MaterialTheme.colorScheme.primary) }
+
+                if (errorMessage != null) {
+                    Text(errorMessage!!, color = MaterialTheme.colorScheme.error)
+                }
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun EditAccountDialog(
+    profile: ProfileWithRole,
+    token: String,
+    onDismiss: () -> Unit,
+    onProfileUpdated: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    var name by remember { mutableStateOf(profile.profile.name) }
+    var email by remember { mutableStateOf(profile.email) }
+    var enrollment by remember { mutableStateOf(profile.profile.enrollment) }
+    var sex by remember { mutableStateOf(profile.profile.sex) }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        photoUri = uri
+    }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        confirmButton = {
+            TextButton(onClick = {
+                scope.launch {
+                    isLoading = true
+                    try {
+                        val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val sexPart = (sex?.ifBlank { "" })?.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val enrollmentPart = enrollment.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                        val photoPart = photoUri?.let { uri ->
+                            val file = getFileFromUri(context, uri)
+                            val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                            MultipartBody.Part.createFormData("photo", file.name, requestFile)
+                        }
+
+                        // Actualizar perfil (ProfileAPI)
+                        RetrofitInstance.profileApi.updateProfile(
+                            id = profile.profile.id,
+                            token = "Bearer $token",
+                            name = namePart,
+                            sex = sexPart,
+                            enrollment = enrollmentPart,
+                            photo = photoPart
+                        )
+
+                        // Si el email cambió -> Actualizar en AuthAPI
+                        if (email != profile.email) {
+                            val body = mapOf("newEmail" to email)
+                            RetrofitInstance.authApi.updateUserEmail(
+                                userId = profile.profile.id,
+                                request = body,
+                                token = "Bearer $token"
+                            )
+                        }
+
+                        onProfileUpdated()
+                        onDismiss()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        errorMessage = "Error al actualizar la cuenta"
+                    } finally {
+                        isLoading = false
+                    }
+                }
+            }) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text("Cancelar")
+            }
+        },
+        title = { Text("Editar cuenta") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") })
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+                OutlinedTextField(value = enrollment, onValueChange = { enrollment = it }, label = { Text("Matrícula") })
+                OutlinedTextField(value = sex!!, onValueChange = { sex = it }, label = { Text("Sexo") })
 
                 Spacer(modifier = Modifier.height(8.dp))
 
