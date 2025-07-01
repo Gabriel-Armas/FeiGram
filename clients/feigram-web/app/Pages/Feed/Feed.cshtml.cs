@@ -5,6 +5,8 @@ using app.DTO;
 using System.Text.Json;
 using System.Net.Http.Headers;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+
 
 
 namespace app.Pages.Feed
@@ -13,112 +15,146 @@ namespace app.Pages.Feed
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly IWebHostEnvironment _env;
+        public List<ProfileFollowingViewModel> Amigos { get; set; } = new();
         public List<PostViewModel> PostCompletos { get; set; } = new();
         private readonly ILogger<FeedModel> _logger;
         private readonly LikesService _likesService;
         private readonly PostService _postService;
+        private readonly ProfileService _profileService;
+
 
 
 
         //public List<PostViewModel> Posts { get; set; } = new();
 
-        public FeedModel(IHttpClientFactory clientFactory, IWebHostEnvironment env, ILogger<FeedModel> logger, LikesService likesService, PostService postService)
+        public FeedModel(IHttpClientFactory clientFactory, IWebHostEnvironment env, ILogger<FeedModel> logger, LikesService likesService, PostService postService, ProfileService profileService)
         {
             _clientFactory = clientFactory;
             _env = env;
             _logger = logger;
             _likesService = likesService;
             _postService = postService;
+            _profileService = profileService;
         }
 
 
         public async Task<IActionResult> OnGetAsync()
+{
+    _logger.LogInformation("FeedModel.OnGetAsync fue llamado.");
+
+    if (!User.Identity.IsAuthenticated)
+        return RedirectToPage("/Login");
+
+    var token = Request.Cookies["jwt_token"];
+    var userId = Request.Cookies["user_id"];
+
+    if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(userId))
+    {
+        _logger.LogWarning("No se encontró el token JWT o el user_id.");
+        return RedirectToPage("/Login");
+    }
+
+    var handler = new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    };
+
+    var client = new HttpClient(handler)
+    {
+        BaseAddress = new Uri("https://feigram-nginx")
+    };
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+    try
+    {
+        // Obtener recomendaciones del feed
+        var responseMessage = await client.GetAsync("/feed/posts/recommendations");
+
+        if (!responseMessage.IsSuccessStatusCode)
         {
-            _logger.LogInformation("FeedModel.OnGetAsync fue llamado.");
+            _logger.LogError($"Error al obtener recomendaciones: {responseMessage.StatusCode}");
+            return Page();
+        }
 
-            // Verifica si el usuario está autenticado
-            if (!User.Identity.IsAuthenticated)
-                return RedirectToPage("/Login");
+        var json = await responseMessage.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<RecommendationResponse>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
 
-            // Obtiene el token JWT de la cookie
-            var token = Request.Cookies["jwt_token"];
-            if (string.IsNullOrEmpty(token))
+        var recomendaciones = result?.Posts ?? new List<PostDTO>();
+
+        foreach (var p in recomendaciones)
+        {
+            var profileResponse = await client.GetAsync($"profiles/profiles/{p.IdUsuario}");
+            if (!profileResponse.IsSuccessStatusCode) continue;
+
+            var profileJson = await profileResponse.Content.ReadAsStringAsync();
+            var userProfile = JsonSerializer.Deserialize<ProfileDTO>(profileJson, new JsonSerializerOptions
             {
-                _logger.LogWarning("No se encontró el token JWT en la cookie.");
-                return RedirectToPage("/Login");
-            }
+                PropertyNameCaseInsensitive = true
+            });
 
-            var handler = new HttpClientHandler
+            PostCompletos.Add(new PostViewModel
             {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
+                Id = p.PostId,
+                Username = userProfile?.Username,
+                Description = p.Descripcion,
+                UserProfileImage = userProfile?.Photo,
+                PostImage = p.UrlMedia,
+                TimeAgo = GetTimeAgo(p.FechaPublicacion),
+                Likes = p.Likes,
+                Comentarios = p.Comentarios,
+                IsLiked = true
+            });
+        }
 
-            var client = new HttpClient(handler);
-            client.BaseAddress = new Uri("https://feigram-nginx");
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            try
+        // Obtener lista de amigos
+        var amigosResponse = await client.GetAsync($"/follow/following/{userId}");
+        if (!amigosResponse.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("No se pudo obtener la lista de amigos.");
+        }
+        else
+        {
+            var amigosJson = await amigosResponse.Content.ReadAsStringAsync();
+            var amigosResult = JsonSerializer.Deserialize<FollowingResponse>(amigosJson, new JsonSerializerOptions
             {
-                var responseMessage = await client.GetAsync("/feed/posts/recommendations");
+                PropertyNameCaseInsensitive = true
+            });
 
-                if (!responseMessage.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"Error al obtener recomendaciones: {responseMessage.StatusCode}");
-                    return Page(); // o RedirectToPage("/Error") si lo deseas
-                }
+            Amigos = new List<ProfileFollowingViewModel>();
+            foreach (var amigoId in amigosResult?.Following ?? Enumerable.Empty<string>())
+            {
+                var perfilAmigoResponse = await client.GetAsync($"profiles/profiles/{amigoId}");
+                if (!perfilAmigoResponse.IsSuccessStatusCode) continue;
 
-                var json = await responseMessage.Content.ReadAsStringAsync();
-                _logger.LogInformation("Respuesta del feed: " + json);
-                var result = JsonSerializer.Deserialize<RecommendationResponse>(json, new JsonSerializerOptions
+                var perfilAmigoJson = await perfilAmigoResponse.Content.ReadAsStringAsync();
+                var perfilAmigo = JsonSerializer.Deserialize<ProfileDTO>(perfilAmigoJson, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                _logger.LogInformation("Respuesta del feed: " + json);
 
-                var recomendaciones = result?.Posts ?? new List<PostDTO>();
-
-
-                foreach (var p in recomendaciones)
+                if (perfilAmigo != null)
                 {
-                    var profileResponse = await client.GetAsync($"profiles/profiles/{p.IdUsuario}");
-                    if (!profileResponse.IsSuccessStatusCode)
+                    Amigos.Add(new ProfileFollowingViewModel
                     {
-                        _logger.LogWarning($"No se pudo obtener perfil de usuario {p.IdUsuario}");
-                        continue;
-                    }
-
-                    var profileJson = await profileResponse.Content.ReadAsStringAsync();
-                    var userProfile = JsonSerializer.Deserialize<ProfileDTO>(profileJson, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-
-                    PostCompletos.Add(new PostViewModel
-                    {
-                        Id = p.PostId,
-                        Username = userProfile.Username,
-                        Description = p.Descripcion,
-                        UserProfileImage = userProfile.Photo,
-                        PostImage = p.UrlMedia,
-                        TimeAgo = GetTimeAgo(p.FechaPublicacion),
-                        Likes = p.Likes,
-                        Comentarios = p.Comentarios,
-                        IsLiked = true
-                        //IsLiked = await likesService.CheckIfUserLikedPostAsync(_me.Id, p.PostId.ToString())
+                        Id = perfilAmigo.Id,
+                        Username = perfilAmigo.Username,
+                        ProfileImage = perfilAmigo.Photo
                     });
                 }
-
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al llamar a /feed/recommendations");
-            }
-            _logger.LogInformation($"Se cargaron {PostCompletos.Count} posts en el feed.");
-
-            return Page();
         }
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error al llamar a /feed/posts/recommendations o /follow/following");
+    }
+
+    _logger.LogInformation($"Se cargaron {PostCompletos.Count} posts en el feed.");
+    return Page();
+}
 
         private string GetTimeAgo(DateTime fecha)
         {
@@ -210,27 +246,48 @@ namespace app.Pages.Feed
             }
         }
 
-        public async Task<IActionResult> OnPostLikeAsync([FromBody] Like like)
+        public async Task<IActionResult> OnPostLikeAsync()
         {
-            Console.WriteLine("✅ Entró a OnPostLikeAsync");
-            if (like == null)
-                return BadRequest("No se pudo deserializar el Like");
+            var postId = Request.Form["PostId"];
+            var userId = Request.Form["UserId"];
 
-            Console.WriteLine($"Id: {like.Id}, PostId: {like.PostId}, UserId: {like.UserId}");
-
-            if (string.IsNullOrEmpty(like?.UserId) || string.IsNullOrEmpty(like?.PostId))
+            if (string.IsNullOrEmpty(postId) || string.IsNullOrEmpty(userId))
             {
                 return new JsonResult(new { success = false, message = "Datos inválidos." }) { StatusCode = 400 };
             }
 
-            var result = await _likesService.CreateLikeAsync(like);
-            if (result != null)
+            var like = new Like
             {
+                PostId = postId,
+                UserId = userId
+            };
+
+            try
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+
+                var client = new HttpClient(handler)
+                {
+                    BaseAddress = new Uri("https://feigram-nginx")
+                };
+
+                var response = await client.PostAsJsonAsync("/likes/likes", like);
+
+                if (!response.IsSuccessStatusCode)
+                    return StatusCode((int)response.StatusCode, "Error al crear el like.");
+
                 return new JsonResult(new { success = true, message = "Like registrado correctamente." });
             }
-
-            return new JsonResult(new { success = false, message = "No se pudo registrar el like." }) { StatusCode = 500 };
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al registrar el like: {ex.Message}");
+            }
         }
+
+
 
         public async Task<IActionResult> OnGetComentariosAsync(int postId)
         {
@@ -239,6 +296,7 @@ namespace app.Pages.Feed
                 var token = HttpContext.Request.Cookies["jwt_token"];
                 if (!string.IsNullOrEmpty(token))
                 {
+                    _profileService.SetBearerToken(token);
                     _postService.SetBearerToken(token);
                 }
                 else
@@ -246,8 +304,23 @@ namespace app.Pages.Feed
                     _logger.LogWarning("No se encontró token JWT para hacer peticiones autorizadas");
                 }
 
-                var comments = await _postService.GetCommentsAsync(postId); // tu método del servicio
-                return new JsonResult(comments);
+                var comments = await _postService.GetCommentsAsync(postId);
+
+                var comentariosConNombre = new List<object>();
+
+                foreach (var comment in comments)
+                {
+                    var profile = await _profileService.GetProfileByIdAsync(comment.user_id);
+
+                    comentariosConNombre.Add(new
+                    {
+                        Text = comment.text_comment,
+                        UserId = comment.user_id,
+                        Username = profile?.Username ?? "Desconocido"
+                    });
+                }
+
+                return new JsonResult(comentariosConNombre);
             }
             catch (Exception ex)
             {
@@ -256,9 +329,126 @@ namespace app.Pages.Feed
             }
         }
 
+        public async Task<IActionResult> OnPostCommentAsync()
+        {
+            var postId = Request.Form["PostId"];
+            var commentText = Request.Form["CommentText"];
+
+            if (string.IsNullOrWhiteSpace(commentText))
+                return BadRequest("Comentario vacío");
+
+            var token = HttpContext.Request.Cookies["jwt_token"];
+            string? userId = !string.IsNullOrEmpty(token)
+                ? ObtenerUserIdDesdeToken(token)
+                : null;
+
+            var comment = new CommentPost
+            {
+                PostId = postId!,
+                TextComment = commentText!,
+                CreatedAt = DateTime.UtcNow,
+                UserId = userId
+            };
+
+            try
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+
+                var client = new HttpClient(handler)
+                {
+                    BaseAddress = new Uri("https://feigram-nginx")
+                };
+
+                var response = await client.PostAsJsonAsync("/comments/comments", comment);
+
+                if (!response.IsSuccessStatusCode)
+                    return StatusCode((int)response.StatusCode, "Error al crear el comentario.");
+
+                var nuevoComentario = await response.Content.ReadFromJsonAsync<CommentPost>();
+
+                var profile = await _profileService.GetProfileByIdAsync(userId!);
+                var username = profile?.Username ?? "Desconocido";
+
+                return new JsonResult(new
+                {
+                    text = comment.TextComment,
+                    userId = comment.UserId,
+                    username = username
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al crear el comentario: {ex.Message}");
+            }
+        }
+
+
+        public static string ObtenerUserIdDesdeToken(string jwtToken)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(jwtToken);
+            return token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? throw new Exception("No se pudo extraer el userId");
+        }
+
+        public async Task<IActionResult> OnGetBuscarAmigosAsync(string nombre)
+        {
+            try
+            {
+                Console.WriteLine("ENTRE AL METODO");
+                var token = Request.Cookies["jwt_token"];
+                if (string.IsNullOrEmpty(token)) return Unauthorized();
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+
+                var client = new HttpClient(handler)
+                {
+                    BaseAddress = new Uri("https://feigram-nginx")
+                };
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await client.GetAsync($"/profiles/profiles/search/{nombre}");
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(">>> JSON RECIBIDO:");
+                Console.WriteLine(json);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine(">>> Status code: " + (int)response.StatusCode);
+                    return StatusCode((int)response.StatusCode, json);
+                }
+
+                var results = JsonSerializer.Deserialize<List<ProfileWithFollowerCount>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new();
+
+                return new JsonResult(results);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("🔥 EXCEPCIÓN:");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                return StatusCode(500, $"Excepción: {ex.Message}");
+            }
+        }
 
 
 
+
+
+
+        public class CommentInput
+        {
+            public string PostId { get; set; }
+            public string CommentText { get; set; }
+        }
     }
     
 

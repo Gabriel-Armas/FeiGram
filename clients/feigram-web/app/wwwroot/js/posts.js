@@ -89,7 +89,7 @@ function openPostModal(postId) {
 
     comments.forEach(comment => {
       const p = document.createElement("p");
-      p.innerText = `${comment.user_id}: ${comment.text_comment}`;
+      p.innerText = `${comment.username}: ${comment.text}`;
       commentsContainer.appendChild(p);
     });
   })

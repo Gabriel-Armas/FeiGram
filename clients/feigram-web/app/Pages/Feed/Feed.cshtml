@@ -34,11 +34,18 @@
         <p class="mb-3">@post.Description</p>
 
         <div class="d-flex align-items-center text-muted px-1 gap-4">
-        <button onclick="likePost(@post.Id)" class="btn btn-link p-0 text-danger d-flex align-items-center">
-          <i class="bi bi-heart-fill me-1"></i>
-          <span>Me gusta</span>
-        </button>
-        <span id="likes-count-@post.Id">@post.Likes</span>
+        <form class="d-inline-flex align-items-center gap-2" id="likeForm-@post.Id">
+  <input type="hidden" name="PostId" value="@post.Id" />
+  
+  <button type="submit" class="btn btn-link p-0 text-danger d-flex align-items-center">
+    <i class="bi bi-heart-fill me-1"></i>
+    <span>Me gusta</span>
+  </button>
+  
+  <span id="likes-count-@post.Id">@post.Likes</span>
+</form>
+
+
 
         <button class="btn btn-link p-0 text-secondary d-flex align-items-center">
           <i class="bi bi-chat-dots-fill me-1"></i>
@@ -64,19 +71,28 @@
     }
   </div>
 
-    <div class="d-none d-lg-block">
-      <div class="position-fixed end-0 me-4" style="top: 50px; width: 300px; z-index: 999;">
-        <div class="card p-3 shadow-sm rounded-4">
-          <h5>👥 Amigos</h5>
-          <ul class="list-unstyled mb-0">
-            <li>🎧 Shinobu Kochou</li>
-            <li>🧊 Giyuu Tomioka</li>
-            <li>✨ Megumin</li>
-            <li>😺 Klee</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    <div class="position-fixed end-0 me-4" style="top: 50px; width: 300px; z-index: 999;">
+  <div class="card p-3 shadow-sm rounded-4">
+    <h5>👥 Amigos</h5>
+    <form class="d-flex mb-4" role="search">
+      <input id="searchBox" class="form-control me-2 fs-5" type="search" placeholder="Buscar amigos..." aria-label="Buscar" autocomplete="off">
+      <button class="btn btn-light" type="submit">🔍</button>
+      <ul id="searchResults" class="list-unstyled mb-0" style="top: 100%; left: 0;"></ul>
+    </form>
+    <ul id="friendList" class="list-unstyled mb-0">
+      @foreach (var amigo in Model.Amigos)
+      {
+          <li>
+            <a href="javascript:void(0);" onclick="verPerfil('@amigo.Id')" class="text-decoration-none text-dark d-flex align-items-center">
+              <img src="@amigo.ProfileImage" alt="Amigo" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+              <span>@amigo.Username</span>
+            </a>
+          </li>
+      }
+    </ul>
+  </div>
+</div>
+
   </div>
 </div>
 
@@ -134,6 +150,7 @@
         </div>
         <div>
           <span id="modalPostDescription"></span>
+          <hr/>
         </div>
         <div class="flex-grow-1" style="min-width: 300px; max-width: 500px;">
           <p><strong>Likes:</strong> <span id="modalPostLikes"></span> ❤️</p>
@@ -183,52 +200,170 @@
   </script>
 
   <script>
-    const currentUserId = "@HttpContext.Request.Cookies["user_id"]";
-  </script>
+  const currentUserId = "@HttpContext.Request.Cookies["user_id"]";
+  document.addEventListener("DOMContentLoaded", () => {
+    // Para cada formulario cuyo id empiece con 'likeForm-'
+    document.querySelectorAll("form[id^='likeForm-']").forEach(form => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-  <script>
-  function likePost(postId) {
-    console.log("Botón like presionado. postId:", postId);
-    console.log("Botón like presionado. userid:", currentUserId);
+        // Obtenemos el PostId del input hidden dentro del form
+        const postId = form.querySelector('input[name="PostId"]').value;
 
-    if (!currentUserId) {
-      alert("Debes iniciar sesión para dar like.");
-      return;
-    }
-
-    fetch(`/Feed?handler=Like`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        PostId: postId.toString(),
-        UserId: currentUserId
-      })
-    })
-    .then(async res => {
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ Respuesta fallida:", errorText);
-        throw new Error(`Error HTTP ${res.status}: ${errorText}`);
-      }
-      return res.json();
-    })
-    .then(data => {
-      if (data.success) {
-        const likesElem = document.getElementById(`likes-count-${postId}`);
-        if (likesElem) {
-          let count = parseInt(likesElem.innerText) || 0;
-          likesElem.innerText = count + 1;
+        if (!currentUserId) {
+          alert("Debes iniciar sesión para dar like.");
+          return;
         }
-      } else {
-        alert("Error del servidor: " + (data.message || "Desconocido"));
-      }
-    })
-    .catch(err => {
-      console.error("❌ Error al dar like:", err);
-      alert("Ocurrió un error al registrar el like.");
+
+        // Creamos FormData con PostId y UserId
+        const formData = new FormData();
+        formData.append("PostId", postId);
+        formData.append("UserId", currentUserId);
+
+        try {
+          const response = await fetch("/Feed?handler=Like", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error al dar like:", errorText);
+            alert("Error al dar like.");
+            return;
+          }
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Actualizamos el contador de likes en la UI
+            const likesElem = document.getElementById(`likes-count-${postId}`);
+            if (likesElem) {
+              let currentLikes = parseInt(likesElem.innerText) || 0;
+              likesElem.innerText = currentLikes + 1;
+            }
+          } else {
+            alert(result.message || "No se pudo registrar el like.");
+          }
+        } catch (error) {
+          console.error("Error al enviar like:", error);
+          alert("Ocurrió un error al enviar el like.");
+        }
+      });
     });
+  });
+
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Seleccionamos todos los formularios con id que empiece con likeForm-
+  document.querySelectorAll("form[id^='likeForm-']").forEach(form => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Obtener PostId desde el input hidden dentro del form
+      const postId = form.querySelector('input[name="PostId"]').value;
+
+      if (!currentUserId) {
+        alert("Debes iniciar sesión para dar like.");
+        return;
+      }
+
+      // Crear FormData con PostId y UserId
+      const formData = new FormData();
+      formData.append("PostId", postId);
+      formData.append("UserId", currentUserId);
+
+      try {
+        const response = await fetch("/Feed?handler=Like", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error al dar like:", errorText);
+          alert("Error al dar like.");
+          return;
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Actualizamos el contador de likes visible
+          const likesElem = document.getElementById(`likes-count-${postId}`);
+          if (likesElem) {
+            let currentLikes = parseInt(likesElem.innerText) || 0;
+            likesElem.innerText = currentLikes + 1;
+          }
+        } else {
+          alert(result.message || "No se pudo registrar el like.");
+        }
+
+      } catch (error) {
+        console.error("Error al enviar like:", error);
+        alert("Ocurrió un error al enviar el like.");
+      }
+    });
+  });
+});
+</script>
+
+<script>
+  function verPerfil(userId) {
+    console.log("Perfil seleccionado:", userId);
+    // Redirigir o abrir modal, según tu lógica:
+    // window.location.href = `/Profile/${userId}`;
   }
 </script>
+
+
+
+<script>
+    const searchBox = document.getElementById('searchBox');
+    const resultsList = document.getElementById('searchResults');
+
+    let timeoutId;
+
+    searchBox.addEventListener('input', function () {
+        clearTimeout(timeoutId);
+        const query = searchBox.value.trim();
+        if (query === "") {
+            resultsList.innerHTML = "";
+            return;
+        }
+
+        timeoutId = setTimeout(() => {
+            fetch(`/Feed?handler=BuscarAmigos&nombre=${encodeURIComponent(query)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Error al buscar");
+                    return response.json();
+                })
+                .then(data => {
+                    resultsList.innerHTML = "";
+
+                    if (data.length === 0) {
+                        resultsList.innerHTML = `<li class="text-muted">Sin resultados</li>`;
+                        return;
+                    }
+
+                    data.forEach(amigo => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `
+                          <a href="javascript:void(0);" onclick="verPerfil('${amigo.id}')" class="text-decoration-none text-dark d-flex align-items-center mb-1">
+                            <img src="${amigo.photo}" alt="Amigo" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                            <span>${amigo.name}</span>
+                          </a>`;
+                        resultsList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    resultsList.innerHTML = `<li class="text-danger">Error al buscar</li>`;
+                    console.error(error);
+                });
+        }, 300);
+    });
+</script>
+
 }
