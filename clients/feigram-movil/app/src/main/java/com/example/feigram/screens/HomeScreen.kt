@@ -61,6 +61,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     val isAdmin = userSession?.rol.equals("Admin", ignoreCase = true)
 
     LaunchedEffect(userSession) {
+        println("ROL DEL USUARIO AL INICIAR HOME: ${userSession?.rol}")
         if (userSession != null) {
             isLoading = true
             skip = 0
