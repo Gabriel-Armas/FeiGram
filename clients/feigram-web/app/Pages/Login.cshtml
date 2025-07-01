@@ -1,0 +1,57 @@
+@page "/Login"
+@model LoginModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Feigram - Inicio de Sesión</title>
+
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/login.css" />
+    <link rel="icon" href="/favicon.ico">
+    <meta name="theme-color" content="#FFA500">
+  </head>
+  <body class="d-flex justify-content-center align-items-center">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-10 login-container d-flex flex-md-row flex-column">
+          <div class="col-md-6 login-image d-none d-md-block"></div>
+
+          <div class="col-md-6 form-section">
+            <h1 class="form-title text-center mb-4">Bienvenido a Feigram</h1>
+            <h5 class="text-center text-secondary mb-4">Alta cohesión bajo acomplamiento</h5>
+
+            <form method="post">
+              <div class="form-floating">
+                <input type="email" class="form-control" id="correoElectronico" name="Input.Email" placeholder="Correo electrónico" required>
+                <label for="correoElectronico">Correo electrónico</label>
+              </div>
+
+              <div class="form-floating">
+                <input type="password" class="form-control" id="password" name="Input.Password" placeholder="Contraseña" required>
+                <label for="password">Contraseña</label>
+              </div>
+
+              <button class="btn btn-feigram w-100 mt-3" type="submit">Iniciar Sesión</button>
+
+              <div class="text-center mt-3">
+                <a href="/ForgotPassword" class="text-decoration-none">¿Has olvidado tu contraseña?</a>
+              </div>
+            </form>
+
+            <p class="mt-4 text-center text-muted">
+              Facultad de Estadística e Informática <br />
+              Universidad Veracruzana &copy; 2025
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

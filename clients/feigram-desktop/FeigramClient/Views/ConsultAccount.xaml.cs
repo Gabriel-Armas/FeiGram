@@ -78,7 +78,6 @@ namespace FeigramClient.Views
                 authService.SetToken(_me.Token);
                 var tasks = perfiles.Select(async p =>
                 {
-                    MessageBox.Show(DateTime.UtcNow.ToString("O"));
                     var response = await authService.GetAccountAsync(p.Id ?? "");
 
                     return new FullUser
