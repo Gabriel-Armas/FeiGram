@@ -310,14 +310,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
-comentarios-->
 </script>
+-->
+
 
 <script>
   function verPerfil(userId) {
-    console.log("Perfil seleccionado:", userId);
-    // Redirigir o abrir modal, según tu lógica:
-    // window.location.href = `/Profile/${userId}`;
+    window.location.href = `/Profile?userId=${encodeURIComponent(userId)}`;
   }
 </script>
 

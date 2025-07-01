@@ -17,13 +17,15 @@
                         <h2 class="fw-bold">@Model.Profile.Username</h2>
                         <p class="text-muted mb-1">Matrícula: @Model.Profile.Matricula</p>
                     </div>
-                    <div class="text-end">
-                        <p class="fw-bold mb-1">Seguidores: <span class="text-primary">@Model.Profile.Followers</span></p>
-                        <form method="post" asp-page-handler="Follow">
-                            <button type="submit" class="btn btn-outline-primary btn-sm">
-                                🌟 Seguir
-                            </button>
-                        </form>
+                    <div class="text-end">                        
+                        @if (!Model.IsOwnProfile)
+                        {
+                            <form method="post" asp-page-handler="Follow">
+                                <button type="submit" class="btn btn-outline-primary btn-sm">
+                                @(Model.IsFriend ? "Dejar de seguir" : "🌟 Seguir")
+                                </button>
+                            </form>
+                        }
                     </div>
                 </div>
             </div>
