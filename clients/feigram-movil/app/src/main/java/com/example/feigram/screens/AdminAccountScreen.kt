@@ -91,7 +91,9 @@ fun AdminAccountsScreen(navController: NavController, sessionViewModel: SessionV
         topBar = {
             TopAppBar(
                 title = { Text("Gestión de Cuentas", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Agregar cuenta")
@@ -146,10 +148,13 @@ fun AccountItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isBanned) Color(0xFFFFEEEE) else Color.Transparent)
+            .background(
+                if (isBanned) MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                else Color.Transparent
+            )
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
-    ) {
+    ){
         Image(
             painter = rememberAsyncImagePainter(profile.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg"),
             contentDescription = "Foto de ${profile.name}",
