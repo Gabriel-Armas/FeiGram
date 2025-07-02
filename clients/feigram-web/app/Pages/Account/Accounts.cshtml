@@ -27,7 +27,9 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAccountModal-@account.Id">📝 Editar</button>
-                        <form method="post" asp-page-handler="Ban" asp-route-id="@account.Id" onsubmit="return confirm('¿Estás seguro que quieres @(account.Role == "Banned" ? "desbanear" : "banear") a esta cuenta?');">
+                        <form method="post" asp-page-handler="@(account.Role == "Banned" ? "Unban" : "Ban")" asp-route-id="@account.Id" 
+                             onsubmit="return confirm('¿Estás seguro que quieres @(account.Role == "Banned" ? "desbanear" : "banear") a esta cuenta?');">
+
                             <input type="hidden" name="email" value="@account.Email" />
                             @if (account.Role == "Banned")
                             {
