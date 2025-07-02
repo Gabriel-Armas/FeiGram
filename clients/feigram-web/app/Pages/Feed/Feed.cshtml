@@ -38,10 +38,18 @@
           <input type="hidden" name="PostId" value="@post.Id" />
           <input type="hidden" name="UserId" value="@HttpContext.Request.Cookies["user_id"]" />
           
-          <button type="submit" class="btn btn-link p-0 text-danger d-flex align-items-center">
+          @* <button type="submit" class="btn btn-link p-0 text-danger d-flex align-items-center">
+            <i class="bi bi-heart-fill me-1"></i>
+            <span>Me gusta</span>
+          </button> *@
+
+          <button type="button" class="btn btn-link p-0 text-danger d-flex align-items-center" onclick="fakeLike(@post.Id)">
             <i class="bi bi-heart-fill me-1"></i>
             <span>Me gusta</span>
           </button>
+
+          <span id="likes-count-@post.Id">@post.Likes</span>
+
           
           <span id="likes-count-@post.Id">@post.Likes</span>
         </form>
@@ -198,6 +206,14 @@
         }
       });
     });
+  </script>
+
+  <script>
+  function fakeLike(postId) {
+    const likeCounter = document.querySelector(`#likes-count-${postId}`);
+    let count = parseInt(likeCounter.textContent) || 0;
+    likeCounter.textContent = count + 1;
+  }
   </script>
 
   <script>

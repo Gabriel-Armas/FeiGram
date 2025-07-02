@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ChartApi.Grpc;
 using Grpc.Net.Client;
+using Microsoft.AspNetCore.Mvc;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,11 @@ builder.Services.AddScoped<LikesService>();
 builder.Services.AddScoped<PostService>();
 
 builder.Services.AddScoped<StatisticsService>();
+
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute());
+});
 
 builder.Services.AddHttpClient("feigram", client =>
 {
