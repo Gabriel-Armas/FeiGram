@@ -8,6 +8,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+      - ./clients/feigram-web/build:/usr/share/nginx/html:ro
     depends_on:
       - post-api
       - profile-api
@@ -205,14 +206,16 @@ services:
     networks:
       - feinet
 
-  # feigram-web:
-  #   build:
-  #     context: ./clients/feigram-web
-  #     dockerfile: ../Dockerfile
-  #   ports:
-  #     - "8089:8089"
-  #   networks:
-  #     - feinet
+  feigram-web:
+    build:
+      context: ./clients/feigram-web
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: feigram-web
+    # ports:
+    #   - "8089:8089"
+    networks:
+      - feinet
 
 networks:
   feinet:

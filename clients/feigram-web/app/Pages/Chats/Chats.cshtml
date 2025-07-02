@@ -1,0 +1,59 @@
+@page "/Chat"
+@model app.Pages.Chats.ChatModel
+@{
+    ViewData["Title"] = "Mensajes";
+    Layout = "_Layout";
+}
+
+<script>
+    const jwtToken = '@Model.JwtToken';
+    const myUserId = '@Model.MyUserId';
+    console.log("[Client] 🛡️ Token inyectado desde backend (primeros 10 chars):", jwtToken.substring(0, 10));
+</script>
+
+<div style="margin-left: 320px; padding-top: 1rem;">
+    <div class="container-fluid">
+        <div class="row" style="height: 85vh;">
+            <div class="col-md-4 border-end d-flex flex-column" >
+                <h5 class="fw-bold mt-3 ms-2">Chats</h5>
+                <ul 
+                    id="friendList" 
+                    class="list-group list-group-flush flex-grow-1 overflow-auto"
+                    style="max-height: 80vh;">
+                </ul>
+            </div>
+
+            <div class="col-md-8 d-flex flex-column" style="height: 85vh;">
+                <div class="border-bottom p-3 d-flex align-items-center">
+                    <h5 id="chatTitle" class="fw-bold mb-0">Selecciona un chat</h5>
+                </div>
+
+                <div id="chatMessages" class="flex-grow-1 overflow-auto p-3" style="background-color: #f9f9f9;">
+                </div>
+
+                <div class="border-top p-3">
+                    <form id="chatForm" onsubmit="sendMessage(); return false;">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" class="form-control" placeholder="Escribe tu mensaje" />
+                            <button type="submit" class="btn btn-primary">Enviar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const contactProfiles = @Html.Raw(Json.Serialize(Model.ContactProfiles));
+
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log("[Client] 👥 Perfiles de contactos:", contactProfiles);
+        renderContactList(contactProfiles);
+        connectWebSocket();
+    });
+</script>
+
+@section Scripts {
+    <script src="~/js/chats.js"></script>
+}

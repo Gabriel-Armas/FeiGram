@@ -1,0 +1,52 @@
+@* @page "/Account/CreateAccount"
+@model app.Pages.Account.CreateAccountModel 
+@{
+    ViewData["Title"] = "Crear Cuenta";
+    Layout = "_Layout";
+}
+
+<div class="container py-4" style="margin-left: 320px; max-width: 900px;"">
+    <h2 class="mb-4">Crear nueva cuenta</h2>
+    <form method="post" enctype="multipart/form-data">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" placeholder="Usuario" name="CreateAccount.Username" />
+                <label for="username">Usuario</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="enrollment" placeholder="Matrícula" name="CreateAccount.Enrollment" />
+                <label for="enrollment">Matrícula</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" placeholder="Correo Electrónico" name="CreateAccount.Email" />
+                <label for="email">Correo Electrónico</label>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="sex" placeholder="Sexo" name="CreateAccount.Sex" />
+                <label for="sex">Sexo</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="password" placeholder="Contraseña" name="CreateAccount.Password" />
+                <label for="password">Contraseña</label>
+            </div>
+
+            <div class="mb-3">
+                <label for="photo" class="form-label">Foto de perfil</label>
+                <input type="file" class="form-control" id="photo" name="Photo" />
+            </div>
+        </div>
+    </div>
+
+    <div class="text-end mt-4">
+        <button type="submit" class="btn btn-success">💾 Crear Cuenta</button>
+    </div>
+</form>
+
+</div> *@

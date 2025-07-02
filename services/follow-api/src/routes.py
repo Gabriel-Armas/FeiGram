@@ -94,7 +94,6 @@ from fastapi import HTTPException
 def unfollow_user(follower: str, followed: str, current_user: str = Depends(get_current_user)):
     try:
         with driver.session() as session:
-            # Verificar que ambos usuarios existen
             result = session.run("""
                 MATCH (a:User {id: $from_user}), (b:User {id: $to_user})
                 RETURN a, b
@@ -103,7 +102,6 @@ def unfollow_user(follower: str, followed: str, current_user: str = Depends(get_
             if not result.single():
                 raise HTTPException(status_code=404, detail="Uno o ambos usuarios no existen")
 
-            # Verificar que la relación FOLLOWS existe
             rel_result = session.run("""
                 MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
                 RETURN r
@@ -112,7 +110,6 @@ def unfollow_user(follower: str, followed: str, current_user: str = Depends(get_
             if not rel_result.single():
                 raise HTTPException(status_code=404, detail=f"No existe relación de seguimiento entre {follower} y {followed}")
 
-            # Borrar la relación
             session.run("""
                 MATCH (a:User {id: $from_user})-[r:FOLLOWS]->(b:User {id: $to_user})
                 DELETE r
