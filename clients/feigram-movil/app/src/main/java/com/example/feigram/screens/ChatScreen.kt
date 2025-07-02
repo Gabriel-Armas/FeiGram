@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -36,6 +35,7 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
     var currentMessage by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     var contactProfile by remember { mutableStateOf<Profile?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         if (userSession != null) {
@@ -62,20 +62,23 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
                     when (json.optString("type", "")) {
                         "history" -> {
                             val history = json.getJSONArray("messages")
-                            messages.clear()
+                            val tempMessages = mutableListOf<ChatMessage>()
                             for (i in 0 until history.length()) {
                                 val item = history.getJSONObject(i)
-                                messages.add(
-                                    ChatMessage(
-                                        from = item.getString("from"),
-                                        content = item.getString("content")
-                                    )
-                                )
+                                // El historial usa "from", no "from_user"
+                                val from = item.optString("from", "")
+                                val content = item.optString("content", "")
+                                if (from.isNotEmpty() && content.isNotEmpty()) {
+                                    tempMessages.add(ChatMessage(from = from, content = content))
+                                }
                             }
+                            messages.clear()
+                            messages.addAll(tempMessages)
+                            isLoading = false
                         }
                         else -> {
-                            if (json.has("from") && json.has("to") && json.has("content")) {
-                                val from = json.getString("from")
+                            if (json.has("from_user") && json.has("to") && json.has("content")) {
+                                val from = json.getString("from_user")
                                 val to = json.getString("to")
                                 val userId = userSession?.userId
 
@@ -142,45 +145,53 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp),
-                reverseLayout = false
-            ) {
-                items(messages) { message ->
-                    val isMe = message.from == userSession?.userId
-                    MessageBubble(message = message, isMe = isMe)
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp),
+                    reverseLayout = false
+                ) {
+                    items(messages) { message ->
+                        val isMe = message.from == userSession?.userId
+                        MessageBubble(message = message, isMe = isMe)
+                    }
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = currentMessage,
-                    onValueChange = { currentMessage = it },
-                    placeholder = { Text("Escribe un mensaje...") },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        if (currentMessage.isNotBlank()) {
-                            val json = JSONObject().apply {
-                                put("to", contactId)
-                                put("content", currentMessage)
-                            }
-                            WebSocketManager.sendJsonMessage(json)
-                            messages.add(ChatMessage(from = userSession?.userId ?: "", content = currentMessage))
-                            currentMessage = ""
-                        }
-                    }
+            if (!isLoading) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Enviar")
+                    OutlinedTextField(
+                        value = currentMessage,
+                        onValueChange = { currentMessage = it },
+                        placeholder = { Text("Escribe un mensaje...") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            if (currentMessage.isNotBlank()) {
+                                val json = JSONObject().apply {
+                                    put("to", contactId)
+                                    put("content", currentMessage)
+                                }
+                                WebSocketManager.sendJsonMessage(json)
+                                messages.add(ChatMessage(from = userSession?.userId ?: "", content = currentMessage))
+                                currentMessage = ""
+                            }
+                        }
+                    ) {
+                        Text("Enviar")
+                    }
                 }
             }
         }
@@ -189,6 +200,10 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
 
 @Composable
 fun MessageBubble(message: ChatMessage, isMe: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    val backgroundColor = if (isMe) colors.primary else colors.secondaryContainer
+    val textColor = if (isMe) colors.onPrimary else colors.onSecondary
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -197,12 +212,12 @@ fun MessageBubble(message: ChatMessage, isMe: Boolean) {
     ) {
         Surface(
             shape = MaterialTheme.shapes.large,
-            color = if (isMe) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
+            color = backgroundColor,
             tonalElevation = 2.dp
         ) {
             Text(
                 text = message.content,
-                color = if (isMe) Color.White else Color.Black,
+                color = textColor,
                 modifier = Modifier.padding(10.dp),
                 textAlign = if (isMe) TextAlign.End else TextAlign.Start
             )

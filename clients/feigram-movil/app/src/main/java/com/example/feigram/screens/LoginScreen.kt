@@ -108,7 +108,6 @@ fun LoginScreen(
                     sessionViewModel.login(email, password) { success ->
                         isLoading = false
                         if (success) {
-                            WebSocketManager.connect(userSession?.token ?: "0")
                             navController.navigate("home") {
                                 popUpTo("login") { inclusive = true }
                             }

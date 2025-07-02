@@ -22,6 +22,8 @@ import com.example.feigram.network.model.Profile
 import com.example.feigram.network.service.RetrofitInstance
 import com.example.feigram.network.service.SessionManager
 import com.example.feigram.network.service.WebSocketManager
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -46,30 +48,29 @@ fun ContactListScreen(navController: NavController) {
                         contactIds.add(contactList.getString(i))
                     }
 
-                    // Al obtener los contactos desde WS, ahora combinamos con los que sigo
                     scope.launch {
                         try {
-                            // 1. Obtener lista de perfiles de contactos vía WS
-                            val wsProfiles = mutableListOf<Profile>()
-                            for (contactId in contactIds) {
-                                try {
-                                    val profile = RetrofitInstance.profileApi.getProfileById(
-                                        id = contactId,
-                                        token = "Bearer ${userSession?.token}"
-                                    )
-                                    wsProfiles.add(profile)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
+                            val deferredProfiles = contactIds.map { contactId ->
+                                async {
+                                    try {
+                                        RetrofitInstance.profileApi.getProfileById(
+                                            id = contactId,
+                                            token = "Bearer ${userSession?.token}"
+                                        )
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        null
+                                    }
                                 }
                             }
 
-                            // 2. Obtener lista de perfiles que sigo desde API
+                            val wsProfiles = deferredProfiles.awaitAll().filterNotNull()
+
                             val followingList = RetrofitInstance.profileApi.getFollowingList(
                                 userId = userSession?.userId ?: "",
                                 token = "Bearer ${userSession?.token}"
                             )
 
-                            // 3. Combinar sin repetir (por id)
                             val combinedMap = mutableMapOf<String, Profile>()
                             (wsProfiles + followingList).forEach { profile ->
                                 combinedMap[profile.id] = profile

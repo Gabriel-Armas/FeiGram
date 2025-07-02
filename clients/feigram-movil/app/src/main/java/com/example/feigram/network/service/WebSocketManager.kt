@@ -15,7 +15,10 @@ object WebSocketManager {
     private val listeners = mutableListOf<(String) -> Unit>()
 
     fun connect(token: String) {
-        if (webSocket != null) return
+        if (webSocket != null) {
+            webSocket?.cancel()
+            webSocket = null
+        }
 
         currentToken = token
 

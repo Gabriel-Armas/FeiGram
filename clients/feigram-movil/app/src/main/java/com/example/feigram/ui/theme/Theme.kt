@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// 🎨 Colores para modo claro
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF00796B),        // Verde fuerte
     secondary = Color(0xFF0288D1),      // Azul medio
@@ -23,7 +22,6 @@ private val LightColorScheme = lightColorScheme(
     onError = Color.White
 )
 
-// 🎨 Colores para modo oscuro
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF26A69A),        // Verde agua
     secondary = Color(0xFF29B6F6),      // Azul cielo
