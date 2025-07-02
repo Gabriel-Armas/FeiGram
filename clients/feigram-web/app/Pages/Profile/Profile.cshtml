@@ -21,10 +21,13 @@
                         @if (!Model.IsOwnProfile)
                         {
                             <form method="post" asp-page-handler="Follow">
+                                <input type="hidden" name="FollowedUserId" value="@Model.Profile.Id" />
+                                <input type="hidden" name="CurrentlyFollowing" value="@(Model.IsFriend.ToString().ToLower())" />
                                 <button type="submit" class="btn btn-outline-primary btn-sm">
-                                @(Model.IsFriend ? "Dejar de seguir" : "🌟 Seguir")
+                                    @(Model.IsFriend ? "Dejar de seguir" : "🌟 Seguir")
                                 </button>
                             </form>
+
                         }
                     </div>
                 </div>
@@ -43,12 +46,53 @@
                         <p class="card-text text-truncate">@post.Caption</p>
                     </div>
                 </div>
+                <!-- Aquí se guarda el JSON del post -->
+        <script type="application/json" id="post-data-@post.Id">
+            {
+              "id": @post.Id,
+              "postImage": "@post.ImageUrl",
+              "description": "@post.Caption",
+              "likes": @post.Likes
+            }
+        </script>
             </div>
             }
         </div>
     </div>
 </div>
 <div id="postModalContainer"></div>
+
+@* Modal reutilizable del Feed *@
+<div class="modal fade" id="consultPost" tabindex="-1" aria-labelledby="consultPostLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="consultPostLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body d-flex flex-wrap">
+        <div class="flex-grow-1 flex-shrink-1 me-3" style="min-width: 300px;">
+          <img id="modalPostImage" class="img-fluid rounded" style="max-height: 70vh; object-fit: contain;" />
+          <div>
+            <span id="modalPostDescription"></span>
+          </div>
+        </div>
+        <div class="flex-grow-1" style="min-width: 300px; max-width: 500px;">
+          <p><strong>Likes:</strong> <span id="modalPostLikes"></span> ❤️</p>
+          <hr />
+          <div class="overflow-auto" style="max-height: 300px;" id="modalPostComments">
+          </div>
+          <form method="post" asp-page-handler="Comment" class="mt-3">
+            <input type="hidden" id="modalPostId" name="PostId" />
+            <textarea name="CommentText" class="form-control mb-2" rows="3" placeholder="Escribe tu comentario... ✨"></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">Enviar 💌</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 @section Scripts {
   <script>
@@ -61,6 +105,51 @@
                   modal.show();
               });
       }
+  </script>
+
+   <script>
+    function openPostModal(postId) {
+      console.log('openPostModal called with postId:', postId);
+      const jsonElement = document.getElementById(`post-data-${postId}`);
+      if (!jsonElement) {
+        console.error(`No se encontró el elemento post-data-${postId}`);
+        return;
+      }
+
+      const raw = jsonElement.textContent;
+      let post;
+
+      try {
+        post = JSON.parse(raw);
+        console.log('Post:', post);
+      } catch (e) {
+        console.error('Error parseando JSON:', e);
+        return;
+      }
+
+      document.getElementById('modalPostImage').src = post.postImage;
+      document.getElementById('modalPostDescription').innerText = post.description;
+      document.getElementById('modalPostLikes').innerText = post.likes;
+      document.getElementById('modalPostId').value = post.id;
+
+      fetch(`/Feed?handler=Comentarios&postId=${postId}`)
+        .then(res => res.json())
+        .then(comments => {
+          const container = document.getElementById('modalPostComments');
+          container.innerHTML = '';
+          comments.forEach(comment => {
+            const p = document.createElement("p");
+            p.innerText = `${comment.username}: ${comment.text}`;
+            container.appendChild(p);
+          });
+        })
+        .catch(err => {
+          console.error("Error al cargar comentarios:", err);
+        });
+
+      const modal = new bootstrap.Modal(document.getElementById('consultPost'));
+      modal.show();
+    }
   </script>
 }
 
