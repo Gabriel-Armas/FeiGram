@@ -11,8 +11,10 @@ object WebSocketManager {
     private var webSocket: WebSocket? = null
     private val client = getUnsafeOkHttpClient()
     private var currentToken: String? = null
-
     private val listeners = mutableListOf<(String) -> Unit>()
+
+    var isConnected: Boolean = false
+        private set
 
     fun connect(token: String) {
         if (webSocket != null) {
@@ -28,6 +30,7 @@ object WebSocketManager {
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
+                isConnected = true
                 println("WebSocket conectado")
             }
 
@@ -37,14 +40,23 @@ object WebSocketManager {
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                isConnected = false
                 println("WebSocket error: ${t.localizedMessage}")
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                isConnected = false
                 webSocket.close(1000, null)
                 println("WebSocket cerrando: $reason")
             }
         })
+    }
+
+    fun reconnectIfNeeded(token: String) {
+        if (!isConnected) {
+            println("WebSocket no conectado, intentando reconectar...")
+            connect(token)
+        }
     }
 
     fun addListener(listener: (String) -> Unit) {
@@ -66,6 +78,7 @@ object WebSocketManager {
     fun disconnect() {
         webSocket?.close(1000, "App closed")
         webSocket = null
+        isConnected = false
         listeners.clear()
     }
 

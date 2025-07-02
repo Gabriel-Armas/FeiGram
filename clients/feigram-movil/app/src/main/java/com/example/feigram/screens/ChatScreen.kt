@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -36,10 +37,27 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
     val scope = rememberCoroutineScope()
     var contactProfile by remember { mutableStateOf<Profile?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var reconnecting by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (userSession != null) {
             WebSocketManager.connect(userSession.token)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (userSession != null) {
+            WebSocketManager.connect(userSession.token)
+
+            while (true) {
+                kotlinx.coroutines.delay(5000L)
+                if (!WebSocketManager.isConnected) {
+                    reconnecting = true
+                    WebSocketManager.reconnectIfNeeded(userSession.token)
+                } else {
+                    reconnecting = false
+                }
+            }
         }
     }
 
@@ -200,9 +218,8 @@ fun ChatScreen(navController: NavController, contactId: String, contactName: Str
 
 @Composable
 fun MessageBubble(message: ChatMessage, isMe: Boolean) {
-    val colors = MaterialTheme.colorScheme
-    val backgroundColor = if (isMe) colors.primary else colors.secondaryContainer
-    val textColor = if (isMe) colors.onPrimary else colors.onSecondary
+    val backgroundColor = if (isMe) Color(0xFF2196F3) else Color.White
+    val textColor = if (isMe) Color.White else Color.Black
 
     Box(
         modifier = Modifier
