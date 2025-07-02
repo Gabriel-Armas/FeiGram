@@ -45,15 +45,19 @@ public class StatisticsService
 
         var stats = new StatsViewModel
         {
-            PostsPerDay = response.Counts.ToDictionary(
-                d => DateTime.Parse(d.Day).ToString("dddd"),
-                d => d.Count),
+            PostsPerDay = response.Counts
+                .GroupBy(d => DateTime.Parse(d.Day).ToString("dddd"))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(x => x.Count)
+                ),
             TotalPosts = response.Counts.Sum(x => x.Count),
             WeekRange = GetWeekRange(DateTime.Now)
         };
 
         return stats;
     }
+
 
     private string GetWeekRange(DateTime date)
     {
