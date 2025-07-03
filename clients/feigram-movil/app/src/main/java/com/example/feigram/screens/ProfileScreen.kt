@@ -120,6 +120,15 @@ fun ProfileScreen(
 
             userPosts = postsWithLikes
 
+            if (!isMyProfile) {
+                val response = RetrofitInstance.followApi.isFollowing(
+                    follower = currentUser?.userId ?: "",
+                    followed = profileId,
+                    token = "Bearer ${currentUser?.token.orEmpty()}"
+                )
+                isFollowing = response["is_following"] ?: false
+            }
+
         } catch (e: Exception) {
             e.printStackTrace()
             loadError = "Error al cargar perfil o publicaciones"
@@ -290,19 +299,6 @@ fun ProfileScreen(
                             profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
                             text = c.textComment
                         )
-                    }
-
-                    if (!isMyProfile) {
-                        try {
-                            val response = RetrofitInstance.followApi.isFollowing(
-                                follower = currentUser?.userId ?: "",
-                                followed = profileId,
-                                token = "Bearer ${currentUser?.token.orEmpty()}"
-                            )
-                            isFollowing = response["is_following"] ?: false
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
                     }
 
                 } catch (e: Exception) {
