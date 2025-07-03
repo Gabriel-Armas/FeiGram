@@ -1,6 +1,8 @@
 using app.DTO;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 
 public class LikesService
 {
@@ -18,7 +20,13 @@ public class LikesService
     {
         Console.WriteLine($"🔁 POST /likes/likes: {like}");
 
-        var response = await _client.PostAsJsonAsync("/likes/likes", like);
+        var jsonContent = new StringContent(
+            JsonSerializer.Serialize(like),
+            Encoding.UTF8,
+            "application/json"
+        );
+
+        var response = await _client.PostAsync("/likes/likes", jsonContent);
 
         Console.WriteLine($"🔁 POST /likes/likes StatusCode: {(int)response.StatusCode} ({response.StatusCode})");
 

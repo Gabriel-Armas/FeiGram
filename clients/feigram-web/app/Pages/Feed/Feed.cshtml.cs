@@ -248,40 +248,40 @@ namespace app.Pages.Feed
             }
         }
 
-        // public async Task<IActionResult> OnPostLikeAsync([FromBody] Like like)
-        // {
-        //     if (like == null || string.IsNullOrEmpty(like.PostId) || string.IsNullOrEmpty(like.UserId))
-        //         return BadRequest(new { success = false, message = "Datos inválidos." });
-
-        //     Console.WriteLine($"✅ OnPostLikeAsync recibió Like: postId={like.PostId}, userId={like.UserId}");
-
-        //     var token = Request.Cookies["jwt_token"];
-        //     if (string.IsNullOrEmpty(token))
-        //         return Unauthorized();
-
-        //     _likesService.SetBearerToken(token);
-
-        //     var createdLike = await _likesService.CreateLikeAsync(like);
-        //     if (createdLike == null)
-        //         return StatusCode(500, "Error al crear el like.");
-
-        //     return new JsonResult(new { success = true, message = "Like registrado correctamente." });
-        // }
-
-        public async Task<IActionResult> OnPostLikeAsync()
+        public async Task<IActionResult> OnPostLikeAsync(Like like)
         {
-            var postId = Request.Form["PostId"];
-            var userId = Request.Form["UserId"];
+            if (like == null || string.IsNullOrEmpty(like.PostId) || string.IsNullOrEmpty(like.UserId))
+                return BadRequest(new { success = false, message = "Datos inválidos." });
 
-            Console.WriteLine($"✨ (Fake) Like recibido para postId={postId}, userId={userId}");
+            Console.WriteLine($"✅ OnPostLikeAsync recibió Like: postId={like.PostId}, userId={like.UserId}");
 
-            if (string.IsNullOrEmpty(postId) || string.IsNullOrEmpty(userId))
-                return new JsonResult(new { success = false, message = "Datos inválidos." }) { StatusCode = 400 };
+            var token = Request.Cookies["jwt_token"];
+            if (string.IsNullOrEmpty(token))
+                return Unauthorized();
 
-            var newLikeCount = 1;
+            _likesService.SetBearerToken(token);
 
-            return new JsonResult(new { success = true, message = "Like registrado (fake).", likesCount = newLikeCount });
+            var createdLike = await _likesService.CreateLikeAsync(like);
+            if (createdLike == null)
+                return StatusCode(500, "Error al crear el like.");
+
+            return new JsonResult(new { success = true, message = "Like registrado correctamente." });
         }
+
+        // public async Task<IActionResult> OnPostLikeAsync()
+        // {
+        //     var postId = Request.Form["PostId"];
+        //     var userId = Request.Form["UserId"];
+
+        //     Console.WriteLine($"✨ (Fake) Like recibido para postId={postId}, userId={userId}");
+
+        //     if (string.IsNullOrEmpty(postId) || string.IsNullOrEmpty(userId))
+        //         return new JsonResult(new { success = false, message = "Datos inválidos." }) { StatusCode = 400 };
+
+        //     var newLikeCount = 1;
+
+        //     return new JsonResult(new { success = true, message = "Like registrado (fake).", likesCount = newLikeCount });
+        // }
 
 
         public async Task<IActionResult> OnGetComentariosAsync(int postId)
