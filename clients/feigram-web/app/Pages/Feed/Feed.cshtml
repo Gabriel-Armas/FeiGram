@@ -12,6 +12,48 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
+<style>
+  .transition-width {
+    transition: width 0.4s ease;
+  }
+
+  .expand-search-area:focus-within {
+    animation: popin 0.3s ease;
+  }
+
+  #friendPanel {
+  position: fixed;
+  top: 50px;
+  right: 30px;
+  width: 300px;
+  z-index: 999;
+  transition: width 0.4s ease, right 0.4s ease;
+  background: white;
+  }
+
+  #friendPanel.expanded {
+  width: 450px !important;
+  right: 0px !important; 
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  }
+
+  @@keyframes popin {
+    0% { transform: scale(0.98); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  #searchResults li {
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+
+  #searchResults li:hover {
+    background-color: #f0f0f0;
+  }
+</style>
+
+
 <div class="container-fluid mt-4">
   <div class="row justify-content-center">
 
@@ -43,14 +85,6 @@
             <span>Me gusta</span>
           </button>
 
-          @* <button type="button" class="btn btn-link p-0 text-danger d-flex align-items-center" onclick="fakeLike(@post.Id)">
-            <i class="bi bi-heart-fill me-1"></i>
-            <span>Me gusta</span>
-          </button> *@
-
-          <span id="likes-count-@post.Id">@post.Likes</span>
-
-          
           <span id="likes-count-@post.Id">@post.Likes</span>
         </form>
 
@@ -80,15 +114,25 @@
     }
   </div>
 
-    <div class="position-fixed end-0 me-4" style="top: 50px; width: 300px; z-index: 999;">
-  <div class="card p-3 shadow-sm rounded-4">
-    <h5>👥 Amigos</h5>
-    <form class="d-flex mb-4" role="search">
-      <input id="searchBox" class="form-control me-2 fs-5" type="search" placeholder="Buscar amigos..." aria-label="Buscar" autocomplete="off">
-      <button class="btn btn-light" type="submit">🔍</button>
-      <ul id="searchResults" class="list-unstyled mb-0" style="top: 100%; left: 0;"></ul>
-    </form>
-    <ul id="friendList" class="list-unstyled mb-0">
+<div class="position-fixed end-0 me-4" style="top: 50px; width: 300px; z-index: 999;">
+  <div class="card p-3 shadow-sm rounded-4 transition-width" id="friendPanel">
+    <div class="expand-search-area">
+      <h6 class="text-muted mb-1">🔍 Buscar usuarios</h6>
+      <div class="d-flex flex-column gap-2">
+        <input id="searchBox" class="form-control fs-5" type="search" placeholder="Buscar amigos..." aria-label="Buscar" autocomplete="off">
+        <select id="careerFilter" class="form-select fs-6">
+          <option value="">Todas las carreras</option>
+          <option value="Ingeniería en Ciencia de Datos">Ingeniería en Ciencia de Datos</option>
+          <option value="Ingeniería de Software">Ingeniería de Software</option>
+          <option value="Ingeniería de Ciberseguridad e Infraestructura de Cómputo">Ingeniería de Ciberseguridad e Infraestructura de Cómputo</option>
+          <option value="Ingeniería en Sistemas y Tecnologías de la Información">Ingeniería en Sistemas y Tecnologías de la Información</option>
+        </select>
+      </div>
+      <ul id="searchResults" class="list-unstyled mt-2 mb-0"></ul>
+    </div>
+
+    <ul id="friendList" class="list-unstyled mb-0 mt-3">
+      <h6 class="text-muted mb-2">📌 Lista de seguidos</h6>
       @foreach (var amigo in Model.Amigos)
       {
           <li>
@@ -101,6 +145,7 @@
     </ul>
   </div>
 </div>
+
 
   </div>
 </div>
@@ -339,20 +384,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script>
     const searchBox = document.getElementById('searchBox');
+    const careerSelect = document.getElementById('careerFilter');
     const resultsList = document.getElementById('searchResults');
+    const friendPanel = document.getElementById('friendPanel');
 
     let timeoutId;
 
-    searchBox.addEventListener('input', function () {
+    // Expandir al hacer foco
+    searchBox.addEventListener("focus", () => {
+        friendPanel.classList.add("expanded");
+    });
+
+    // Cerrar al quitar foco del panel (opcional)
+    document.addEventListener("click", function (event) {
+        if (!friendPanel.contains(event.target)) {
+            friendPanel.classList.remove("expanded");
+        }
+    });
+
+    function hacerBusqueda() {
         clearTimeout(timeoutId);
-        const query = searchBox.value.trim();
-        if (query === "") {
+        const username = searchBox.value.trim();
+        const major = careerSelect.value;
+
+        if (username === "" && major === "") {
             resultsList.innerHTML = "";
             return;
         }
 
         timeoutId = setTimeout(() => {
-            fetch(`/Feed?handler=BuscarAmigos&nombre=${encodeURIComponent(query)}`)
+            const url = `/Feed?handler=BuscarAmigos&username=${encodeURIComponent(username)}&major=${encodeURIComponent(major)}`;
+
+            fetch(url)
                 .then(response => {
                     if (!response.ok) throw new Error("Error al buscar");
                     return response.json();
@@ -380,7 +443,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error(error);
                 });
         }, 300);
-    });
+    }
+
+    searchBox.addEventListener('input', hacerBusqueda);
+    careerSelect.addEventListener('change', hacerBusqueda);
 </script>
 
 }

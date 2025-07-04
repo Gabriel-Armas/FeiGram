@@ -66,6 +66,7 @@ namespace app.Pages.Account
                         Enrollment = profile.Enrollment,
                         Email = account.Email,
                         Role = account.Role,
+                        Major = profile.Major,
                         ProfilePictureUrl = profile.Photo
                     });
                 }
@@ -174,6 +175,7 @@ namespace app.Pages.Account
                 CreateAccount.Email,
                 CreateAccount.Sex = "",
                 CreateAccount.Enrollment,
+                CreateAccount.Major,
                 photoStream,
                 photoFileName
             );
@@ -216,7 +218,7 @@ namespace app.Pages.Account
                 photoFileName = Photo.FileName;
             }
 
-            var result = await _profileService.EditProfileAsync(id, CreateAccount.Username, CreateAccount.Enrollment, photoStream, photoFileName);
+            var result = await _profileService.EditProfileAsync(id, CreateAccount.Username, CreateAccount.Enrollment, CreateAccount.Major, photoStream, photoFileName);
 
             if (!result)
             {

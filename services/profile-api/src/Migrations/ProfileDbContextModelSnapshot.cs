@@ -37,6 +37,9 @@ namespace profileapi.Migrations
                     b.Property<string>("Sex")
                         .HasColumnType("text");
 
+                    b.Property<string>("Major")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.ToTable("Profiles");

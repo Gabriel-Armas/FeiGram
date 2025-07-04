@@ -383,13 +383,14 @@ namespace app.Pages.Feed
             return token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? throw new Exception("No se pudo extraer el userId");
         }
 
-        public async Task<IActionResult> OnGetBuscarAmigosAsync(string nombre)
+        public async Task<IActionResult> OnGetBuscarAmigosAsync(string username, string major)
         {
             try
             {
-                Console.WriteLine("ENTRE AL METODO");
+                Console.WriteLine("🔍 BUSCANDO AMIGOS...");
                 var token = Request.Cookies["jwt_token"];
                 if (string.IsNullOrEmpty(token)) return Unauthorized();
+
                 var handler = new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
@@ -402,7 +403,9 @@ namespace app.Pages.Feed
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await client.GetAsync($"/profiles/profiles/search/{nombre}");
+                var query = $"/profiles/profiles/search?username={Uri.EscapeDataString(username ?? "")}&major={Uri.EscapeDataString(major ?? "")}";
+                var response = await client.GetAsync(query);
+
                 var json = await response.Content.ReadAsStringAsync();
                 Console.WriteLine(">>> JSON RECIBIDO:");
                 Console.WriteLine(json);
@@ -424,7 +427,6 @@ namespace app.Pages.Feed
             {
                 Console.WriteLine("🔥 EXCEPCIÓN:");
                 Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
                 return StatusCode(500, $"Excepción: {ex.Message}");
             }
         }

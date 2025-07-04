@@ -37,6 +37,7 @@ public class AuthService
         string email,
         string sex,
         string enrollment,
+        string major,
         Stream? photoStream = null,
         string? photoFileName = null)
     {
@@ -47,6 +48,7 @@ public class AuthService
         content.Add(new StringContent(email), "Email");
         content.Add(new StringContent(sex), "Sex");
         content.Add(new StringContent(enrollment), "Enrollment");
+        content.Add(new StringContent(major), "Major");
 
         if (photoStream != null && !string.IsNullOrEmpty(photoFileName))
         {
@@ -86,7 +88,7 @@ public class AuthService
 
         return response.IsSuccessStatusCode;
     }
-    
+
     public async Task<bool> UnbanUserAsync(string email)
     {
         var content = new StringContent(

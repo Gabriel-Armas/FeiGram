@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using src.Rabbit;
 using Services;
+using Microsoft.AspNetCore.Mvc;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -158,6 +159,7 @@ app.MapGet("/profiles", [Authorize] async (
                 profile.Photo,
                 profile.Sex,
                 profile.Enrollment,
+                profile.Major,
                 FollowerCount = count
             });
         }
@@ -194,6 +196,7 @@ app.MapGet("/profiles/{id}", [Authorize] async (
             profile.Photo,
             profile.Sex,
             profile.Enrollment,
+            profile.Major,
             FollowerCount = count
         };
 
@@ -237,6 +240,7 @@ app.MapPut("/profiles/{id}", [Authorize] async (
     var name = form["Name"].ToString();
     var sex = form["Sex"].ToString();
     var enrollment = form["Enrollment"].ToString();
+    var major = form["Major"].ToString();
     var photoFile = form.Files.GetFile("Photo");
 
     try
@@ -254,25 +258,28 @@ app.MapPut("/profiles/{id}", [Authorize] async (
 
             if (!string.IsNullOrEmpty(enrollment))
                 profile.Enrollment = enrollment;
+                
+            if (!string.IsNullOrEmpty(major))
+                profile.Major = major;
 
             if (photoFile != null)
+            {
+                using var stream = photoFile.OpenReadStream();
+                var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
                 {
-                    using var stream = photoFile.OpenReadStream();
-                    var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
-                    {
-                        File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
-                    };
-                    var uploadResult = await cloudinary.UploadAsync(uploadParams);
+                    File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+                };
+                var uploadResult = await cloudinary.UploadAsync(uploadParams);
 
-                    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        profile.Photo = uploadResult.SecureUrl.ToString();
-                    }
-                    else
-                    {
-                        return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
-                    }
+                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    profile.Photo = uploadResult.SecureUrl.ToString();
                 }
+                else
+                {
+                    return Results.Problem("Error al subir la imagen a Cloudinary", statusCode: 500);
+                }
+            }
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -373,6 +380,7 @@ app.MapGet("/profiles/enrollment/{enrollment}", [Authorize] async (
             profile.Photo,
             profile.Sex,
             profile.Enrollment,
+            profile.Major,
             FollowerCount = count
         };
 
@@ -384,9 +392,10 @@ app.MapGet("/profiles/enrollment/{enrollment}", [Authorize] async (
     }
 });
 
-app.MapGet("/profiles/search/{name}", [Authorize] async (
+app.MapGet("/profiles/search", [Authorize] async (
     HttpContext httpContext,
-    string name,
+    [FromQuery] string? username,
+    [FromQuery] string? major,
     ProfileDbContext db,
     FollowService followService) =>
 {
@@ -395,10 +404,19 @@ app.MapGet("/profiles/search/{name}", [Authorize] async (
 
     try
     {
-        var matchingProfiles = await db.Profiles
-            .Where(p => p.Name.ToLower().Contains(name.ToLower()))
-            .ToListAsync();
+        var query = db.Profiles.AsQueryable();
 
+        if (!string.IsNullOrWhiteSpace(username))
+        {
+            query = query.Where(p => p.Name.ToLower().Contains(username.ToLower()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(major))
+        {
+            query = query.Where(p => p.Major.ToLower() == major.ToLower());
+        }
+
+        var matchingProfiles = await query.ToListAsync();
         var results = new List<object>();
 
         foreach (var profile in matchingProfiles)
@@ -413,6 +431,7 @@ app.MapGet("/profiles/search/{name}", [Authorize] async (
                 profile.Photo,
                 profile.Sex,
                 profile.Enrollment,
+                profile.Major,
                 FollowerCount = count
             });
         }
@@ -421,7 +440,7 @@ app.MapGet("/profiles/search/{name}", [Authorize] async (
     }
     catch (Exception ex)
     {
-        return Results.Problem("Error al buscar perfiles por nombre: " + ex.Message);
+        return Results.Problem("Error al buscar perfiles: " + ex.Message);
     }
 });
 

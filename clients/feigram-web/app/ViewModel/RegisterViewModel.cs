@@ -7,5 +7,6 @@ namespace app.ViewModel
         public string Password { get; set; } = string.Empty;
         public string Enrollment { get; set; } = string.Empty;
         public string Sex { get; set; } = string.Empty;
+        public string Major { get; set; } = string.Empty;
     }
 }

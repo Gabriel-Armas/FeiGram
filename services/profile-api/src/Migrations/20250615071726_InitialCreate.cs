@@ -18,7 +18,8 @@ namespace profileapi.Migrations
                     Photo = table.Column<string>(type: "text", nullable: true),
                     Enrollment = table.Column<string>(type: "text", nullable: true),
                     Name = table.Column<string>(type: "text", nullable: true),
-                    Sex = table.Column<string>(type: "text", nullable: true)
+                    Sex = table.Column<string>(type: "text", nullable: true),
+                    Major = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {

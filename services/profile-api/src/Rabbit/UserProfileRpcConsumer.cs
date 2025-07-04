@@ -14,6 +14,7 @@ public class UserProfileResponse
     public string Name { get; set; } = string.Empty;
     public string Photo { get; set; } = string.Empty;
     public string Enrollment { get; set; } = string.Empty;
+    public string Major { get; set; } = string.Empty;
 }
 
 public class UserProfileRpcConsumer : BackgroundService
@@ -83,7 +84,8 @@ public class UserProfileRpcConsumer : BackgroundService
             {
                 Name = profile.Name ?? string.Empty,
                 Photo = profile.Photo ?? string.Empty,
-                Enrollment = profile.Enrollment ?? string.Empty
+                Enrollment = profile.Enrollment ?? string.Empty,
+                Major = profile.Major ?? string.Empty
             }
             : new UserProfileResponse();
 

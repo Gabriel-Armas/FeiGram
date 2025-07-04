@@ -42,6 +42,7 @@ public class ProfileService
         string id,
         string username,
         string enrollment,
+        string major,
         Stream? photoStream = null,
         string? photoFileName = null)
     {
@@ -57,7 +58,8 @@ public class ProfileService
         using var content = new MultipartFormDataContent
         {
             { new StringContent(username), "Name" },
-            { new StringContent(enrollment), "Enrollment" }
+            { new StringContent(enrollment), "Enrollment" },
+            { new StringContent(major), "Major" }
         };
 
         if (photoStream != null && !string.IsNullOrEmpty(photoFileName))

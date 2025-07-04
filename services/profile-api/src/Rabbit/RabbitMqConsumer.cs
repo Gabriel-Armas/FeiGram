@@ -60,8 +60,11 @@ public class RabbitMqConsumer : BackgroundService
                             Name = message.Name,
                             Photo = message.Photo,
                             Enrollment = message.Enrollment,
-                            Sex = message.Sex
+                            Sex = message.Sex,
+                            Major = message.Major
                         };
+
+                        Console.WriteLine($"🎯 Creando perfil: {profile.Name}, Major: {profile.Major ?? "null"}");
 
                         dbContext.Profiles.Add(profile);
                         await dbContext.SaveChangesAsync(stoppingToken);

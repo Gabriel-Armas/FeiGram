@@ -78,6 +78,26 @@
                                 <label class="form-label">Matrícula</label>
                                 <input class="form-control" name="Enrollment" value="@account.Enrollment" required />
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label">Carrera</label>
+                                <select class="form-select" name="Major" required>
+                                    @{
+                                        var carreras = new[] {
+                                            "Ingeniería en Ciencia de Datos",
+                                            "Ingeniería de Software",
+                                            "Ingeniería de Ciberseguridad e Infraestructura de Cómputo",
+                                            "Ingeniería en Sistemas y Tecnologías de la Información",
+                                        };
+                                    }
+
+                                    <option disabled selected>Selecciona una carrera</option>
+                                    @foreach (var carrera in carreras)
+                                    {
+                                        <option value="@carrera" selected="@(carrera == account.Major ? "selected" : null)">@carrera</option>
+                                    }
+
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -131,6 +151,16 @@
                             <div class="mb-3">
                                 <label class="form-label">Contraseña</label>
                                 <input type="password" class="form-control" asp-for="CreateAccount.Password" id="contrasena" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Carrera</label>
+                                <select class="form-select" asp-for="CreateAccount.Major" required>
+                                    <option value="" disabled selected>Selecciona una carrera</option>
+                                    <option value="Ingeniería en Ciencia de Datos">Ingeniería en Ciencia de Datos</option>
+                                    <option value="Ingeniería de Software">Ingeniería de Software</option>
+                                    <option value="Ingeniería de Ciberseguridad e Infraestructura de Cómputo">Ingeniería de Ciberseguridad e Infraestructura de Cómputo</option>
+                                    <option value="Ingeniería en Sistemas y Tecnologías de la Información">Ingeniería en Sistemas y Tecnologías de la Información</option>
+                                </select>
                             </div>
                         </div>
                     </div>

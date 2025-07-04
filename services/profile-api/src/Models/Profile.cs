@@ -5,4 +5,5 @@ public class Profile
     public string? Enrollment { get; set; }
     public string? Name { get; set; }
     public string? Sex { get; set; }
+    public string? Major { get; set; }
 }

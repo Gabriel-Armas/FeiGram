@@ -15,5 +15,7 @@ namespace app.DTO
 
         [JsonPropertyName("photo")]
         public string Photo { get; set; } = string.Empty;
+        [JsonPropertyName("major")]
+        public string? Major { get; set; } = null;
     }
 }

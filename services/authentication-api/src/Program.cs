@@ -7,6 +7,7 @@ using AuthenticationApi.Data;
 using MongoDB.Driver;
 using System.Text;
 using src.Events.Publishers;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -125,87 +126,91 @@ var builder = WebApplication.CreateBuilder(args);
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status401Unauthorized);
 
-app.MapPost("/register", async (
-HttpContext context,
-IConfiguration config,
-AuthenticationDbContext dbContext,
-RabbitMqPublisher publisher,
-CloudinaryDotNet.Cloudinary cloudinary) =>
-{
-var form = await context.Request.ReadFormAsync();
+    app.MapPost("/register", async (
+        HttpContext context,
+        IConfiguration config,
+        AuthenticationDbContext dbContext,
+        RabbitMqPublisher publisher,
+        CloudinaryDotNet.Cloudinary cloudinary) =>
+        {
+        var form = await context.Request.ReadFormAsync();
 
-var username = form["Username"].ToString();
-var password = form["Password"].ToString();
-var email = form["Email"].ToString();
-var sex = form["Sex"].ToString();
-var enrollment = form["Enrollment"].ToString();
-var photoFile = form.Files.GetFile("Photo");
+        var username = form["Username"].ToString();
+        var password = form["Password"].ToString();
+        var email = form["Email"].ToString();
+        var sex = form["Sex"].ToString();
+        var enrollment = form["Enrollment"].ToString();
+        var photoFile = form.Files.GetFile("Photo");
+        var major = form["Major"].ToString();
 
-if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
-{
-    return Results.BadRequest("Missing required fields");
-}
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
+            {
+                return Results.BadRequest("Missing required fields");
+            }
 
-var existingUser = await dbContext.Users.Find(u => u.Email == email).FirstOrDefaultAsync();
-if (existingUser != null)
-{
-    return Results.BadRequest("Email already exists");
-}
+        var existingUser = await dbContext.Users.Find(u => u.Email == email).FirstOrDefaultAsync();
+        if (existingUser != null)
+        {
+            return Results.BadRequest("Email already exists");
+        }
 
-string photoUrl = null;
+        string photoUrl = null;
 
-if (photoFile != null)
-{
-    using var stream = photoFile.OpenReadStream();
-    var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams()
-    {
-        File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
-    };
-    var uploadResult = await cloudinary.UploadAsync(uploadParams);
+        if (photoFile != null)
+        {
+            using var stream = photoFile.OpenReadStream();
+            var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams()
+            {
+                File = new CloudinaryDotNet.FileDescription(photoFile.FileName, stream)
+            };
+            var uploadResult = await cloudinary.UploadAsync(uploadParams);
 
-    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
-    {
-        photoUrl = uploadResult.SecureUrl.ToString();
-    }
-    else
-    {
-        return Results.Problem(detail: "Error uploading image", statusCode: 500);
-    }
-}
+            if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                photoUrl = uploadResult.SecureUrl.ToString();
+            }
+            else
+            {
+                return Results.Problem(detail: "Error uploading image", statusCode: 500);
+            }
+        }
 
-var hashedPassword = PasswordService.HashPassword(password);
+        var hashedPassword = PasswordService.HashPassword(password);
 
-var user = new User
-{
-    Username = username,
-    Password = hashedPassword,
-    Email = email,
-    Role = "User",
-    CreationDate = DateTime.UtcNow
-};
+        var user = new User
+        {
+            Username = username,
+            Password = hashedPassword,
+            Email = email,
+            Role = "User",
+            CreationDate = DateTime.UtcNow
+        };
 
-try
-{
-    dbContext.Users.InsertOne(user);
+        try
+        {
+            dbContext.Users.InsertOne(user);
 
-    var message = new CreateProfileMessage
-    {
-        UserId = user.Id,
-        Name = user.Username,
-        Photo = photoUrl,
-        Enrollment = enrollment,
-        Sex = sex
-    };
 
-    publisher.Publish(message);
+            var message = new CreateProfileMessage
+            {
+                UserId = user.Id,
+                Name = user.Username,
+                Photo = photoUrl,
+                Enrollment = enrollment,
+                Sex = sex,
+                Major = major
+            };
 
-    return Results.Ok(new { message = "User registered successfully" });
-}
-catch (Exception)
-{
-    return Results.StatusCode(500);
-}
-}).RequireAuthorization();
+            Console.WriteLine($"📥 Major recibido: {message.Major ?? "null"}");
+            publisher.Publish(message);
+
+            return Results.Ok(new { message = "User registered successfully" });
+        }
+        catch (Exception)
+        {
+            return Results.StatusCode(500);
+        }
+    }).RequireAuthorization();
 
 
     app.MapPost("/forgot-password", async (ForgotPasswordRequest request, AuthenticationDbContext dbContext, EmailService emailService) =>
@@ -279,7 +284,7 @@ app.MapGet("/users/{id}", async (string id, AuthenticationDbContext dbContext) =
     return Results.Ok(new
     {
         email = user.Email,
-        role = user.Role
+        role = user.Role,
     });
 }).RequireAuthorization();
     app.MapPut("/users/{id}/email", async (string id, UpdateEmailRequest request, AuthenticationDbContext dbContext) =>
