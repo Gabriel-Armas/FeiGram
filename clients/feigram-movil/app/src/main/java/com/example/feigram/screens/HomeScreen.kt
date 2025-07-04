@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -171,6 +172,16 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                         modifier = Modifier.clickable {
                             scope.launch {
                                 navController.navigate("adminAccounts")
+                                drawerState.close()
+                            }
+                        }
+                    )
+                    ListItem(
+                        headlineContent = { Text("Gestión de anuncios") },
+                        leadingContent = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Ads") },
+                        modifier = Modifier.clickable {
+                            scope.launch {
+                                navController.navigate("adsScreen")
                                 drawerState.close()
                             }
                         }

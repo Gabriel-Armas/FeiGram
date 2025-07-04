@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.compose.*
 import com.example.feigram.screens.AdminAccountsScreen
+import com.example.feigram.screens.AdsScreen
 import com.example.feigram.screens.ChatScreen
 import com.example.feigram.screens.ContactListScreen
 import com.example.feigram.screens.HomeScreen
@@ -64,6 +65,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("adminAccounts") {
                         AdminAccountsScreen(navController, sessionViewModel)
+                    }
+                    composable("adsScreen") {
+                        AdsScreen(navController, sessionViewModel)
                     }
                 }
             }

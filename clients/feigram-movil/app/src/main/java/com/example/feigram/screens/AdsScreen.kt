@@ -1,0 +1,154 @@
+package com.example.feigram.screens
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.feigram.network.api.AdsApi
+import com.example.feigram.network.model.ads.Ad
+import com.example.feigram.network.service.RetrofitInstance
+import com.example.feigram.viewmodels.SessionViewModel
+import kotlinx.coroutines.launch
+
+@Composable
+fun AdsScreen(
+    navController: NavController,
+    sessionViewModel: SessionViewModel,
+) {
+    val scope = rememberCoroutineScope()
+    val authToken = sessionViewModel.userSession.collectAsState().value?.token ?: ""
+    val adsApi = RetrofitInstance.adsApi
+
+    var adsList by remember { mutableStateOf<List<Ad>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var filteredAds by remember { mutableStateOf<List<Ad>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        isLoading = true
+        try {
+            val response = adsApi.getAllAds("Bearer $authToken")
+            if (response.isSuccessful) {
+                adsList = response.body()?.ads ?: emptyList()
+                filteredAds = adsList
+            } else {
+                errorMessage = "Error al obtener anuncios: ${response.code()} ${response.message()}"
+            }
+        } catch (e: Exception) {
+            errorMessage = "Error en la red: ${e.message}"
+        }
+        isLoading = false
+    }
+
+    fun searchAds(query: String) {
+        filteredAds = if (query.isBlank()) {
+            adsList
+        } else {
+            val lowerQuery = query.lowercase()
+            adsList.filter {
+                it.brandName.lowercase().contains(lowerQuery) ||
+                        it.description.lowercase().contains(lowerQuery)
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text(text = "Gestión de Anuncios", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        BasicTextField(
+            value = searchQuery,
+            onValueChange = {
+                searchQuery = it
+                searchAds(it.text)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                .padding(8.dp),
+            singleLine = true,
+            decorationBox = { innerTextField ->
+                if (searchQuery.text.isEmpty()) {
+                    Text(
+                        "Buscar anuncios...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                innerTextField()
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (isLoading) {
+            CircularProgressIndicator()
+        } else {
+            errorMessage?.let { Text(text = it, color = MaterialTheme.colorScheme.error) }
+            if (filteredAds.isEmpty()) {
+                Text("No hay anuncios que mostrar", style = MaterialTheme.typography.bodyLarge)
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(filteredAds) { ad ->
+                        AdItem(ad = ad, onDelete = {
+                            scope.launch {
+                                try {
+                                    val deleteResponse = adsApi.deleteAd("Bearer $authToken", ad.id)
+                                    if (deleteResponse.isSuccessful) {
+                                        adsList = adsList.filter { it.id != ad.id }
+                                        filteredAds = filteredAds.filter { it.id != ad.id }
+                                    } else {
+                                        errorMessage = "Error al eliminar anuncio: ${deleteResponse.code()}"
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = "Error en la red: ${e.message}"
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AdItem(ad: Ad, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(text = "Marca: ${ad.brandName}", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Descripción: ${ad.description}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Cantidad pagada: ${ad.amount}", style = MaterialTheme.typography.bodySmall)
+            Text(text = "Fecha: ${ad.publicationDate}", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Eliminar",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .clickable { onDelete() }
+                        .padding(8.dp)
+                )
+            }
+        }
+    }
+}
