@@ -1,22 +1,30 @@
-package com.example.feigram.screens
-
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.feigram.network.api.AdsApi
 import com.example.feigram.network.model.ads.Ad
 import com.example.feigram.network.service.RetrofitInstance
 import com.example.feigram.viewmodels.SessionViewModel
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import androidx.compose.foundation.lazy.items
+import java.io.File
 
 @Composable
 fun AdsScreen(
@@ -24,6 +32,7 @@ fun AdsScreen(
     sessionViewModel: SessionViewModel,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val authToken = sessionViewModel.userSession.collectAsState().value?.token ?: ""
     val adsApi = RetrofitInstance.adsApi
 
@@ -32,6 +41,19 @@ fun AdsScreen(
     var filteredAds by remember { mutableStateOf<List<Ad>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var brandNameInput by remember { mutableStateOf("") }
+    var urlSiteInput by remember { mutableStateOf("") }
+    var descriptionInput by remember { mutableStateOf("") }
+    var amountInput by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     LaunchedEffect(Unit) {
         isLoading = true
@@ -61,8 +83,70 @@ fun AdsScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    fun createAd() {
+        if (brandNameInput.isBlank() || urlSiteInput.isBlank() || descriptionInput.isBlank() || amountInput.isBlank() || selectedImageUri == null) {
+            errorMessage = "Por favor completa todos los campos y selecciona una imagen"
+            return
+        }
+        scope.launch {
+            try {
+                val parcelFileDescriptor = context.contentResolver.openFileDescriptor(selectedImageUri!!, "r") ?: return@launch
+                val inputStream = context.contentResolver.openInputStream(selectedImageUri!!) ?: return@launch
+                val tempFile = File(context.cacheDir, "upload_image_temp.jpg")
+                inputStream.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
+
+                val requestFile = tempFile.asRequestBody("image/*".toMediaType())
+                val multipartBody = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
+
+                val brandNamePart = brandNameInput.toRequestBody("text/plain".toMediaType())
+                val urlSitePart = urlSiteInput.toRequestBody("text/plain".toMediaType())
+                val descriptionPart = descriptionInput.toRequestBody("text/plain".toMediaType())
+                val amountPart = amountInput.toRequestBody("text/plain".toMediaType())
+
+                isLoading = true
+                val response = adsApi.createAd(
+                    "Bearer $authToken",
+                    brandNamePart,
+                    urlSitePart,
+                    descriptionPart,
+                    amountPart,
+                    multipartBody
+                )
+                isLoading = false
+
+                if (response.isSuccessful) {
+                    val refreshedResponse = adsApi.getAllAds("Bearer $authToken")
+                    if (refreshedResponse.isSuccessful) {
+                        adsList = refreshedResponse.body()?.ads ?: emptyList()
+                        filteredAds = adsList
+                        showCreateDialog = false
+                        brandNameInput = ""
+                        urlSiteInput = ""
+                        descriptionInput = ""
+                        amountInput = ""
+                        selectedImageUri = null
+                        errorMessage = null
+                    } else {
+                        errorMessage = "Error al recargar anuncios: ${refreshedResponse.code()} ${refreshedResponse.message()}"
+                    }
+                } else {
+                    errorMessage = "Error al crear anuncio: ${response.code()} ${response.message()}"
+                }
+            } catch (e: Exception) {
+                isLoading = false
+                errorMessage = "Error en la red: ${e.message}"
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
         Text(text = "Gestión de Anuncios", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { showCreateDialog = true }) {
+            Text("Crear Nuevo Anuncio")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -100,7 +184,7 @@ fun AdsScreen(
                 Text("No hay anuncios que mostrar", style = MaterialTheme.typography.bodyLarge)
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(filteredAds) { ad ->
+                    items(items = filteredAds, key = { ad -> ad.id }) { ad ->
                         AdItem(ad = ad, onDelete = {
                             scope.launch {
                                 try {
@@ -120,6 +204,66 @@ fun AdsScreen(
                 }
             }
         }
+    }
+
+    if (showCreateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateDialog = false },
+            title = { Text("Crear Anuncio") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = brandNameInput,
+                        onValueChange = { brandNameInput = it },
+                        label = { Text("Marca") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = urlSiteInput,
+                        onValueChange = { urlSiteInput = it },
+                        label = { Text("URL Sitio") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = descriptionInput,
+                        onValueChange = { descriptionInput = it },
+                        label = { Text("Descripción") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = amountInput,
+                        onValueChange = { newValue ->
+                            if (newValue.length <= 3 && newValue.all { it.isDigit() }) {
+                                val number = newValue.toIntOrNull() ?: 0
+                                if (number <= 100) {
+                                    amountInput = newValue
+                                }
+                            } else if (newValue.isEmpty()) {
+                                amountInput = ""
+                            }
+                        },
+                        label = { Text("Cantidad pagada") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { launcher.launch("image/*") }) {
+                        Text(if (selectedImageUri == null) "Seleccionar Imagen" else "Imagen Seleccionada")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { createAd() }) {
+                    Text("Crear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

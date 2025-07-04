@@ -1,5 +1,6 @@
 package com.example.feigram
 
+import AdsScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,7 +8,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.navigation.compose.*
 import com.example.feigram.screens.AdminAccountsScreen
-import com.example.feigram.screens.AdsScreen
 import com.example.feigram.screens.ChatScreen
 import com.example.feigram.screens.ContactListScreen
 import com.example.feigram.screens.HomeScreen
