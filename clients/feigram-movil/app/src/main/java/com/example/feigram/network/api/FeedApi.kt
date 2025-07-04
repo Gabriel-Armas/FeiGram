@@ -11,6 +11,6 @@ interface FeedApi {
         @Header("Authorization") token: String,
         @Query("user_id") userId: String,
         @Query("skip") skip: Int = 0,
-        @Query("limit") limit: Int = 5
+        @Query("limit") limit: Int = 10
     ): FeedRecommendationsResponse
 }

@@ -68,13 +68,16 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     var firstLoadDone by remember { mutableStateOf(false) }
 
     val isAdmin = userSession?.rol.equals("Admin", ignoreCase = true)
+    var postCountTotal by remember { mutableStateOf(0) }
 
     fun mergePostsAndAds(newPosts: List<FeedPost>) {
         scope.launch {
             val newCombined = mutableListOf<Any>()
-            for ((index, post) in newPosts.withIndex()) {
+            for (post in newPosts) {
                 newCombined.add(post)
-                if ((feedPosts.size + index + 1) % 5 == 0) {
+                postCountTotal++
+
+                if (postCountTotal % 5 == 0) {
                     try {
                         val adResponse = adsApi.getRandomAd("Bearer ${userSession?.token.orEmpty()}")
                         if (adResponse.isSuccessful) {
@@ -470,7 +473,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                                             .padding(end = 8.dp)
                                     )
 
-                                    Column(  // <-- Aquí antes no tenías modifiers
+                                    Column(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
@@ -598,12 +601,12 @@ fun AdItem(
                 contentDescription = "Imagen del anuncio $brandName",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(500.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = description,
