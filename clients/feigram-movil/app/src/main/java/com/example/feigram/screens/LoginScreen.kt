@@ -126,7 +126,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                "¿Olvidaste tu contraseña?",
+                //"¿Olvidaste tu contraseña?",
+                "",
                 color = Color.Blue,
                 fontSize = 14.sp
             )

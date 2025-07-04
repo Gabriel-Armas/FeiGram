@@ -1,5 +1,7 @@
 package com.example.feigram.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -8,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.AccountCircle
@@ -23,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -54,6 +59,9 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
     var isLoading by remember { mutableStateOf(false) }
     var currentPostId by remember { mutableStateOf<Int?>(null) }
 
+    var combinedFeed by remember { mutableStateOf<List<Any>>(emptyList()) }
+    val adsApi = RetrofitInstance.adsApi
+
     var skip by remember { mutableStateOf(0) }
     val listState = rememberLazyListState()
 
@@ -61,8 +69,29 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
 
     val isAdmin = userSession?.rol.equals("Admin", ignoreCase = true)
 
+    fun mergePostsAndAds(newPosts: List<FeedPost>) {
+        scope.launch {
+            val newCombined = mutableListOf<Any>()
+            for ((index, post) in newPosts.withIndex()) {
+                newCombined.add(post)
+                if ((feedPosts.size + index + 1) % 5 == 0) {
+                    try {
+                        val adResponse = adsApi.getRandomAd("Bearer ${userSession?.token.orEmpty()}")
+                        if (adResponse.isSuccessful) {
+                            adResponse.body()?.let { ad ->
+                                newCombined.add(ad)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+            combinedFeed = combinedFeed + newCombined
+        }
+    }
+
     LaunchedEffect(userSession) {
-        println("ROL DEL USUARIO AL INICIAR HOME: ${userSession?.rol}")
         if (userSession != null) {
             isLoading = true
             skip = 0
@@ -72,6 +101,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                     userId = userSession!!.userId
                 )
                 feedPosts = response.posts
+                mergePostsAndAds(response.posts)
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -85,7 +115,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
         snapshotFlow {
             listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
         }.collect { lastVisibleIndex ->
-            if (lastVisibleIndex != null && lastVisibleIndex >= feedPosts.size - 1 && !isLoading) {
+            if (lastVisibleIndex != null && lastVisibleIndex >= combinedFeed.size - 1 && !isLoading) {
                 isLoading = true
                 skip += 10
                 try {
@@ -94,7 +124,9 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                         userId = userSession?.userId ?: "",
                         skip = skip
                     )
-                    feedPosts = feedPosts + newResponse.posts
+                    val nuevosPosts = newResponse.posts
+                    feedPosts = feedPosts + nuevosPosts
+                    mergePostsAndAds(nuevosPosts)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 } finally {
@@ -266,108 +298,128 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(feedPosts) { post ->
-                            var profile by remember { mutableStateOf<Profile?>(null) }
-                            var likeCount by remember { mutableStateOf(post.likes) }
-                            var commentCount by remember { mutableStateOf(post.comentarios) }
-                            var hasLiked by remember { mutableStateOf(false) }
+                        items(combinedFeed) { item ->
+                            when (item) {
+                                is FeedPost -> {
+                                    var profile by remember { mutableStateOf<Profile?>(null) }
+                                    var likeCount by remember { mutableStateOf(item.likes) }
+                                    var commentCount by remember { mutableStateOf(item.comentarios) }
+                                    var hasLiked by remember { mutableStateOf(false) }
 
-                            LaunchedEffect(post.id_usuario) {
-                                try {
-                                    profile = RetrofitInstance.profileApi.getProfileById(
-                                        id = post.id_usuario,
-                                        token = "Bearer ${userSession?.token.orEmpty()}"
-                                    )
+                                    LaunchedEffect(item.id_usuario) {
+                                        try {
+                                            profile = RetrofitInstance.profileApi.getProfileById(
+                                                id = item.id_usuario,
+                                                token = "Bearer ${userSession?.token.orEmpty()}"
+                                            )
 
-                                    hasLiked = RetrofitInstance.likeApi.checkLike(
-                                        userId = userSession?.userId ?: "",
-                                        postId = post.post_id.toString(),
-                                        token = "Bearer ${userSession?.token.orEmpty()}"
-                                    )
+                                            hasLiked = RetrofitInstance.likeApi.checkLike(
+                                                userId = userSession?.userId ?: "",
+                                                postId = item.post_id.toString(),
+                                                token = "Bearer ${userSession?.token.orEmpty()}"
+                                            )
 
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
+                                    }
 
-                            Column(modifier = Modifier.padding(8.dp)) {
-                                PostItem(
-                                    username = profile?.name ?: "Cargando...",
-                                    profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
-                                    imageUrl = post.url_media,
-                                    description = post.descripcion,
-                                    date = post.fechaPublicacion.substring(0, 10),
-                                    commentCount = commentCount,
-                                    likeCount = likeCount,
-                                    onCommentsClick = {
-                                        scope.launch {
-                                            try {
-                                                currentPostId = post.post_id
+                                    Column(modifier = Modifier.padding(8.dp)) {
+                                        PostItem(
+                                            username = profile?.name ?: "Cargando...",
+                                            profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                            imageUrl = item.url_media,
+                                            description = item.descripcion,
+                                            date = item.fechaPublicacion.substring(0, 10),
+                                            commentCount = commentCount,
+                                            likeCount = likeCount,
+                                            onCommentsClick = {
+                                                scope.launch {
+                                                    try {
+                                                        currentPostId = item.post_id
 
-                                                val response = RetrofitInstance.postApi.getPostComments(
-                                                    postId = post.post_id,
-                                                    token = "Bearer ${userSession?.token.orEmpty()}"
-                                                )
-
-                                                val commentsWithUsernames = response.comments.map { c ->
-                                                    val profile = try {
-                                                        RetrofitInstance.profileApi.getProfileById(
-                                                            id = c.userId,
+                                                        val response = RetrofitInstance.postApi.getPostComments(
+                                                            postId = item.post_id,
                                                             token = "Bearer ${userSession?.token.orEmpty()}"
                                                         )
+
+                                                        val commentsWithUsernames = response.comments.map { c ->
+                                                            val profile = try {
+                                                                RetrofitInstance.profileApi.getProfileById(
+                                                                    id = c.userId,
+                                                                    token = "Bearer ${userSession?.token.orEmpty()}"
+                                                                )
+                                                            } catch (e: Exception) {
+                                                                null
+                                                            }
+
+                                                            Comment(
+                                                                username = profile?.name ?: c.userId,
+                                                                profileImageUrl = profile?.photo
+                                                                    ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+                                                                text = c.textComment ?: ""
+                                                            )
+                                                        }
+
+                                                        currentComments = commentsWithUsernames
+                                                        showComments = true
+
                                                     } catch (e: Exception) {
-                                                        null
+                                                        e.printStackTrace()
                                                     }
-
-                                                    Comment(
-                                                        username = profile?.name ?: c.userId,
-                                                        profileImageUrl = profile?.photo ?: "https://randomuser.me/api/portraits/lego/1.jpg",
-                                                        text = c.textComment ?: ""
-                                                    )
                                                 }
-
-                                                currentComments = commentsWithUsernames
-                                                showComments = true
-
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                            }
-                                        }
-                                    },
-                                    onLikeClick = {
-                                        scope.launch {
-                                            try {
-                                                if (hasLiked) {
-                                                    RetrofitInstance.likeApi.deleteLike(
-                                                        userId = userSession?.userId ?: "",
-                                                        postId = post.post_id.toString(),
-                                                        token = "Bearer ${userSession?.token.orEmpty()}"
-                                                    )
-                                                    likeCount--
-                                                } else {
-                                                    RetrofitInstance.likeApi.addLike(
-                                                        like = LikeRequest(
-                                                            userId = userSession?.userId ?: "",
-                                                            postId = post.post_id.toString()
-                                                        ),
-                                                        token = "Bearer ${userSession?.token.orEmpty()}"
-                                                    )
-                                                    likeCount++
+                                            },
+                                            onLikeClick = {
+                                                scope.launch {
+                                                    try {
+                                                        if (hasLiked) {
+                                                            RetrofitInstance.likeApi.deleteLike(
+                                                                userId = userSession?.userId ?: "",
+                                                                postId = item.post_id.toString(),
+                                                                token = "Bearer ${userSession?.token.orEmpty()}"
+                                                            )
+                                                            likeCount--
+                                                        } else {
+                                                            RetrofitInstance.likeApi.addLike(
+                                                                like = LikeRequest(
+                                                                    userId = userSession?.userId ?: "",
+                                                                    postId = item.post_id.toString()
+                                                                ),
+                                                                token = "Bearer ${userSession?.token.orEmpty()}"
+                                                            )
+                                                            likeCount++
+                                                        }
+                                                        hasLiked = !hasLiked
+                                                    } catch (e: Exception) {
+                                                        e.printStackTrace()
+                                                    }
                                                 }
-                                                hasLiked = !hasLiked
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                            }
-                                        }
-                                    },
-                                    hasLiked = hasLiked
-                                )
+                                            },
+                                            hasLiked = hasLiked
+                                        )
 
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 4.dp),
-                                    thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(vertical = 4.dp),
+                                            thickness = 0.5.dp,
+                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                        )
+                                    }
+                                }
+
+                                is com.example.feigram.network.model.ads.Ad -> {
+                                    AdItem(
+                                        brandName = item.brandName,
+                                        imageUrl = item.urlMedia,
+                                        description = item.description,
+                                        urlSite = item.urlSite
+                                    )
+
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                    )
+                                }
                             }
                         }
 
@@ -500,6 +552,65 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel)
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun AdItem(
+    brandName: String,
+    imageUrl: String,
+    description: String,
+    urlSite: String
+) {
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlSite))
+                context.startActivity(intent)
+            },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Anuncio patrocinado",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = brandName,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Imagen del anuncio $brandName",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
