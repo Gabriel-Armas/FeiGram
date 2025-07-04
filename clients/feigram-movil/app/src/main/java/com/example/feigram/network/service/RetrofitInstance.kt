@@ -16,7 +16,7 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.*
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://192.168.1.11/"
+    private const val BASE_URL = "https://10.0.2.2/"
     //private const val BASE_URL = "https://192.168.1.251/"
 
     private fun getUnsafeOkHttpClient(): OkHttpClient {

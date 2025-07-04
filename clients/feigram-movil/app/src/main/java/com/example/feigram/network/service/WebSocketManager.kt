@@ -25,7 +25,7 @@ object WebSocketManager {
         currentToken = token
 
         val request = Request.Builder()
-            .url("wss://192.168.1.11/messages/ws/?token=$token")
+            .url("wss://10.0.2.2/messages/ws/?token=$token")
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {

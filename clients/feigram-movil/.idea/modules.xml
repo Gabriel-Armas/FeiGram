@@ -3,10 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Feigram.iml" filepath="$PROJECT_DIR$/.idea/modules/Feigram.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Feigram.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Feigram.app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Feigram.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Feigram.app.androidTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Feigram.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Feigram.app.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Feigram.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Feigram.app.unitTest.iml" />
     </modules>
   </component>
 </project>
