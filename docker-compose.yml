@@ -206,6 +206,22 @@ services:
     networks:
       - feinet
 
+  ads-api:
+    build:
+      context: ./services/ads-api
+      dockerfile: Dockerfile
+    container_name: ads-api
+    # ports:
+    #   - "9092:9092"
+    environment:
+      - PORT=9092
+      - MONGO_URL=mongodb://mongo:27017
+      - MONGO_DB=adsdb
+    depends_on:
+      - mongo
+    networks:
+      - feinet
+
   feigram-web:
     build:
       context: ./clients/feigram-web

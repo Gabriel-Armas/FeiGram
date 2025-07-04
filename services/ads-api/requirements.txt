@@ -1,0 +1,8 @@
+fastapi
+pydantic
+python-dotenv
+motor
+python-jose
+cloudinary
+uvicorn
+python-multipart
