@@ -90,30 +90,56 @@ def get_recent_posts(user_id: str = Depends(get_current_user)):
 
     recent_posts = list(posts_collection.find({
         "fechaPublicacion": {"$gte": one_week_ago}
-    }))
+    }).sort("fechaPublicacion", -1))
 
-    rpc = CommentCountRpcClient()
-    rpc1 = LikesCountRpcClient()
+    # Agrupar por (id_usuario, fechaPublicacion)
+    from collections import defaultdict
+    grouped = defaultdict(list)
+    procesados = set()
+
+    for post in recent_posts:
+        user = str(post["id_usuario"])
+        fecha_sin_hora = post["fechaPublicacion"].date()
+        description = post["descripcion"]  
+        grouped[(user, fecha_sin_hora, description)].append(post)
+
+    rpc_comments = CommentCountRpcClient()
+    rpc_likes = LikesCountRpcClient()
 
     result = []
-    for post in recent_posts:
-        # Llamada RPC para contar los comentarios
-        response = rpc.get_comment_count(str(post["post_id"]))
-        count = response.get("count", 0)
-        response2 = rpc1.get_likes_count(str(post["post_id"]))
-        count2 = response2.get("like_count", 0)
+    for (user_id, fecha_str, descripcion), posts in grouped.items():
+        clave_grupo = (user_id, fecha_str, descripcion)
+        if clave_grupo in procesados:
+            continue
+        procesados.add(clave_grupo)
+        post_principal = posts[0]  # Usamos la descripción de este
+
+        imagenes = []
+        total_likes = 0
+        total_comentarios = 0
+
+        for p in posts:
+            imagenes.append(p["url_media"])
+
+            # RPC por cada imagen
+            resp_c = rpc_comments.get_comment_count(str(p["post_id"]))
+            total_comentarios += resp_c.get("count", 0)
+
+            resp_l = rpc_likes.get_likes_count(str(p["post_id"]))
+            total_likes += resp_l.get("like_count", 0)
 
         result.append({
-            "post_id": post["post_id"],
-            "id_usuario": post["id_usuario"],
-            "descripcion": post["descripcion"],
-            "url_media": post["url_media"],
-            "fechaPublicacion": convert_to_local(post["fechaPublicacion"]),
-            "comentarios": count,  
-            "likes": count2
+            "post_id": post_principal["post_id"],
+            "id_usuario": user_id,
+            "descripcion": descripcion,
+            "fechaPublicacion": convert_to_local(post_principal["fechaPublicacion"]),
+            "imagenes": imagenes,
+            "comentarios": total_comentarios,
+            "likes": total_likes
         })
 
     return result
+
 
 @router.get("/posts/{post_id}/comments")
 def get_post_comments(post_id: str, user_id: str = Depends(get_current_user)):
